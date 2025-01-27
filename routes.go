@@ -2,13 +2,22 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/inventory-service/internal/controller"
+	auth_controller "github.com/inventory-service/internal/controller/auth"
+	branch_controller "github.com/inventory-service/internal/controller/branch"
+	item_controller "github.com/inventory-service/internal/controller/item"
+	purchase_controller "github.com/inventory-service/internal/controller/purchase"
+	supplier_controller "github.com/inventory-service/internal/controller/supplier"
+
+	product_controller "github.com/inventory-service/internal/controller/product"
+
 	"github.com/inventory-service/internal/middleware"
 	branch_repository "github.com/inventory-service/internal/repository/branch"
 	item_repository "github.com/inventory-service/internal/repository/item"
+	product_repository "github.com/inventory-service/internal/repository/product"
 	purchase_repository "github.com/inventory-service/internal/repository/purchase"
 	supplier_repository "github.com/inventory-service/internal/repository/supplier"
 	user_repository "github.com/inventory-service/internal/repository/user"
+
 	auth_service "github.com/inventory-service/internal/service/auth"
 	branch_service "github.com/inventory-service/internal/service/branch"
 	item_service "github.com/inventory-service/internal/service/item"
@@ -28,6 +37,7 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 	itemRepository := item_repository.NewItemRepository(pgDB)
 	branchRepository := branch_repository.NewBranchRepository(pgDB)
 	purchaseRepository := purchase_repository.NewPurchaseRepository(pgDB)
+	productRepository := product_repository.NewProductRepository(mongoDB, "inventory_service", "products")
 
 	// initialize service
 	userService := auth_service.NewUserService(userRepository)
@@ -37,11 +47,12 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 	purchaseService := purchase_service.NewPurchaseService(purchaseRepository, supplierRepository, branchRepository, itemRepository)
 
 	// initialize controller
-	authController := controller.NewAuthController(userService)
-	branchController := controller.NewBranchController(branchService)
-	supplierController := controller.NewSupplierController(supplierService)
-	itemController := controller.NewItemController(itemService)
-	purchaseController := controller.NewPurchaseController(purchaseService)
+	authController := auth_controller.NewAuthController(userService)
+	branchController := branch_controller.NewBranchController(branchService)
+	supplierController := supplier_controller.NewSupplierController(supplierService)
+	itemController := item_controller.NewItemController(itemService)
+	purchaseController := purchase_controller.NewPurchaseController(purchaseService)
+	productController := product_controller.NewProductController(productRepository)
 
 	router.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -91,6 +102,15 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 			purchaseRoutes.POST("/", purchaseController.CreatePurchase)
 			purchaseRoutes.PUT("/:id", purchaseController.UpdatePurchase)
 			purchaseRoutes.DELETE("/:id", purchaseController.DeletePurchase)
+		}
+
+		productRoutes := apiV1.Group("/product")
+		{
+			productRoutes.POST("/", productController.Create)
+			productRoutes.GET("/", productController.FindAll)
+			productRoutes.GET("/:id", productController.FindByID)
+			productRoutes.PUT("/:id", productController.Update)
+			productRoutes.DELETE("/:id", productController.Delete)
 		}
 
 		adminRoutes := apiV1.Group("/admin")

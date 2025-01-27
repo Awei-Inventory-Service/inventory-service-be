@@ -18,13 +18,14 @@ func InitMongoDB() (*mongo.Client, error) {
 	mongoPassword := os.Getenv("MONGO_PASSWORD")
 	mongoHost := os.Getenv("MONGO_HOST")
 	mongoPort := os.Getenv("MONGO_PORT")
+	mongoDatabaseName := os.Getenv("MONGO_DATABASE")
 
 	if mongoUser == "" || mongoPassword == "" || mongoHost == "" || mongoPort == "" {
 		log.Fatalf("Username / password / host / port can't be empty")
 		return nil, errors.New("Check your Mongo env")
 	}
 
-	uri := fmt.Sprintf("mongodb://%s:%s@%s:%s", mongoUser, mongoPassword, mongoHost, mongoPort)
+	uri := fmt.Sprintf("mongodb://%s:%s@%s:%s/%s?authSource=admin", mongoUser, mongoPassword, mongoHost, mongoPort, mongoDatabaseName)
 	clientOpts := options.Client().ApplyURI(uri)
 
 	client, err := mongo.NewClient(clientOpts)

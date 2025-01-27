@@ -1,30 +1,11 @@
-package controller
+package item
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/internal/dto"
-	"github.com/inventory-service/internal/service/item"
 )
-
-type ItemController interface {
-	GetItems(c *gin.Context)
-	GetItem(c *gin.Context)
-	CreateItem(c *gin.Context)
-	UpdateItem(c *gin.Context)
-	DeleteItem(c *gin.Context)
-}
-
-type itemController struct {
-	itemService item.ItemService
-}
-
-func NewItemController(itemService item.ItemService) ItemController {
-	return &itemController{
-		itemService: itemService,
-	}
-}
 
 func (i *itemController) GetItems(c *gin.Context) {
 	items, err := i.itemService.FindAll()

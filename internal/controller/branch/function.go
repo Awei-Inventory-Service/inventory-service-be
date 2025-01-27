@@ -1,4 +1,4 @@
-package controller
+package branch
 
 import (
 	"net/http"
@@ -6,26 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/internal/dto"
 	"github.com/inventory-service/internal/model"
-	"github.com/inventory-service/internal/service/branch"
 )
-
-type BranchController interface {
-	GetBranches(c *gin.Context)
-	GetBranch(c *gin.Context)
-	CreateBranch(c *gin.Context)
-	UpdateBranch(c *gin.Context)
-	DeleteBranch(c *gin.Context)
-}
-
-type branchController struct {
-	branchService branch.BranchService
-}
-
-func NewBranchController(branchService branch.BranchService) BranchController {
-	return &branchController{
-		branchService: branchService,
-	}
-}
 
 func (b *branchController) GetBranches(c *gin.Context) {
 	var branches []model.Branch

@@ -1,30 +1,11 @@
-package controller
+package supplier
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/internal/dto"
-	"github.com/inventory-service/internal/service/supplier"
 )
-
-type SupplierController interface {
-	GetSuppliers(c *gin.Context)
-	GetSupplier(c *gin.Context)
-	CreateSupplier(c *gin.Context)
-	UpdateSupplier(c *gin.Context)
-	DeleteSupplier(c *gin.Context)
-}
-
-type supplierController struct {
-	supplierService supplier.SupplierService
-}
-
-func NewSupplierController(supplierService supplier.SupplierService) SupplierController {
-	return &supplierController{
-		supplierService: supplierService,
-	}
-}
 
 func (s *supplierController) GetSuppliers(c *gin.Context) {
 	suppliers, err := s.supplierService.FindAll()

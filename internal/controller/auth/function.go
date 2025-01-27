@@ -1,25 +1,9 @@
-package controller
+package auth
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/internal/dto"
-	"github.com/inventory-service/internal/service/auth"
 )
-
-type AuthController interface {
-	Login(ctx *gin.Context)
-	Register(ctx *gin.Context)
-}
-
-type authController struct {
-	authService auth.UserService
-}
-
-func NewAuthController(authService auth.UserService) AuthController {
-	return &authController{
-		authService: authService,
-	}
-}
 
 // Todo: standardize the error
 func (a *authController) Login(ctx *gin.Context) {
