@@ -4,8 +4,8 @@ import (
 	"github.com/inventory-service/internal/model"
 )
 
-func (i *itemService) Create(name, category string, price float64, unit string) error {
-	err := i.itemRepository.Create(name, category, price, unit)
+func (i *itemService) Create(name, supplierID string, category string, price float64, unit string) error {
+	err := i.itemRepository.Create(name, supplierID, category, price, unit)
 	if err != nil {
 		return err
 	}
@@ -31,8 +31,8 @@ func (i *itemService) FindByID(id string) (*model.Item, error) {
 	return item, nil
 }
 
-func (i *itemService) Update(id, name, category string, price float64, unit string) error {
-	err := i.itemRepository.Update(id, name, category, price, unit)
+func (i *itemService) Update(id, supplierID string, name, category string, price float64, unit string) error {
+	err := i.itemRepository.Update(id, supplierID, name, category, price, unit)
 	if err != nil {
 		return err
 	}

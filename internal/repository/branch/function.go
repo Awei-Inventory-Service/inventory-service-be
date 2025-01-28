@@ -21,7 +21,7 @@ func (b *branchRepository) Create(name, location, branchManagerId string) error 
 
 func (b *branchRepository) FindAll() ([]model.Branch, error) {
 	var branches []model.Branch
-	result := b.db.Find(&branches)
+	result := b.db.Preload("BranchManager").Find(&branches)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -31,7 +31,7 @@ func (b *branchRepository) FindAll() ([]model.Branch, error) {
 
 func (b *branchRepository) FindByID(id string) (*model.Branch, error) {
 	var branch model.Branch
-	result := b.db.Where("uuid = ?", id).First(&branch)
+	result := b.db.Preload("BranchManager").Where("uuid = ?", id).First(&branch)
 	if result.Error != nil {
 		return nil, result.Error
 	}

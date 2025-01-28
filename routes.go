@@ -4,14 +4,15 @@ import (
 	"github.com/gin-gonic/gin"
 	auth_controller "github.com/inventory-service/internal/controller/auth"
 	branch_controller "github.com/inventory-service/internal/controller/branch"
+	inventory_stock_count_controller "github.com/inventory-service/internal/controller/inventory_stock_count"
 	item_controller "github.com/inventory-service/internal/controller/item"
+	product_controller "github.com/inventory-service/internal/controller/product"
 	purchase_controller "github.com/inventory-service/internal/controller/purchase"
 	supplier_controller "github.com/inventory-service/internal/controller/supplier"
 
-	product_controller "github.com/inventory-service/internal/controller/product"
-
 	"github.com/inventory-service/internal/middleware"
 	branch_repository "github.com/inventory-service/internal/repository/branch"
+	inventory_stock_count_repository "github.com/inventory-service/internal/repository/inventory_stock_count"
 	item_repository "github.com/inventory-service/internal/repository/item"
 	product_repository "github.com/inventory-service/internal/repository/product"
 	purchase_repository "github.com/inventory-service/internal/repository/purchase"
@@ -20,6 +21,7 @@ import (
 
 	auth_service "github.com/inventory-service/internal/service/auth"
 	branch_service "github.com/inventory-service/internal/service/branch"
+	inventory_stock_count_service "github.com/inventory-service/internal/service/inventory_stock_count"
 	item_service "github.com/inventory-service/internal/service/item"
 	purchase_service "github.com/inventory-service/internal/service/purchase"
 	supplier_service "github.com/inventory-service/internal/service/supplier"
@@ -38,6 +40,7 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 	branchRepository := branch_repository.NewBranchRepository(pgDB)
 	purchaseRepository := purchase_repository.NewPurchaseRepository(pgDB)
 	productRepository := product_repository.NewProductRepository(mongoDB, "inventory_service", "products")
+	inventoryStockCountRepository := inventory_stock_count_repository.NewInventoryStockCountRepository(mongoDB, "inventory_service", "inventory_stock_counts")
 
 	// initialize service
 	userService := auth_service.NewUserService(userRepository)
@@ -45,6 +48,7 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 	itemService := item_service.NewItemService(itemRepository)
 	branchService := branch_service.NewBranchService(branchRepository, userRepository)
 	purchaseService := purchase_service.NewPurchaseService(purchaseRepository, supplierRepository, branchRepository, itemRepository)
+	inventoryStockCountService := inventory_stock_count_service.NewInventoryStockCountService(inventoryStockCountRepository, branchRepository, itemRepository)
 
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)
@@ -53,6 +57,7 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 	itemController := item_controller.NewItemController(itemService)
 	purchaseController := purchase_controller.NewPurchaseController(purchaseService)
 	productController := product_controller.NewProductController(productRepository)
+	inventoryStockCountController := inventory_stock_count_controller.NewInventoryStockCountController(inventoryStockCountService)
 
 	router.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -111,6 +116,16 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 			productRoutes.GET("/:id", productController.FindByID)
 			productRoutes.PUT("/:id", productController.Update)
 			productRoutes.DELETE("/:id", productController.Delete)
+		}
+
+		inventoryStockCountRoutes := apiV1.Group("/inventory-stock-count")
+		{
+			inventoryStockCountRoutes.POST("/", inventoryStockCountController.Create)
+			inventoryStockCountRoutes.GET("/", inventoryStockCountController.FindAll)
+			inventoryStockCountRoutes.GET("/:id", inventoryStockCountController.FindByID)
+			inventoryStockCountRoutes.PUT("/:id", inventoryStockCountController.Update)
+			inventoryStockCountRoutes.GET("/branch/:id", inventoryStockCountController.FilterByBranch)
+			inventoryStockCountRoutes.DELETE("/:id", inventoryStockCountController.Delete)
 		}
 
 		adminRoutes := apiV1.Group("/admin")

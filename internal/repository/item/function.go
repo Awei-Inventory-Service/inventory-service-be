@@ -4,12 +4,13 @@ import (
 	"github.com/inventory-service/internal/model"
 )
 
-func (i *itemRepository) Create(name, category string, price float64, unit string) error {
+func (i *itemRepository) Create(name, supplierId string, category string, price float64, unit string) error {
 	item := model.Item{
-		Name:     name,
-		Category: category,
-		Price:    price,
-		Unit:     unit,
+		Name:       name,
+		Category:   category,
+		Price:      price,
+		Unit:       unit,
+		SupplierID: supplierId,
 	}
 
 	result := i.db.Create(&item)
@@ -22,7 +23,7 @@ func (i *itemRepository) Create(name, category string, price float64, unit strin
 
 func (i *itemRepository) FindAll() ([]model.Item, error) {
 	var items []model.Item
-	result := i.db.Find(&items)
+	result := i.db.Preload("Supplier").Find(&items)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -40,12 +41,13 @@ func (i *itemRepository) FindByID(id string) (*model.Item, error) {
 	return &item, nil
 }
 
-func (i *itemRepository) Update(id, name, category string, price float64, unit string) error {
+func (i *itemRepository) Update(id, supplierID string, name, category string, price float64, unit string) error {
 	item := model.Item{
 		Name:     name,
 		Category: category,
 		Price:    price,
 		Unit:     unit,
+		SupplierID: supplierID,
 	}
 
 	result := i.db.Where("uuid = ?", id).Updates(&item)
