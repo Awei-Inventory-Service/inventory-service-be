@@ -1,0 +1,89 @@
+package invoice
+
+import (
+	"github.com/inventory-service/internal/model"
+)
+
+func (i *invoiceRepository) Create(fileUrl, notes, invoiceDate string, amount, amountOwed float64) error {
+	invoice := model.Invoice{
+		FileURL:     fileUrl,
+		Amount:      amount,
+		AmountOwed:  amountOwed,
+		Notes:       notes,
+		InvoiceDate: invoiceDate,
+	}
+
+	result := i.db.Create(&invoice)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
+func (i *invoiceRepository) FindAll() ([]model.Invoice, error) {
+	var invoices []model.Invoice
+	result := i.db.Find(&invoices)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return invoices, nil
+}
+
+func (i *invoiceRepository) FindByID(id string) (*model.Invoice, error) {
+	var invoice model.Invoice
+	result := i.db.Where("uuid = ?", id).First(&invoice)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &invoice, nil
+}
+
+func (i *invoiceRepository) Update(id string, fileUrl, notes, status, invoiceDate string, amount, amountOwed float64) error {
+	updates := map[string]interface{}{}
+
+	if fileUrl != "" {
+		updates["file_url"] = fileUrl
+	}
+	if amount != 0 {
+		updates["amount"] = amount
+	}
+	if amountOwed != 0 {
+		updates["amount_owed"] = amountOwed
+	}
+	if notes != "" {
+		updates["notes"] = notes
+	}
+	if status != "" {
+		updates["status"] = status
+	}
+	if invoiceDate != "" {
+		updates["invoice_date"] = invoiceDate
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	result := i.db.Model(&model.Invoice{}).
+		Where("uuid = ?", id).
+		Updates(updates)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
+
+func (i *invoiceRepository) Delete(id string) error {
+	result := i.db.Where("uuid = ?", id).Delete(&model.Invoice{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}

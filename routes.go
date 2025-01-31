@@ -9,6 +9,7 @@ import (
 	supplier_controller "github.com/inventory-service/internal/controller/supplier"
 
 	product_controller "github.com/inventory-service/internal/controller/product"
+	invoice_controller "github.com/inventory-service/internal/controller/invoice"
 
 	"github.com/inventory-service/internal/middleware"
 	branch_repository "github.com/inventory-service/internal/repository/branch"
@@ -17,12 +18,14 @@ import (
 	purchase_repository "github.com/inventory-service/internal/repository/purchase"
 	supplier_repository "github.com/inventory-service/internal/repository/supplier"
 	user_repository "github.com/inventory-service/internal/repository/user"
+	invoice_repository "github.com/inventory-service/internal/repository/invoice"
 
 	auth_service "github.com/inventory-service/internal/service/auth"
 	branch_service "github.com/inventory-service/internal/service/branch"
 	item_service "github.com/inventory-service/internal/service/item"
 	purchase_service "github.com/inventory-service/internal/service/purchase"
 	supplier_service "github.com/inventory-service/internal/service/supplier"
+	invoice_service "github.com/inventory-service/internal/service/invoice"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
@@ -38,6 +41,7 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 	branchRepository := branch_repository.NewBranchRepository(pgDB)
 	purchaseRepository := purchase_repository.NewPurchaseRepository(pgDB)
 	productRepository := product_repository.NewProductRepository(mongoDB, "inventory_service", "products")
+	invoiceRepository := invoice_repository.NewInvoiceRepository(pgDB)
 
 	// initialize service
 	userService := auth_service.NewUserService(userRepository)
@@ -45,6 +49,7 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 	itemService := item_service.NewItemService(itemRepository)
 	branchService := branch_service.NewBranchService(branchRepository, userRepository)
 	purchaseService := purchase_service.NewPurchaseService(purchaseRepository, supplierRepository, branchRepository, itemRepository)
+	invoiceService := invoice_service.NewInvoiceService(invoiceRepository)
 
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)
@@ -53,6 +58,7 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 	itemController := item_controller.NewItemController(itemService)
 	purchaseController := purchase_controller.NewPurchaseController(purchaseService)
 	productController := product_controller.NewProductController(productRepository)
+	invoiceController := invoice_controller.NewInvoiceController(invoiceService)
 
 	router.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -116,6 +122,15 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 		adminRoutes := apiV1.Group("/admin")
 		{
 			adminRoutes.Use(middleware.AuthMiddleware())
+		}
+
+		invoiceRoutes := apiV1.Group("/invoice")
+		{
+			invoiceRoutes.GET("/", invoiceController.GetInvoices)
+			invoiceRoutes.GET("/:id", invoiceController.GetInvoice)
+			invoiceRoutes.POST("/", invoiceController.CreateInvoice)
+			invoiceRoutes.PUT("/:id", invoiceController.UpdateInvoice)
+			invoiceRoutes.DELETE("/:id", invoiceController.DeleteInvoice)
 		}
 	}
 
