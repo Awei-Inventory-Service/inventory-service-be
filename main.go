@@ -21,12 +21,6 @@ func main() {
 		return
 	}
 
-	// initialize mongo db
-	mongoDB, err := config.InitMongoDB()
-	if err != nil {
-		log.Fatalf("Error initializing mongo db, err=%v", err)
-	}
-
 	// for raw sql query
 	// sqlDB, err := db.DB()
 	// if err != nil {
@@ -36,7 +30,7 @@ func main() {
 
 	// initialize redis
 
-	router := InitRoutes(pgDB, mongoDB)
+	router := InitRoutes(pgDB)
 
 	router.Run(":8080")
 }

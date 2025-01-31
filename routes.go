@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	auth_controller "github.com/inventory-service/internal/controller/auth"
 	branch_controller "github.com/inventory-service/internal/controller/branch"
@@ -14,6 +16,7 @@ import (
 	branch_repository "github.com/inventory-service/internal/repository/branch"
 	inventory_stock_count_repository "github.com/inventory-service/internal/repository/inventory_stock_count"
 	item_repository "github.com/inventory-service/internal/repository/item"
+	"github.com/inventory-service/internal/repository/mongodb"
 	product_repository "github.com/inventory-service/internal/repository/product"
 	purchase_repository "github.com/inventory-service/internal/repository/purchase"
 	supplier_repository "github.com/inventory-service/internal/repository/supplier"
@@ -23,14 +26,14 @@ import (
 	branch_service "github.com/inventory-service/internal/service/branch"
 	inventory_stock_count_service "github.com/inventory-service/internal/service/inventory_stock_count"
 	item_service "github.com/inventory-service/internal/service/item"
+	product_service "github.com/inventory-service/internal/service/product"
 	purchase_service "github.com/inventory-service/internal/service/purchase"
 	supplier_service "github.com/inventory-service/internal/service/supplier"
 
-	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
 )
 
-func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
+func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	router := gin.Default()
 
 	// initialize repository
@@ -39,8 +42,14 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 	itemRepository := item_repository.NewItemRepository(pgDB)
 	branchRepository := branch_repository.NewBranchRepository(pgDB)
 	purchaseRepository := purchase_repository.NewPurchaseRepository(pgDB)
-	productRepository := product_repository.NewProductRepository(mongoDB, "inventory_service", "products")
-	inventoryStockCountRepository := inventory_stock_count_repository.NewInventoryStockCountRepository(mongoDB, "inventory_service", "inventory_stock_counts")
+	mongodbRepository, err := mongodb.InitMongoDB()
+
+	if err != nil {
+		fmt.Println("Error iniitalizing mongo db")
+	}
+
+	productRepository := product_repository.NewProductRepository(mongodbRepository, "inventory_service", "products")
+	inventoryStockCountRepository := inventory_stock_count_repository.NewInventoryStockCountRepository(mongodbRepository, "inventory_service", "inventory_stock_counts")
 
 	// initialize service
 	userService := auth_service.NewUserService(userRepository)
@@ -49,14 +58,14 @@ func InitRoutes(pgDB *gorm.DB, mongoDB *mongo.Client) *gin.Engine {
 	branchService := branch_service.NewBranchService(branchRepository, userRepository)
 	purchaseService := purchase_service.NewPurchaseService(purchaseRepository, supplierRepository, branchRepository, itemRepository)
 	inventoryStockCountService := inventory_stock_count_service.NewInventoryStockCountService(inventoryStockCountRepository, branchRepository, itemRepository)
-
+	productService := product_service.NewProductservice(productRepository, itemRepository)
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)
 	branchController := branch_controller.NewBranchController(branchService)
 	supplierController := supplier_controller.NewSupplierController(supplierService)
 	itemController := item_controller.NewItemController(itemService)
 	purchaseController := purchase_controller.NewPurchaseController(purchaseService)
-	productController := product_controller.NewProductController(productRepository)
+	productController := product_controller.NewProductController(productService)
 	inventoryStockCountController := inventory_stock_count_controller.NewInventoryStockCountController(inventoryStockCountService)
 
 	router.GET("/healthcheck", func(c *gin.Context) {

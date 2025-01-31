@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/inventory-service/internal/model"
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/inventory-service/internal/repository/mongodb"
 )
 
 type InventoryStockCountRepository interface {
@@ -17,5 +17,5 @@ type InventoryStockCountRepository interface {
 }
 
 type inventoryStockCountRepository struct {
-	inventoryStockCountCollection *mongo.Collection
+	inventoryStockCountCollection mongodb.MongoDBCollection
 }
