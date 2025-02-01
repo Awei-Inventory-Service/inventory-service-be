@@ -8,40 +8,52 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-// MongoDBCollection interface defines MongoDB collection operations
-type MongoDBCollection interface {
+type MongoDBSingleResultWrapper interface {
+	Decode(v interface{}) error
+}
+
+type MongoDBCursorWrapper interface {
+	Next(ctx context.Context) bool
+	Decode(val interface{}) error
+	Err() error
+	Close(ctx context.Context) error
+}
+
+type MongoDBCollectionWrapper interface {
 	InsertOne(ctx context.Context, document interface{}, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error)
-	Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (cur *mongo.Cursor, err error)
+	Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (MongoDBCursorWrapper, error)
 	UpdateOne(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
-	FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) *mongo.SingleResult
+	FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) MongoDBSingleResultWrapper
 	DeleteOne(ctx context.Context, filter interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error)
 }
 
-// MongoDBDatabase interface defines database-level operations
-type MongoDBDatabase interface {
-	Collection(collectionName string, opts ...*options.CollectionOptions) MongoDBCollection
+type MongoDBDatabaseWrapper interface {
+	Collection(collectionName string, opts ...*options.CollectionOptions) MongoDBCollectionWrapper
 }
 
-// MongoDBClient interface defines client-level operations
-type MongoDBClient interface {
+type MongoDBClientWrapper interface {
 	Connect(ctx context.Context) error
 	Disconnect(ctx context.Context) error
 	Ping(ctx context.Context, readPref *readpref.ReadPref) error
-	Database(name string, opts ...*options.DatabaseOptions) MongoDBDatabase
+	Database(name string, opts ...*options.DatabaseOptions) MongoDBDatabaseWrapper
 }
 
-// RealMongoDBClient wraps the actual MongoDB client
-type RealMongoDBClient struct {
+type MongoClient struct {
 	client *mongo.Client
 }
 
-// RealMongoDBDatabase wraps the actual MongoDB database
-type RealMongoDBDatabase struct {
+type MongoDatabase struct {
 	database *mongo.Database
 }
 
-type RealMongoDBCollection struct {
+type MongoCollection struct {
 	collection *mongo.Collection
 }
 
-// NewRealMongoDBClient creates a new MongoDB client
+type MongoCursor struct {
+	cursor *mongo.Cursor
+}
+
+type MongoSingleResult struct {
+	singleResult *mongo.SingleResult
+}

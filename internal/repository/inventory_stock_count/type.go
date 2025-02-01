@@ -17,5 +17,5 @@ type InventoryStockCountRepository interface {
 }
 
 type inventoryStockCountRepository struct {
-	inventoryStockCountCollection mongodb.MongoDBCollection
+	inventoryStockCountCollection mongodb.MongoDBCollectionWrapper
 }

@@ -12,11 +12,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-func NewRealMongoDBClient(client *mongo.Client) MongoDBClient {
-	return &RealMongoDBClient{client: client}
+func NewRealMongoDBClient(client *mongo.Client) MongoDBClientWrapper {
+	return &MongoClient{client: client}
 }
 
-func InitMongoDB() (MongoDBClient, error) {
+func InitMongoDB() (MongoDBClientWrapper, error) {
 	mongoUser := os.Getenv("MONGO_USER")
 	mongoPassword := os.Getenv("MONGO_PASSWORD")
 	mongoHost := os.Getenv("MONGO_HOST")

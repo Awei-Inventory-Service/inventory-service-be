@@ -17,5 +17,5 @@ type ProductRepository interface {
 }
 
 type productRepository struct {
-	productCollection mongodb.MongoDBCollection
+	productCollection mongodb.MongoDBCollectionWrapper
 }
