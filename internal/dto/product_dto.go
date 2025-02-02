@@ -11,7 +11,7 @@ type UpdateProductRequest struct {
 }
 
 type Ingredient struct {
-	Name     string `json:"name" binding:"required"`
+	ItemID   string `json:"item_id" binding:"required"`
 	Quantity int    `json:"quantity" binding:"required"`
 	Unit     string `json:"unit" binding:"required"`
 }

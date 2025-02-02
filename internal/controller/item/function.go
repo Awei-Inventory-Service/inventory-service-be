@@ -35,7 +35,7 @@ func (i *itemController) CreateItem(c *gin.Context) {
 		return
 	}
 
-	err := i.itemService.Create(createItemRequest.Name, createItemRequest.Category, createItemRequest.Price, createItemRequest.Unit)
+	err := i.itemService.Create(createItemRequest.Name, createItemRequest.SupplierID, createItemRequest.Category, createItemRequest.Price, createItemRequest.Unit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -52,7 +52,7 @@ func (i *itemController) UpdateItem(c *gin.Context) {
 		return
 	}
 
-	err := i.itemService.Update(id, updateItemRequest.Name, updateItemRequest.Category, updateItemRequest.Price, updateItemRequest.Unit)
+	err := i.itemService.Update(id, updateItemRequest.SupplierID, updateItemRequest.Name, updateItemRequest.Category, updateItemRequest.Price, updateItemRequest.Unit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

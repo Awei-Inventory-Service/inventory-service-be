@@ -16,16 +16,8 @@ func (p *productController) Create(ctx *gin.Context) {
 		return
 	}
 
-	var ingredients []model.Ingredient
 
-	for _, ingredient := range product.Ingredients {
-		ingredients = append(ingredients, model.Ingredient{
-			Name:     ingredient.Name,
-			Quantity: ingredient.Quantity,
-			Unit:     ingredient.Unit,
-		})
-	}
-	err := p.productService.Create(ctx, product.Name, ingredients)
+	err := p.productService.Create(ctx, product.Name, product.Ingredients)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -81,7 +73,7 @@ func (p *productController) Update(ctx *gin.Context) {
 
 	for _, ingredient := range updatedData.Ingredients {
 		ingredients = append(ingredients, model.Ingredient{
-			Name:     ingredient.Name,
+			ItemID:   ingredient.ItemID,
 			Unit:     ingredient.Unit,
 			Quantity: ingredient.Quantity,
 		})

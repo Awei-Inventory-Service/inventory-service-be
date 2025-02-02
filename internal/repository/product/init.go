@@ -1,8 +1,10 @@
 package product
 
-import "go.mongodb.org/mongo-driver/mongo"
+import (
+	"github.com/inventory-service/internal/repository/mongodb"
+)
 
-func NewProductRepository(mongoDb *mongo.Client, dbName string, collectionName string) ProductRepository {
+func NewProductRepository(mongoDb mongodb.MongoDBClientWrapper, dbName string, collectionName string) ProductRepository {
 	collection := mongoDb.Database(dbName).Collection(collectionName)
 
 	return &productRepository{productCollection: collection}
