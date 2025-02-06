@@ -59,9 +59,13 @@ var (
 	RErrMongoDBQuery           = errW.NewDefinition(400001, "Error MongoDB Query", true, CategoryInternalServerError)
 	RErrMongoDBReadDocument    = errW.NewDefinition(400002, "Error MongoDB Read Document", true, CategoryInternalServerError)
 	RErrMongoDBCreateDocument  = errW.NewDefinition(400003, "Error MongoDB Create Document", true, CategoryInternalServerError)
-	RErrMongoDBUpdateDocument  = errW.NewDefinition(40004, "Error MongoDB Update Document", true, CategoryInternalServerError)
-	RErrMongoDBDeleteDocument  = errW.NewDefinition(40005, "Error MongoDB Delete Document", true, CategoryInternalServerError)
-	RErrDecodeStringToObjectID = errW.NewDefinition(40006, "Error Unable to Decode String ID to Object ID", true, CategoryInternalServerError)
+	RErrMongoDBUpdateDocument  = errW.NewDefinition(400004, "Error MongoDB Update Document", true, CategoryInternalServerError)
+	RErrMongoDBDeleteDocument  = errW.NewDefinition(400005, "Error MongoDB Delete Document", true, CategoryInternalServerError)
+	RErrDecodeStringToObjectID = errW.NewDefinition(400006, "Error Unable to Decode String ID to Object ID", true, CategoryInternalServerError)
+	RErrPostgresCreateDocument = errW.NewDefinition(400007, "Error PostgreSQL Create Document", true, CategoryInternalServerError)
+	RErrPostgresReadDocument   = errW.NewDefinition(400008, "Error PostgreSQL Read Document", true, CategoryInternalServerError)
+	RErrPostgresUpdateDocument = errW.NewDefinition(400009, "Error Postgres Update Document", true, CategoryInternalServerError)
+	RErrPostgresDeleteDocument = errW.NewDefinition(400010, "Error Postgres Delete Document", true, CategoryInternalServerError)
 
 	RErrDataNotFound = errW.NewDefinition(401000, "Error Data Not Found", true, CategoryNotFound)
 

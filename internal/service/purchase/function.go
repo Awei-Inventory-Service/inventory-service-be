@@ -34,7 +34,6 @@ func (p *purchaseService) Create(supplierId, branchId, itemId string, quantity i
 	go func() {
 		_, err := p.itemRepository.FindByID(itemId)
 		if err != nil {
-			err = errors.New("item not found")
 			errChan <- err
 		} else {
 			errChan <- nil

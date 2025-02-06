@@ -9,7 +9,7 @@ import (
 	"github.com/inventory-service/internal/model"
 	"github.com/inventory-service/internal/repository/product"
 	"github.com/inventory-service/lib/error_wrapper"
-	mock_mongodb "github.com/inventory-service/mocks"
+	mock_mongodb "github.com/inventory-service/mocks/resource"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

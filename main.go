@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/inventory-service/config"
+	"github.com/inventory-service/seeding"
 	"github.com/joho/godotenv"
 )
 
@@ -32,5 +33,7 @@ func main() {
 
 	router := InitRoutes(pgDB)
 
+	// UNCOMMENT INI KLO GAK MAU SEEDING
+	seeding.Seed(pgDB)
 	router.Run(":8080")
 }
