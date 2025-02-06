@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 
+	"github.com/inventory-service/internal/model"
 	"github.com/inventory-service/internal/utils"
 )
 
@@ -28,7 +29,7 @@ func (u *userService) Login(identifier, password string) (string, error) {
 		return token, errors.New("invalid credentials")
 	}
 
-	token, err = utils.GenerateToken(user.UUID, user.Name, user.Username, user.Email, user.Role)
+	token, err = utils.GenerateToken(user.UUID, user.Name, user.Username, user.Email, string(user.Role))
 	if err != nil {
 		return token, err
 	}
@@ -75,7 +76,7 @@ func (u *userService) Register(name, username, email, password string) error {
 		return errors.New("email already exists")
 	}
 
-	err = u.userRepository.Create(name, username, email, "Guest", password)
+	err = u.userRepository.Create(name, username, email, password, model.RoleGuest)
 	if err != nil {
 		return err
 	}

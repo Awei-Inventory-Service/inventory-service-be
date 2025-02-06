@@ -4,7 +4,7 @@ import (
 	"github.com/inventory-service/internal/model"
 )
 
-func (r *userRepository) Create(name, username, email, role, password string) error {
+func (r *userRepository) Create(name, username, email, password string, role model.UserRole) error {
 	user := model.User{
 		Name:     name,
 		Username: username,

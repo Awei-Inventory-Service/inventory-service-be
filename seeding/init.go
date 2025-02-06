@@ -32,7 +32,7 @@ func Seed(pgDB *gorm.DB) {
 			Username: fmt.Sprintf("username%d", i),
 			Email:    fmt.Sprintf("user%d@gmail.com", i),
 			Password: string(hashed),
-			Role:     "branch-manager",
+			Role:     model.RoleBranchManager,
 		}
 
 		result := pgDB.Create(&user)

@@ -7,31 +7,31 @@ import (
 	auth_controller "github.com/inventory-service/internal/controller/auth"
 	branch_controller "github.com/inventory-service/internal/controller/branch"
 	inventory_stock_count_controller "github.com/inventory-service/internal/controller/inventory_stock_count"
+	invoice_controller "github.com/inventory-service/internal/controller/invoice"
 	item_controller "github.com/inventory-service/internal/controller/item"
 	product_controller "github.com/inventory-service/internal/controller/product"
 	purchase_controller "github.com/inventory-service/internal/controller/purchase"
 	supplier_controller "github.com/inventory-service/internal/controller/supplier"
-	invoice_controller "github.com/inventory-service/internal/controller/invoice"
 
 	"github.com/inventory-service/internal/middleware"
 	branch_repository "github.com/inventory-service/internal/repository/branch"
 	inventory_stock_count_repository "github.com/inventory-service/internal/repository/inventory_stock_count"
+	invoice_repository "github.com/inventory-service/internal/repository/invoice"
 	item_repository "github.com/inventory-service/internal/repository/item"
 	"github.com/inventory-service/internal/repository/mongodb"
 	product_repository "github.com/inventory-service/internal/repository/product"
 	purchase_repository "github.com/inventory-service/internal/repository/purchase"
 	supplier_repository "github.com/inventory-service/internal/repository/supplier"
 	user_repository "github.com/inventory-service/internal/repository/user"
-	invoice_repository "github.com/inventory-service/internal/repository/invoice"
 
 	auth_service "github.com/inventory-service/internal/service/auth"
 	branch_service "github.com/inventory-service/internal/service/branch"
 	inventory_stock_count_service "github.com/inventory-service/internal/service/inventory_stock_count"
+	invoice_service "github.com/inventory-service/internal/service/invoice"
 	item_service "github.com/inventory-service/internal/service/item"
 	product_service "github.com/inventory-service/internal/service/product"
 	purchase_service "github.com/inventory-service/internal/service/purchase"
 	supplier_service "github.com/inventory-service/internal/service/supplier"
-	invoice_service "github.com/inventory-service/internal/service/invoice"
 
 	"gorm.io/gorm"
 )
@@ -53,7 +53,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 	productRepository := product_repository.NewProductRepository(mongodbRepository, "inventory_service", "products")
 	inventoryStockCountRepository := inventory_stock_count_repository.NewInventoryStockCountRepository(mongodbRepository, "inventory_service", "inventory_stock_counts")
-  invoiceRepository := invoice_repository.NewInvoiceRepository(pgDB)
+	invoiceRepository := invoice_repository.NewInvoiceRepository(pgDB)
 
 	// initialize service
 	userService := auth_service.NewUserService(userRepository)
@@ -63,19 +63,18 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	purchaseService := purchase_service.NewPurchaseService(purchaseRepository, supplierRepository, branchRepository, itemRepository)
 	inventoryStockCountService := inventory_stock_count_service.NewInventoryStockCountService(inventoryStockCountRepository, branchRepository, itemRepository)
 	productService := product_service.NewProductservice(productRepository, itemRepository)
-  invoiceService := invoice_service.NewInvoiceService(invoiceRepository)
-  
+	invoiceService := invoice_service.NewInvoiceService(invoiceRepository)
+
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)
 	branchController := branch_controller.NewBranchController(branchService)
 	supplierController := supplier_controller.NewSupplierController(supplierService)
 	itemController := item_controller.NewItemController(itemService)
 	purchaseController := purchase_controller.NewPurchaseController(purchaseService)
-	productController := product_controller.NewProductController(productRepository)
-	invoiceController := invoice_controller.NewInvoiceController(invoiceService)
 	productController := product_controller.NewProductController(productService)
+	invoiceController := invoice_controller.NewInvoiceController(invoiceService)
+
 	inventoryStockCountController := inventory_stock_count_controller.NewInventoryStockCountController(inventoryStockCountService)
-  invoiceController := invoice_controller.NewInvoiceController(invoiceService)
 
 	router.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{

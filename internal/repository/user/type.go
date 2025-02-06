@@ -6,7 +6,7 @@ import (
 )
 
 type UserRepository interface {
-	Create(name, username, email, role, password string) error
+	Create(name, username, email, password string, role model.UserRole) error
 	FindById(id string) (*model.User, error)
 	FindUserByIdentifier(identifier string) (*model.User, error)
 }
