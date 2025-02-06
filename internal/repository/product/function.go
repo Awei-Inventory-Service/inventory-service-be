@@ -54,7 +54,7 @@ func (p *productRepository) FindByID(ctx context.Context, productID string) (mod
 	objectID, err := primitive.ObjectIDFromHex(productID)
 
 	if err != nil {
-		return model.Product{}, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
+		return model.Product{}, error_wrapper.New(model.RErrDecodeStringToObjectID, err.Error())
 	}
 
 	result := p.productCollection.FindOne(ctx, bson.M{

@@ -2,9 +2,10 @@ package invoice
 
 import (
 	"github.com/inventory-service/internal/model"
+	"github.com/inventory-service/lib/error_wrapper"
 )
 
-func (i *invoiceService) Create(fileUrl, notes, invoiceDate string, amount, amountOwed float64) error {
+func (i *invoiceService) Create(fileUrl, notes, invoiceDate string, amount, amountOwed float64) *error_wrapper.ErrorWrapper {
 	err := i.invoiceRepository.Create(fileUrl, notes, invoiceDate, amount, amountOwed)
 	if err != nil {
 		return err
@@ -13,7 +14,7 @@ func (i *invoiceService) Create(fileUrl, notes, invoiceDate string, amount, amou
 	return nil
 }
 
-func (i *invoiceService) FindAll() ([]model.Invoice, error) {
+func (i *invoiceService) FindAll() ([]model.Invoice, *error_wrapper.ErrorWrapper) {
 	invoices, err := i.invoiceRepository.FindAll()
 	if err != nil {
 		return nil, err
@@ -22,7 +23,7 @@ func (i *invoiceService) FindAll() ([]model.Invoice, error) {
 	return invoices, nil
 }
 
-func (i *invoiceService) FindByID(id string) (*model.Invoice, error) {
+func (i *invoiceService) FindByID(id string) (*model.Invoice, *error_wrapper.ErrorWrapper) {
 	invoice, err := i.invoiceRepository.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -31,7 +32,7 @@ func (i *invoiceService) FindByID(id string) (*model.Invoice, error) {
 	return invoice, nil
 }
 
-func (i *invoiceService) Update(id string, fileUrl, notes, invoiceDate string, amount, amountOwed float64) error {
+func (i *invoiceService) Update(id string, fileUrl, notes, invoiceDate string, amount, amountOwed float64) *error_wrapper.ErrorWrapper {
 	status := "unpaid"
 	if amountOwed < amount {
 		status = "paid"
@@ -45,7 +46,7 @@ func (i *invoiceService) Update(id string, fileUrl, notes, invoiceDate string, a
 	return nil
 }
 
-func (i *invoiceService) Delete(id string) error {
+func (i *invoiceService) Delete(id string) *error_wrapper.ErrorWrapper {
 	err := i.invoiceRepository.Delete(id)
 	if err != nil {
 		return err

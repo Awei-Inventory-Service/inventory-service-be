@@ -5,11 +5,12 @@ import (
 	"time"
 
 	"github.com/inventory-service/internal/model"
+	"github.com/inventory-service/lib/error_wrapper"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (i *inventoryStockCountRepository) Create(ctx context.Context, branchID string, items []model.ItemCount) error {
+func (i *inventoryStockCountRepository) Create(ctx context.Context, branchID string, items []model.ItemCount) *error_wrapper.ErrorWrapper {
 	newData := model.InventoryStockCount{
 		BranchID:  branchID,
 		CreatedAt: time.Now(),
@@ -20,17 +21,17 @@ func (i *inventoryStockCountRepository) Create(ctx context.Context, branchID str
 	_, err := i.inventoryStockCountCollection.InsertOne(ctx, newData)
 
 	if err != nil {
-		return err
+		return error_wrapper.New(model.RErrMongoDBCreateDocument, err.Error())
 	}
 
 	return nil
 }
 
-func (i *inventoryStockCountRepository) Update(ctx context.Context, stockCountID string, branchID string, items []model.ItemCount) error {
+func (i *inventoryStockCountRepository) Update(ctx context.Context, stockCountID string, branchID string, items []model.ItemCount) *error_wrapper.ErrorWrapper {
 	id, err := primitive.ObjectIDFromHex(stockCountID)
 
 	if err != nil {
-		return err
+		return error_wrapper.New(model.RErrDecodeStringToObjectID, err.Error())
 	}
 
 	filter := bson.D{{Key: "_id", Value: id}}
@@ -45,17 +46,17 @@ func (i *inventoryStockCountRepository) Update(ctx context.Context, stockCountID
 	_, err = i.inventoryStockCountCollection.UpdateOne(ctx, filter, updatedData)
 
 	if err != nil {
-		return err
+		return error_wrapper.New(model.RErrMongoDBUpdateDocument, err.Error())
 	}
 
 	return nil
 }
 
-func (i *inventoryStockCountRepository) FindAll(ctx context.Context) ([]model.InventoryStockCount, error) {
+func (i *inventoryStockCountRepository) FindAll(ctx context.Context) ([]model.InventoryStockCount, *error_wrapper.ErrorWrapper) {
 	cur, err := i.inventoryStockCountCollection.Find(ctx, bson.D{})
 
 	if err != nil {
-		return nil, err
+		return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 	}
 
 	defer cur.Close(ctx)
@@ -65,7 +66,7 @@ func (i *inventoryStockCountRepository) FindAll(ctx context.Context) ([]model.In
 		var inventoryStockCount model.InventoryStockCount
 
 		if err := cur.Decode(&inventoryStockCount); err != nil {
-			return nil, err
+			return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 		}
 		inventoryStockCounts = append(inventoryStockCounts, inventoryStockCount)
 	}
@@ -73,11 +74,11 @@ func (i *inventoryStockCountRepository) FindAll(ctx context.Context) ([]model.In
 	return inventoryStockCounts, nil
 }
 
-func (i *inventoryStockCountRepository) FindByID(ctx context.Context, stockCountID string) (model.InventoryStockCount, error) {
+func (i *inventoryStockCountRepository) FindByID(ctx context.Context, stockCountID string) (model.InventoryStockCount, *error_wrapper.ErrorWrapper) {
 	id, err := primitive.ObjectIDFromHex(stockCountID)
 
 	if err != nil {
-		return model.InventoryStockCount{}, err
+		return model.InventoryStockCount{}, error_wrapper.New(model.RErrDecodeStringToObjectID, err.Error())
 	}
 
 	result := i.inventoryStockCountCollection.FindOne(ctx, bson.M{
@@ -87,19 +88,19 @@ func (i *inventoryStockCountRepository) FindByID(ctx context.Context, stockCount
 	var inventoryStockCount model.InventoryStockCount
 
 	if err = result.Decode(&inventoryStockCount); err != nil {
-		return model.InventoryStockCount{}, err
+		return model.InventoryStockCount{}, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 	}
 
-	return inventoryStockCount, err
+	return inventoryStockCount, nil
 }
 
-func (i *inventoryStockCountRepository) FilterByBranch(ctx context.Context, branchID string) ([]model.InventoryStockCount, error) {
+func (i *inventoryStockCountRepository) FilterByBranch(ctx context.Context, branchID string) ([]model.InventoryStockCount, *error_wrapper.ErrorWrapper) {
 	cursor, err := i.inventoryStockCountCollection.Find(ctx, bson.D{
 		{Key: "branch_id", Value: branchID},
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 	}
 
 	defer cursor.Close(ctx)
@@ -110,7 +111,7 @@ func (i *inventoryStockCountRepository) FilterByBranch(ctx context.Context, bran
 		var inventoryStockCount model.InventoryStockCount
 
 		if err := cursor.Decode(&inventoryStockCount); err != nil {
-			return nil, err
+			return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 		}
 
 		inventoryStockCounts = append(inventoryStockCounts, inventoryStockCount)
@@ -119,11 +120,11 @@ func (i *inventoryStockCountRepository) FilterByBranch(ctx context.Context, bran
 	return inventoryStockCounts, nil
 }
 
-func (i *inventoryStockCountRepository) Delete(ctx context.Context, stockCountID string) error {
+func (i *inventoryStockCountRepository) Delete(ctx context.Context, stockCountID string) *error_wrapper.ErrorWrapper {
 	id, err := primitive.ObjectIDFromHex(stockCountID)
 
 	if err != nil {
-		return err
+		return error_wrapper.New(model.RErrDecodeStringToObjectID, err.Error())
 	}
 
 	_, err = i.inventoryStockCountCollection.DeleteOne(ctx, bson.D{
@@ -131,7 +132,7 @@ func (i *inventoryStockCountRepository) Delete(ctx context.Context, stockCountID
 	})
 
 	if err != nil {
-		return err
+		return error_wrapper.New(model.RErrMongoDBDeleteDocument, err.Error())
 	}
 
 	return nil
