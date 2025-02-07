@@ -2,13 +2,13 @@ package inventorystockcount
 
 import (
 	"context"
-	"errors"
 
 	"github.com/inventory-service/internal/dto"
 	"github.com/inventory-service/internal/model"
+	"github.com/inventory-service/lib/error_wrapper"
 )
 
-func (i *inventoryStockCountService) Create(ctx context.Context, branchID string, items []dto.StockCount) error {
+func (i *inventoryStockCountService) Create(ctx context.Context, branchID string, items []dto.StockCount) *error_wrapper.ErrorWrapper {
 	branch, err := i.branchRepository.FindByID(branchID)
 
 	if err != nil {
@@ -16,7 +16,7 @@ func (i *inventoryStockCountService) Create(ctx context.Context, branchID string
 	}
 
 	if branch.UUID == "" {
-		return errors.New("Branch not found")
+		return error_wrapper.New(model.SErrBranchNotExist, "Branch doesn't exist").With(branchID)
 	}
 	var itemsData []model.ItemCount
 	for _, item := range items {
@@ -26,7 +26,7 @@ func (i *inventoryStockCountService) Create(ctx context.Context, branchID string
 		}
 
 		if itemData.UUID == "" {
-			return errors.New("Item not found")
+			return error_wrapper.New(model.SErrItemNotExist, "Item doesn't exist").With(itemData.UUID)
 		}
 
 		itemsData = append(itemsData, model.ItemCount{
@@ -46,7 +46,7 @@ func (i *inventoryStockCountService) Create(ctx context.Context, branchID string
 	return nil
 }
 
-func (i *inventoryStockCountService) Update(ctx context.Context, stockCountID string, branchID string, items []dto.StockCount) error {
+func (i *inventoryStockCountService) Update(ctx context.Context, stockCountID string, branchID string, items []dto.StockCount) *error_wrapper.ErrorWrapper {
 	branch, err := i.branchRepository.FindByID(branchID)
 
 	if err != nil {
@@ -54,7 +54,7 @@ func (i *inventoryStockCountService) Update(ctx context.Context, stockCountID st
 	}
 
 	if branch.UUID == "" {
-		return errors.New("Branch not found")
+		return error_wrapper.New(model.SErrBranchNotExist, "Branch doesn't exist").With(branchID)
 	}
 	var itemsData []model.ItemCount
 	for _, item := range items {
@@ -64,7 +64,7 @@ func (i *inventoryStockCountService) Update(ctx context.Context, stockCountID st
 		}
 
 		if itemData.UUID == "" {
-			return errors.New("Item not found")
+			return error_wrapper.New(model.SErrItemNotExist, "Item doesn't exist").With(itemData.UUID)
 		}
 
 		itemsData = append(itemsData, model.ItemCount{
@@ -84,7 +84,7 @@ func (i *inventoryStockCountService) Update(ctx context.Context, stockCountID st
 	return nil
 }
 
-func (i *inventoryStockCountService) FindAll(ctx context.Context) ([]model.InventoryStockCount, error) {
+func (i *inventoryStockCountService) FindAll(ctx context.Context) ([]model.InventoryStockCount, *error_wrapper.ErrorWrapper) {
 	inventoryStockCounts, err := i.inventoryStockCountRepository.FindAll(ctx)
 
 	if err != nil {
@@ -94,7 +94,7 @@ func (i *inventoryStockCountService) FindAll(ctx context.Context) ([]model.Inven
 	return inventoryStockCounts, nil
 }
 
-func (i *inventoryStockCountService) FindByID(ctx context.Context, stockCountID string) (model.InventoryStockCount, error) {
+func (i *inventoryStockCountService) FindByID(ctx context.Context, stockCountID string) (model.InventoryStockCount, *error_wrapper.ErrorWrapper) {
 	inventoryStockCount, err := i.inventoryStockCountRepository.FindByID(ctx, stockCountID)
 
 	if err != nil {
@@ -104,14 +104,15 @@ func (i *inventoryStockCountService) FindByID(ctx context.Context, stockCountID 
 	return inventoryStockCount, nil
 }
 
-func (i *inventoryStockCountService) FilterByBranch(ctx context.Context, branchID string) ([]model.InventoryStockCount, error) {
+func (i *inventoryStockCountService) FilterByBranch(ctx context.Context, branchID string) ([]model.InventoryStockCount, *error_wrapper.ErrorWrapper) {
 	branch, err := i.branchRepository.FindByID(branchID)
 	if err != nil {
 		return nil, err
 	}
 
 	if branch.UUID == "" {
-		return nil, errors.New("Branch not found!")
+		return nil, error_wrapper.New(model.SErrBranchNotExist, "Branch doesn't exist").With(branchID)
+
 	}
 
 	inventoryStockCounts, err := i.inventoryStockCountRepository.FilterByBranch(ctx, branchID)
@@ -123,7 +124,7 @@ func (i *inventoryStockCountService) FilterByBranch(ctx context.Context, branchI
 	return inventoryStockCounts, nil
 }
 
-func (i *inventoryStockCountService) Delete(ctx context.Context, stockCountID string) error {
+func (i *inventoryStockCountService) Delete(ctx context.Context, stockCountID string) *error_wrapper.ErrorWrapper {
 
 	return i.inventoryStockCountRepository.Delete(ctx, stockCountID)
 }

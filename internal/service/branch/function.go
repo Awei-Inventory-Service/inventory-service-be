@@ -1,12 +1,11 @@
 package branch
 
 import (
-	"errors"
-
 	"github.com/inventory-service/internal/model"
+	"github.com/inventory-service/lib/error_wrapper"
 )
 
-func (b *branchService) Create(name, location, branchManagerId string) error {
+func (b *branchService) Create(name, location, branchManagerId string) *error_wrapper.ErrorWrapper {
 	// find the proper branch manager via role and id
 	branchManager, err := b.userRepository.FindById(branchManagerId)
 	if err != nil {
@@ -14,8 +13,8 @@ func (b *branchService) Create(name, location, branchManagerId string) error {
 	}
 
 	// Todo: pindahin enum
-	if branchManager.Role != "branch_manager" {
-		return errors.New("user is not a branch manager")
+	if branchManager.Role != model.RoleBranchManager && branchManager.Role != model.RoleBusinessOwner {
+		return error_wrapper.New(model.SErrUserNotBranchManager, "User not authorized")
 	}
 
 	err = b.branchRepository.Create(name, location, branchManagerId)
@@ -26,7 +25,7 @@ func (b *branchService) Create(name, location, branchManagerId string) error {
 	return nil
 }
 
-func (b *branchService) FindAll() ([]model.Branch, error) {
+func (b *branchService) FindAll() ([]model.Branch, *error_wrapper.ErrorWrapper) {
 	branches, err := b.branchRepository.FindAll()
 	if err != nil {
 		return nil, err
@@ -35,7 +34,7 @@ func (b *branchService) FindAll() ([]model.Branch, error) {
 	return branches, nil
 }
 
-func (b *branchService) FindByID(id string) (*model.Branch, error) {
+func (b *branchService) FindByID(id string) (*model.Branch, *error_wrapper.ErrorWrapper) {
 	branch, err := b.branchRepository.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -44,7 +43,7 @@ func (b *branchService) FindByID(id string) (*model.Branch, error) {
 	return branch, nil
 }
 
-func (b *branchService) Update(id, name, location, branchManagerId string) error {
+func (b *branchService) Update(id, name, location, branchManagerId string) *error_wrapper.ErrorWrapper {
 	branchManager, err := b.userRepository.FindById(branchManagerId)
 	if err != nil {
 		return err
@@ -58,7 +57,7 @@ func (b *branchService) Update(id, name, location, branchManagerId string) error
 	return nil
 }
 
-func (b *branchService) Delete(id string) error {
+func (b *branchService) Delete(id string) *error_wrapper.ErrorWrapper {
 	err := b.branchRepository.Delete(id)
 	if err != nil {
 		return err

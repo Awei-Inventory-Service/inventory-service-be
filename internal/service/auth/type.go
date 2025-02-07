@@ -1,16 +1,16 @@
 package auth
 
-import "github.com/inventory-service/internal/model"
+import (
+	"github.com/inventory-service/internal/repository/user"
+	"github.com/inventory-service/lib/error_wrapper"
+)
 
-type AdjustmentLogRepository interface {
-	Create(adjustment model.AdjustmentLog) error
-	FindAll() ([]model.AdjustmentLog, error)
-	FindByID(id string) (*model.AdjustmentLog, error)
-	Delete(id string) error
+type UserService interface {
+	Login(identifier, password string) (string, *error_wrapper.ErrorWrapper)
+	Register(name, username, email, password string) *error_wrapper.ErrorWrapper
+	UpdateRole(username, role string) *error_wrapper.ErrorWrapper
 }
 
-type userRepository interface {
-	Create(name, username, email, password string, role model.UserRole) error
-	FindById(id string) (*model.User, error)
-	FindUserByIdentifier(identifier string) (*model.User, error)
+type userService struct {
+	userRepository user.UserRepository
 }
