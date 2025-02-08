@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 
 	"github.com/inventory-service/config"
@@ -10,9 +9,6 @@ import (
 )
 
 func main() {
-	seedFlag := flag.Bool("seed", false, "Run database seeding")
-	flag.Parse()
-
 	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
@@ -27,13 +23,8 @@ func main() {
 		return
 	}
 
-	// Check if the seeding flag is passed
-	if *seedFlag {
-		log.Println("Running database seeding...")
-		seeding.SeedStockTransaction(pgDB)
-		log.Println("Seeding completed!")
-		return
-	}
+	// Seed data
+	seeding.MainSeed(pgDB)
 
 	// Initialize and start the router
 	router := InitRoutes(pgDB)
