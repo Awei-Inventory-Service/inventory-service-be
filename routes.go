@@ -11,6 +11,7 @@ import (
 	item_controller "github.com/inventory-service/internal/controller/item"
 	product_controller "github.com/inventory-service/internal/controller/product"
 	purchase_controller "github.com/inventory-service/internal/controller/purchase"
+	stock_controller "github.com/inventory-service/internal/controller/stock"
 	supplier_controller "github.com/inventory-service/internal/controller/supplier"
 
 	"github.com/inventory-service/internal/middleware"
@@ -21,6 +22,7 @@ import (
 	"github.com/inventory-service/internal/repository/mongodb"
 	product_repository "github.com/inventory-service/internal/repository/product"
 	purchase_repository "github.com/inventory-service/internal/repository/purchase"
+	stock_transaction_repository "github.com/inventory-service/internal/repository/stock_transaction"
 	supplier_repository "github.com/inventory-service/internal/repository/supplier"
 	user_repository "github.com/inventory-service/internal/repository/user"
 
@@ -32,6 +34,7 @@ import (
 	product_service "github.com/inventory-service/internal/service/product"
 	purchase_service "github.com/inventory-service/internal/service/purchase"
 	supplier_service "github.com/inventory-service/internal/service/supplier"
+	stock_service "github.com/inventory-service/internal/service/stock"
 
 	"gorm.io/gorm"
 )
@@ -54,6 +57,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	productRepository := product_repository.NewProductRepository(mongodbRepository, "inventory_service", "products")
 	inventoryStockCountRepository := inventory_stock_count_repository.NewInventoryStockCountRepository(mongodbRepository, "inventory_service", "inventory_stock_counts")
 	invoiceRepository := invoice_repository.NewInvoiceRepository(pgDB)
+	stockTransactionRepository := stock_transaction_repository.NewStockTransactionRepository(pgDB)
 
 	// initialize service
 	userService := auth_service.NewUserService(userRepository)
@@ -64,6 +68,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	inventoryStockCountService := inventory_stock_count_service.NewInventoryStockCountService(inventoryStockCountRepository, branchRepository, itemRepository)
 	productService := product_service.NewProductservice(productRepository, itemRepository)
 	invoiceService := invoice_service.NewInvoiceService(invoiceRepository)
+	stockService := stock_service.NewStockService(stockTransactionRepository)
 
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)
@@ -75,6 +80,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	invoiceController := invoice_controller.NewInvoiceController(invoiceService)
 
 	inventoryStockCountController := inventory_stock_count_controller.NewInventoryStockCountController(inventoryStockCountService)
+	stockController := stock_controller.NewStockController(stockService)
 
 	router.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -164,6 +170,11 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 			invoiceRoutes.POST("/", invoiceController.CreateInvoice)
 			invoiceRoutes.PUT("/:id", invoiceController.UpdateInvoice)
 			invoiceRoutes.DELETE("/:id", invoiceController.DeleteInvoice)
+		}
+
+		stockRoutes := apiV1.Group("/stock")
+		{
+			stockRoutes.GET("/:id/qty", stockController.GetStockByItemID)
 		}
 	}
 

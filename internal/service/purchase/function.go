@@ -12,8 +12,7 @@ func (p *purchaseService) Create(supplierId, branchId, itemId string, quantity i
 	go func() {
 		_, err := p.supplierRepository.FindByID(supplierId)
 		if err != nil {
-			err = errors.New("supplier not found")
-			errChan <- err
+			errChan <- errors.New("supplier not found")
 		} else {
 			errChan <- nil
 		}
@@ -23,8 +22,7 @@ func (p *purchaseService) Create(supplierId, branchId, itemId string, quantity i
 	go func() {
 		_, err := p.branchRepository.FindByID(branchId)
 		if err != nil {
-			err = errors.New("branch not found")
-			errChan <- err
+			errChan <- errors.New("supplier not found")
 		} else {
 			errChan <- nil
 		}

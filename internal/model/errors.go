@@ -52,6 +52,14 @@ var (
 	SErrWorkflowParameterInvalid = errW.NewDefinition(201000, "Error Parameter Invalid from config. Parameter key: %s expected type (%s) but get %s", false, CategoryBadRequest)
 
 	SErrConfigApproverKeyNotFound = errW.NewDefinition(202000, "Error Approver Key Not Found. Approver Key: %s", false, CategoryBadRequest)
+
+	SErrAuthInvalidCredentials = errW.NewDefinition(203000, "Error Invalid Credentials", false, CategoryBadRequest)
+	SErrAuthGenerateToken      = errW.NewDefinition(203001, "Error Generate Token", true, CategoryInternalServerError)
+
+	SErrBranchNotExist = errW.NewDefinition(204000, "Error Branch Not Exist", false, CategoryBadRequest)
+	SErrItemNotExist   = errW.NewDefinition(204001, "Error Item Not Exist", false, CategoryBadRequest)
+
+	SErrUserNotBranchManager = errW.NewDefinition(205000, "Error User Not Branch Manager", false, CategoryBadRequest)
 	//	- Usecase -
 
 	//	Repository
