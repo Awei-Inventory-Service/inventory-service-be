@@ -51,3 +51,23 @@ func (s *stockTransactionRepository) Delete(id string) *error_wrapper.ErrorWrapp
 
 	return nil
 }
+
+func (s *stockTransactionRepository) FindWithFilter(filters []map[string]interface{}) ([]model.StockTransaction, *error_wrapper.ErrorWrapper) {
+	var transactions []model.StockTransaction
+	query := s.db
+
+	for _, filter := range filters {
+		field, okField := filter["field"].(string)
+		value, okValue := filter["value"]
+		if okField && okValue {
+			query = query.Where(field+" = ?", value)
+		}
+	}
+
+	result := query.Find(&transactions)
+	if result.Error != nil {
+		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
+	}
+
+	return transactions, nil
+}

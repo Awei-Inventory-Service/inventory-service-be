@@ -2,6 +2,8 @@ package model
 
 import "time"
 
+// type: IN/OUT
+
 type StockTransaction struct {
 	UUID                string  `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
 	BranchOriginID      string  `gorm:"type:uuid;not null"`
