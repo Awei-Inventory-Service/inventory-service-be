@@ -1,18 +1,17 @@
 package purchase
 
 import (
-	"errors"
-
 	"github.com/inventory-service/internal/model"
+	"github.com/inventory-service/lib/error_wrapper"
 )
 
-func (p *purchaseService) Create(supplierId, branchId, itemId string, quantity int, purchaseCost float64) error {
-	errChan := make(chan error, 3)
+func (p *purchaseService) Create(supplierId, branchId, itemId string, quantity int, purchaseCost float64) *error_wrapper.ErrorWrapper {
+	errChan := make(chan *error_wrapper.ErrorWrapper, 3)
 	// supplier check
 	go func() {
 		_, err := p.supplierRepository.FindByID(supplierId)
 		if err != nil {
-			errChan <- errors.New("supplier not found")
+			errChan <- err
 		} else {
 			errChan <- nil
 		}
@@ -22,7 +21,7 @@ func (p *purchaseService) Create(supplierId, branchId, itemId string, quantity i
 	go func() {
 		_, err := p.branchRepository.FindByID(branchId)
 		if err != nil {
-			errChan <- errors.New("supplier not found")
+			errChan <- err
 		} else {
 			errChan <- nil
 		}
@@ -52,7 +51,7 @@ func (p *purchaseService) Create(supplierId, branchId, itemId string, quantity i
 	return nil
 }
 
-func (p *purchaseService) FindAll() ([]model.Purchase, error) {
+func (p *purchaseService) FindAll() ([]model.Purchase, *error_wrapper.ErrorWrapper) {
 	purchases, err := p.purchaseRepository.FindAll()
 	if err != nil {
 		return nil, err
@@ -61,7 +60,7 @@ func (p *purchaseService) FindAll() ([]model.Purchase, error) {
 	return purchases, nil
 }
 
-func (p *purchaseService) FindByID(id string) (*model.Purchase, error) {
+func (p *purchaseService) FindByID(id string) (*model.Purchase, *error_wrapper.ErrorWrapper) {
 	purchase, err := p.purchaseRepository.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -70,14 +69,14 @@ func (p *purchaseService) FindByID(id string) (*model.Purchase, error) {
 	return purchase, nil
 }
 
-func (p *purchaseService) Update(id, supplierId, branchId, itemId string, quantity int, purchaseCost float64) error {
-	errChan := make(chan error, 3)
+func (p *purchaseService) Update(id, supplierId, branchId, itemId string, quantity int, purchaseCost float64) *error_wrapper.ErrorWrapper {
+	errChan := make(chan *error_wrapper.ErrorWrapper, 3)
 
 	// Supplier check
 	go func() {
 		_, err := p.supplierRepository.FindByID(supplierId)
 		if err != nil {
-			errChan <- errors.New("supplier not found")
+			errChan <- err
 		} else {
 			errChan <- nil
 		}
@@ -87,7 +86,7 @@ func (p *purchaseService) Update(id, supplierId, branchId, itemId string, quanti
 	go func() {
 		_, err := p.branchRepository.FindByID(branchId)
 		if err != nil {
-			errChan <- errors.New("branch not found")
+			errChan <- err
 		} else {
 			errChan <- nil
 		}
@@ -97,7 +96,7 @@ func (p *purchaseService) Update(id, supplierId, branchId, itemId string, quanti
 	go func() {
 		_, err := p.itemRepository.FindByID(itemId)
 		if err != nil {
-			errChan <- errors.New("item not found")
+			errChan <- err
 		} else {
 			errChan <- nil
 		}
@@ -117,7 +116,7 @@ func (p *purchaseService) Update(id, supplierId, branchId, itemId string, quanti
 	return nil
 }
 
-func (p *purchaseService) Delete(id string) error {
+func (p *purchaseService) Delete(id string) *error_wrapper.ErrorWrapper {
 	err := p.purchaseRepository.Delete(id)
 	if err != nil {
 		return err

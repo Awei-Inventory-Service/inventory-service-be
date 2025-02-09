@@ -3,8 +3,10 @@ package middleware
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/inventory-service/internal/utils"
 )
 
@@ -42,5 +44,13 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set("role", claims.Role)
 
 		c.Next()
+	}
+}
+
+func BasicMiddleware() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		ctx.Set("start_time", time.Now().UnixNano())
+		ctx.Set("request_id", uuid.NewString())
+		ctx.Next()
 	}
 }

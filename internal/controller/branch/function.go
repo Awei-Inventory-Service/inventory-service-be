@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/internal/dto"
 	"github.com/inventory-service/internal/model"
+	"github.com/inventory-service/lib/error_wrapper"
+	"github.com/inventory-service/lib/response_wrapper"
 )
 
 func (b *branchController) GetBranches(c *gin.Context) {
@@ -31,19 +33,32 @@ func (b *branchController) GetBranch(c *gin.Context) {
 }
 
 func (b *branchController) CreateBranch(c *gin.Context) {
-	var createBranchRequest dto.CreateBranchRequest
+	var (
+		createBranchRequest dto.CreateBranchRequest
+		errW                *error_wrapper.ErrorWrapper
+		isSuccess           bool
+	)
+
+	defer func() {
+		if errW == nil {
+			isSuccess = true
+		} else {
+			isSuccess = false
+		}
+		response_wrapper.New(&c.Writer, c, isSuccess, nil, errW)
+	}()
+
 	if err := c.ShouldBindJSON(&createBranchRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
 
-	err := b.branchService.Create(createBranchRequest.Name, createBranchRequest.Location, createBranchRequest.BranchManagerID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	errW = b.branchService.Create(createBranchRequest.Name, createBranchRequest.Location, createBranchRequest.BranchManagerID)
+	if errW != nil {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "success"})
+	isSuccess = true
 }
 
 func (b *branchController) UpdateBranch(c *gin.Context) {

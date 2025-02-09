@@ -39,27 +39,27 @@ var (
 
 	//	- Default -
 
-	//	Handler
-	HErrJsonDecode        = errW.NewDefinition(100000, "Error JSON Decode", true, CategoryInternalServerError)
-	HErrPayloadIncomplete = errW.NewDefinition(100001, "Error Payload Incomplete. Payload %s", true, CategoryBadRequest)
-	HErrHeaderIncomplete  = errW.NewDefinition(100002, "Error Header Incomplete", true, CategoryUnAuthorized)
+	//	Controller
+	CErrJsonDecode        = errW.NewDefinition(100000, "Error JSON Decode", true, CategoryInternalServerError)
+	CErrPayloadIncomplete = errW.NewDefinition(100001, "Error Payload Incomplete. Payload %s", true, CategoryBadRequest)
+	CErrHeaderIncomplete  = errW.NewDefinition(100002, "Error Header Incomplete", true, CategoryUnAuthorized)
+	CErrJsonBind          = errW.NewDefinition(100003, "Error JSON Bind", true, CategoryInternalServerError)
+
 	//	- Handler -
 
 	//	Service
 	SErrDataExist       = errW.NewDefinition(200000, "Error Data Already Exist", false, CategoryBadRequest)
 	SErrUnableToProceed = errW.NewDefinition(200001, "Error Unable To Proceed", false, CategoryBadRequest)
 
-	SErrWorkflowParameterInvalid = errW.NewDefinition(201000, "Error Parameter Invalid from config. Parameter key: %s expected type (%s) but get %s", false, CategoryBadRequest)
 
 	SErrConfigApproverKeyNotFound = errW.NewDefinition(202000, "Error Approver Key Not Found. Approver Key: %s", false, CategoryBadRequest)
 
-	SErrAuthInvalidCredentials = errW.NewDefinition(203000, "Error Invalid Credentials", false, CategoryBadRequest)
-	SErrAuthGenerateToken      = errW.NewDefinition(203001, "Error Generate Token", true, CategoryInternalServerError)
-
-	SErrBranchNotExist = errW.NewDefinition(204000, "Error Branch Not Exist", false, CategoryBadRequest)
-	SErrItemNotExist   = errW.NewDefinition(204001, "Error Item Not Exist", false, CategoryBadRequest)
 
 	SErrUserNotBranchManager = errW.NewDefinition(205000, "Error User Not Branch Manager", false, CategoryBadRequest)
+	SErrAuthInvalidCredentials = errW.NewDefinition(202000, "Error Invalid Credentials %s", false, CategoryUnAuthorized)
+	SErrAuthGenerateToken      = errW.NewDefinition(202001, "Error generating JWT token", true, CategoryInternalServerError)
+	SErrBranchNotExist         = errW.NewDefinition(203000, "Error Branch Not Found. Branch ID: %s", true, CategoryBadRequest)
+	SErrItemNotExist           = errW.NewDefinition(204000, "Error Item Not Found. Item ID: %s", true, CategoryBadRequest)
 	//	- Usecase -
 
 	//	Repository

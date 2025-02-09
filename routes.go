@@ -90,6 +90,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 	apiV1 := router.Group("/api/v1")
 	{
+		apiV1.Use(middleware.BasicMiddleware())
 		authRoutes := apiV1.Group("/auth")
 		{
 			authRoutes.POST("/login", authController.Login)
@@ -98,7 +99,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 		branchRoutes := apiV1.Group("/branch")
 		{
-			branchRoutes.Use(middleware.AuthMiddleware())
+			// branchRoutes.Use(middleware.AuthMiddleware())
 			branchRoutes.GET("/", branchController.GetBranches)
 			branchRoutes.GET("/:id", branchController.GetBranch)
 			branchRoutes.POST("/", branchController.CreateBranch)
@@ -108,7 +109,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 		supplierRoutes := apiV1.Group("/supplier")
 		{
-			supplierRoutes.Use(middleware.AuthMiddleware())
+			// supplierRoutes.Use(middleware.AuthMiddleware())
 			supplierRoutes.GET("/", supplierController.GetSuppliers)
 			supplierRoutes.GET("/:id", supplierController.GetSupplier)
 			supplierRoutes.POST("/", supplierController.CreateSupplier)
@@ -118,7 +119,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 		itemRoutes := apiV1.Group("/item")
 		{
-			itemRoutes.Use(middleware.AuthMiddleware())
+			// itemRoutes.Use(middleware.AuthMiddleware())
 			itemRoutes.GET("/", itemController.GetItems)
 			itemRoutes.GET("/:id", itemController.GetItem)
 			itemRoutes.POST("/", itemController.CreateItem)
@@ -128,7 +129,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 		purchaseRoutes := apiV1.Group("/purchase")
 		{
-			purchaseRoutes.Use(middleware.AuthMiddleware())
+			// purchaseRoutes.Use(middleware.AuthMiddleware())
 			purchaseRoutes.GET("/", purchaseController.GetPurchases)
 			purchaseRoutes.GET("/:id", purchaseController.GetPurchase)
 			purchaseRoutes.POST("/", purchaseController.CreatePurchase)
@@ -138,7 +139,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 		productRoutes := apiV1.Group("/product")
 		{
-			productRoutes.Use(middleware.AuthMiddleware())
+			// productRoutes.Use(middleware.AuthMiddleware())
 			productRoutes.POST("/", productController.Create)
 			productRoutes.GET("/", productController.FindAll)
 			productRoutes.GET("/:id", productController.FindByID)
@@ -148,7 +149,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 		inventoryStockCountRoutes := apiV1.Group("/inventory-stock-count")
 		{
-			inventoryStockCountRoutes.Use(middleware.AuthMiddleware())
+			// inventoryStockCountRoutes.Use(middleware.AuthMiddleware())
 			inventoryStockCountRoutes.POST("/", inventoryStockCountController.Create)
 			inventoryStockCountRoutes.GET("/", inventoryStockCountController.FindAll)
 			inventoryStockCountRoutes.GET("/:id", inventoryStockCountController.FindByID)
@@ -164,7 +165,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 		invoiceRoutes := apiV1.Group("/invoice")
 		{
-			invoiceRoutes.Use(middleware.AuthMiddleware())
+			// invoiceRoutes.Use(middleware.AuthMiddleware())
 			invoiceRoutes.GET("/", invoiceController.GetInvoices)
 			invoiceRoutes.GET("/:id", invoiceController.GetInvoice)
 			invoiceRoutes.POST("/", invoiceController.CreateInvoice)
