@@ -22,7 +22,6 @@ jobs:
 
       - name: Build & Push Docker Image
         run: |
-          cd backend
           docker build -t ${{ secrets.DOCKER_USERNAME }}/inventory-service-be:latest .
           docker tag ${{ secrets.DOCKER_USERNAME }}/inventory-service-be:latest ${{ secrets.DOCKER_USERNAME }}/inventory-service-be:$(date +%Y%m%d%H%M%S)
           docker push ${{ secrets.DOCKER_USERNAME }}/inventory-service-be:latest
