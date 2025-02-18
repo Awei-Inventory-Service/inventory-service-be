@@ -49,7 +49,6 @@ jobs:
           docker network create inventory-network || true
 
           echo "Running new container in inventory-service-network..."
-          docker run -d --network=inventory-service-network -p 8080:8080 \
-            --name inventory-service-be ${{ secrets.DOCKER_USERNAME }}/inventory-service-be:latest
-          docker run -d -p 8080:8080 --name inventory-service-be ${{ secrets.DOCKER_USERNAME }}/inventory-service-be:latest
+          docker run -d --network=ec2-user_inventory-service-network -p 8080:8080 \
+            --name inventory-service-be nathaniainfras/inventory-service-be:latest
           EOF
