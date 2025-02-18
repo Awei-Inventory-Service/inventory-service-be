@@ -10,6 +10,8 @@ services:
       - "5433:5432"
     volumes:
       - db:/var/lib/postgresql/data
+    networks:
+      - inventory-service-network
   migrate:
     image: migrate/migrate
     container_name: db-migrate
@@ -21,6 +23,8 @@ services:
       "sh", "-c",
       "until nc -z db 5432; do echo waiting for db; sleep 2; done; migrate -path=/migrations -database 'postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable' up"
     ]
+    networks:
+      - inventory-service-network
   mongo:
     container_name: inv-service-mongo
     image: mongo:6
@@ -31,6 +35,8 @@ services:
       - "27017:27017"
     volumes:
       - mongo:/data/db
+    networks:
+      - inventory-service-network
   
   # app:
   #   container_name: inv-service-app
@@ -58,3 +64,7 @@ services:
 volumes:
   db:
   mongo:
+
+networks:
+  inventory-service-network:
+    driver: bridge

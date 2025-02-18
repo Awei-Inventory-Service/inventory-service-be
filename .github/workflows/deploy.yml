@@ -45,6 +45,11 @@ jobs:
           docker stop inventory-service-be || true
           docker rm inventory-service-be || true
 
-          echo "Running new container..."
+          echo "Ensuring network exists..."
+          docker network create inventory-network || true
+
+          echo "Running new container in inventory-service-network..."
+          docker run -d --network=inventory-service-network -p 8080:8080 \
+            --name inventory-service-be ${{ secrets.DOCKER_USERNAME }}/inventory-service-be:latest
           docker run -d -p 8080:8080 --name inventory-service-be ${{ secrets.DOCKER_USERNAME }}/inventory-service-be:latest
           EOF
