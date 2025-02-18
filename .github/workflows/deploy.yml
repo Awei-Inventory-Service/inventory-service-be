@@ -37,8 +37,8 @@ jobs:
 
           ssh -i ec2-key.pem $EC2_USER@$EC2_HOST << 'EOF'
           docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
-          docker pull ${{ secrets.DOCKER_USERNAME }}/go-app:latest
-          docker stop go-app || true
-          docker rm go-app || true
-          docker run -d -p 8080:8080 --name go-app ${{ secrets.DOCKER_USERNAME }}/go-app:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/}/inventory-service-be:latest
+          docker stop inventory-service-be || true
+          docker rm inventory-service-be || true
+          docker run -d -p 8080:8080 --name inventory-service-be ${{ secrets.DOCKER_USERNAME }}/inventory-service-be:latest
           EOF
