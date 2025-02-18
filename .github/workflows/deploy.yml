@@ -1,11 +1,12 @@
 name: Deploy to staging
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "backend/**"
+  workflow_dispatch:
+    inputs:
+      commit_hash:
+        description: "Hash to deploy"
+        required: true
+        default: "latest"
 
 jobs:
   deploy:
