@@ -1,71 +1,86 @@
 package product
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/internal/dto"
 	"github.com/inventory-service/internal/model"
+	"github.com/inventory-service/lib/error_wrapper"
+	"github.com/inventory-service/lib/response_wrapper"
 )
 
 func (p *productController) Create(ctx *gin.Context) {
-	var product dto.CreateProductRequest
+	var (
+		product dto.CreateProductRequest
+		errW    *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&ctx.Writer, ctx, errW == nil, nil, errW)
+	}()
 
 	if err := ctx.ShouldBindJSON(&product); err != nil {
-		ctx.JSON(400, gin.H{"error": err.Error()})
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
 
+	errW = p.productService.Create(ctx, product.Name, product.Ingredients)
 
-	err := p.productService.Create(ctx, product.Name, product.Ingredients)
-
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if errW != nil {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"Message": "Success"})
 }
 
 func (p *productController) FindAll(ctx *gin.Context) {
-	products, err := p.productService.FindAll(ctx)
+	var (
+		products []model.Product
+		errW     *error_wrapper.ErrorWrapper
+	)
 
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
+	defer func() {
+		response_wrapper.New(&ctx.Writer, ctx, errW == nil, products, errW)
+	}()
+
+	products, errW = p.productService.FindAll(ctx)
+
+	if errW != nil {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, products)
 }
 
 func (p *productController) FindByID(ctx *gin.Context) {
+	var (
+		product model.Product
+		errW    *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&ctx.Writer, ctx, errW == nil, product, errW)
+	}()
+
 	id := ctx.Param("id")
 
-	if id == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Id is required"})
-		return
-	}
-	product, err := p.productService.FindByID(ctx, id)
-
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
+	product, errW = p.productService.FindByID(ctx, id)
+	if errW != nil {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, product)
 }
 
 func (p *productController) Update(ctx *gin.Context) {
+	var (
+		updatedData dto.UpdateProductRequest
+		errW        *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&ctx.Writer, ctx, errW == nil, nil, errW)
+	}()
+
 	id := ctx.Param("id")
-	if id == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Id is required"})
-		return
-	}
-
-	var updatedData dto.UpdateProductRequest
-
 	if err := ctx.ShouldBindJSON(&updatedData); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
 
@@ -79,30 +94,26 @@ func (p *productController) Update(ctx *gin.Context) {
 		})
 	}
 
-	err := p.productService.Update(ctx, id, updatedData.Name, ingredients)
+	errW = p.productService.Update(ctx, id, updatedData.Name, ingredients)
 
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
+	if errW != nil {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"Message": "Successfully update data!"})
 }
 
 func (p *productController) Delete(ctx *gin.Context) {
+	var errW *error_wrapper.ErrorWrapper
+
+	defer func() {
+		response_wrapper.New(&ctx.Writer, ctx, errW == nil, nil, errW)
+	}()
+
 	id := ctx.Param("id")
 
-	if id == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"Error": "Id is required"})
+	errW = p.productService.Delete(ctx, id)
+	if errW != nil {
 		return
 	}
 
-	err := p.productService.Delete(ctx, id)
-
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"Message": "Succesfully delete a product!"})
 }

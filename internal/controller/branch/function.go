@@ -1,8 +1,6 @@
 package branch
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/internal/dto"
 	"github.com/inventory-service/internal/model"
@@ -11,41 +9,47 @@ import (
 )
 
 func (b *branchController) GetBranches(c *gin.Context) {
-	var branches []model.Branch
-	branches, err := b.branchService.FindAll()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	var (
+		branches []model.Branch
+		errW     *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, branches, errW)
+	}()
+
+	branches, errW = b.branchService.FindAll()
+	if errW != nil {
 		return
 	}
 
-	c.JSON(http.StatusOK, branches)
 }
 
 func (b *branchController) GetBranch(c *gin.Context) {
 	id := c.Param("id")
-	branch, err := b.branchService.FindByID(id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	var (
+		branch *model.Branch
+		errW   *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, branch, errW)
+	}()
+	branch, errW = b.branchService.FindByID(id)
+	if errW != nil {
 		return
 	}
 
-	c.JSON(http.StatusOK, branch)
 }
 
 func (b *branchController) CreateBranch(c *gin.Context) {
 	var (
 		createBranchRequest dto.CreateBranchRequest
 		errW                *error_wrapper.ErrorWrapper
-		isSuccess           bool
 	)
 
 	defer func() {
-		if errW == nil {
-			isSuccess = true
-		} else {
-			isSuccess = false
-		}
-		response_wrapper.New(&c.Writer, c, isSuccess, nil, errW)
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
 	}()
 
 	if err := c.ShouldBindJSON(&createBranchRequest); err != nil {
@@ -57,34 +61,40 @@ func (b *branchController) CreateBranch(c *gin.Context) {
 	if errW != nil {
 		return
 	}
-
-	isSuccess = true
 }
 
 func (b *branchController) UpdateBranch(c *gin.Context) {
 	id := c.Param("id")
-	var updateBranchRequest dto.UpdateBranchRequest
+	var (
+		updateBranchRequest dto.UpdateBranchRequest
+		errW                *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
 	if err := c.ShouldBindJSON(&updateBranchRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
 
-	err := b.branchService.Update(id, updateBranchRequest.Name, updateBranchRequest.Location, updateBranchRequest.BranchManagerID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	errW = b.branchService.Update(id, updateBranchRequest.Name, updateBranchRequest.Location, updateBranchRequest.BranchManagerID)
+	if errW != nil {
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
 func (b *branchController) DeleteBranch(c *gin.Context) {
+	var (
+		errW *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
 	id := c.Param("id")
-	err := b.branchService.Delete(id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	errW = b.branchService.Delete(id)
+	if errW != nil {
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "success"})
 }

@@ -1,7 +1,7 @@
 package stock
 
 import (
-	"github.com/inventory-service/internal/service/model"
+	"github.com/inventory-service/internal/model"
 	"github.com/inventory-service/lib/error_wrapper"
 )
 

@@ -1,64 +1,90 @@
 package purchase
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/internal/dto"
+	"github.com/inventory-service/internal/model"
+	"github.com/inventory-service/lib/error_wrapper"
+	"github.com/inventory-service/lib/response_wrapper"
 )
 
 func (p *purchaseController) GetPurchases(c *gin.Context) {
-	purchases, err := p.purchaseService.FindAll()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	var (
+		purchases []model.Purchase
+		errW      *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, purchases, errW)
+	}()
+
+	purchases, errW = p.purchaseService.FindAll()
+	if errW != nil {
 		return
 	}
-
-	c.JSON(http.StatusOK, purchases)
 }
 
 func (p *purchaseController) GetPurchase(c *gin.Context) {
+	var (
+		purchase *model.Purchase
+		errW     *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, purchase, errW)
+	}()
+
 	id := c.Param("id")
-	purchase, err := p.purchaseService.FindByID(id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Purchase not found"})
+	purchase, errW = p.purchaseService.FindByID(id)
+	if errW != nil {
 		return
 	}
-
-	c.JSON(http.StatusOK, purchase)
 }
 
 func (p *purchaseController) CreatePurchase(c *gin.Context) {
-	var createPurchaseRequest dto.CreatePurchaseRequest
+	var (
+		createPurchaseRequest dto.CreatePurchaseRequest
+		errW                  *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
+
 	if err := c.ShouldBindJSON(&createPurchaseRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
 
-	err := p.purchaseService.Create(
+	errW = p.purchaseService.Create(
 		createPurchaseRequest.SupplierID,
 		createPurchaseRequest.BranchID,
 		createPurchaseRequest.ItemID,
 		createPurchaseRequest.Quantity,
 		createPurchaseRequest.PurchaseCost,
 	)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if errW != nil {
 		return
 	}
-
-	c.JSON(http.StatusCreated, gin.H{"message": "Purchase created successfully"})
 }
 
 func (p *purchaseController) UpdatePurchase(c *gin.Context) {
 	id := c.Param("id")
-	var updatePurchaseRequest dto.UpdatePurchaseRequest
+	var (
+		updatePurchaseRequest dto.UpdatePurchaseRequest
+		errW                  *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
+
 	if err := c.ShouldBindJSON(&updatePurchaseRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
 
-	err := p.purchaseService.Update(
+	errW = p.purchaseService.Update(
 		id,
 		updatePurchaseRequest.SupplierID,
 		updatePurchaseRequest.BranchID,
@@ -66,21 +92,25 @@ func (p *purchaseController) UpdatePurchase(c *gin.Context) {
 		updatePurchaseRequest.Quantity,
 		updatePurchaseRequest.PurchaseCost,
 	)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if errW != nil {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Purchase updated successfully"})
 }
 
 func (p *purchaseController) DeletePurchase(c *gin.Context) {
+	var (
+		errW *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
+
 	id := c.Param("id")
-	err := p.purchaseService.Delete(id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	errW = p.purchaseService.Delete(id)
+	if errW != nil {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Purchase deleted successfully"})
 }

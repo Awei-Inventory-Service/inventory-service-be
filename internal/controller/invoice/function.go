@@ -1,74 +1,115 @@
 package invoice
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/internal/dto"
+	"github.com/inventory-service/internal/model"
+	"github.com/inventory-service/lib/error_wrapper"
+	"github.com/inventory-service/lib/response_wrapper"
 )
 
 func (i *invoiceController) GetInvoices(c *gin.Context) {
-	invoices, err := i.invoiceService.FindAll()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	var (
+		invoices []model.Invoice
+		errW     *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, invoices, errW)
+	}()
+
+	invoices, errW = i.invoiceService.FindAll()
+
+	if errW != nil {
 		return
 	}
 
-	c.JSON(http.StatusOK, invoices)
 }
 
 func (i *invoiceController) GetInvoice(c *gin.Context) {
-	id := c.Param("id")
-	invoice, err := i.invoiceService.FindByID(id)
+	var (
+		invoice *model.Invoice
+		errW    *error_wrapper.ErrorWrapper
+	)
 
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Invoice not found"})
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, invoice, errW)
+	}()
+
+	id := c.Param("id")
+	invoice, errW = i.invoiceService.FindByID(id)
+
+	if errW != nil {
 		return
 	}
 
-	c.JSON(http.StatusOK, invoice)
 }
 
 func (i *invoiceController) CreateInvoice(c *gin.Context) {
-	var CreateInvoiceRequest dto.CreateInvoiceRequest
-	if err := c.ShouldBindJSON(&CreateInvoiceRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	var (
+		createInvoiceRequest dto.CreateInvoiceRequest
+		errW                 *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
+
+	if err := c.ShouldBindJSON(&createInvoiceRequest); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
 
-	err := i.invoiceService.Create(CreateInvoiceRequest.FileURL, CreateInvoiceRequest.Notes, CreateInvoiceRequest.InvoiceDate, CreateInvoiceRequest.Amount, CreateInvoiceRequest.AmountOwed)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	errW = i.invoiceService.Create(
+		createInvoiceRequest.FileURL,
+		createInvoiceRequest.Notes,
+		createInvoiceRequest.InvoiceDate,
+		createInvoiceRequest.Amount,
+		createInvoiceRequest.AmountOwed,
+	)
+
+	if errW != nil {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Invoice created successfully"})
 }
 
 func (i *invoiceController) UpdateInvoice(c *gin.Context) {
+	var (
+		updateInvoiceRequest dto.UpdateInvoiceRequest
+		errW                 *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
+
 	id := c.Param("id")
-	var updateInvoiceRequest dto.UpdateInvoiceRequest
 	if err := c.ShouldBindJSON(&updateInvoiceRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
 
-	err := i.invoiceService.Update(id, updateInvoiceRequest.FileURL, updateInvoiceRequest.Notes, updateInvoiceRequest.InvoiceDate, updateInvoiceRequest.Amount, updateInvoiceRequest.AmountOwed)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	errW = i.invoiceService.Update(id, updateInvoiceRequest.FileURL, updateInvoiceRequest.Notes, updateInvoiceRequest.InvoiceDate, updateInvoiceRequest.Amount, updateInvoiceRequest.AmountOwed)
+	if errW != nil {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Invoice updated successfully"})
 }
 
 func (i *invoiceController) DeleteInvoice(c *gin.Context) {
+	var (
+		errW *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
+
 	id := c.Param("id")
-	err := i.invoiceService.Delete(id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	errW = i.invoiceService.Delete(id)
+	if errW != nil {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Invoice deleted successfully"})
 }
