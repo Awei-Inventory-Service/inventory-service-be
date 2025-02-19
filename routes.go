@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	auth_controller "github.com/inventory-service/internal/controller/auth"
 	branch_controller "github.com/inventory-service/internal/controller/branch"
@@ -33,14 +35,23 @@ import (
 	item_service "github.com/inventory-service/internal/service/item"
 	product_service "github.com/inventory-service/internal/service/product"
 	purchase_service "github.com/inventory-service/internal/service/purchase"
-	supplier_service "github.com/inventory-service/internal/service/supplier"
 	stock_service "github.com/inventory-service/internal/service/stock"
+	supplier_service "github.com/inventory-service/internal/service/supplier"
 
 	"gorm.io/gorm"
 )
 
 func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// initialize repository
 	userRepository := user_repository.NewUserRepository(pgDB)

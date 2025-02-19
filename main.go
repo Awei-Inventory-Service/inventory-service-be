@@ -28,5 +28,6 @@ func main() {
 
 	// Initialize and start the router
 	router := InitRoutes(pgDB)
+
 	router.Run("0.0.0.0:8080")
 }
