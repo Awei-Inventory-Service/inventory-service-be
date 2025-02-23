@@ -3,27 +3,22 @@ package itempurchasechain
 import (
 	"context"
 
+	"github.com/inventory-service/internal/model"
+	"github.com/inventory-service/internal/repository/branch"
+	"github.com/inventory-service/internal/repository/item"
+	itempurchasechain "github.com/inventory-service/internal/repository/item_purchase_chain"
+	"github.com/inventory-service/internal/repository/purchase"
 	"github.com/inventory-service/lib/error_wrapper"
 )
 
-func (i *itemPurchaseChainService) Create(ctx context.Context, itemID string, branchID string, purchaseID string) *error_wrapper.ErrorWrapper {
-	purchase, errW := i.purchaseRepository.FindByID(purchaseID)
+type ItemPurchaseChainService interface {
+	Create(ctx context.Context, itemID string, branchID string, purchaseID string) *error_wrapper.ErrorWrapper
+	CalculateCost(ctx context.Context, itemID string, branchID string, quantity int) (int, []model.ItemPurchaseChainGet, *error_wrapper.ErrorWrapper)
+}
 
-	if errW != nil {
-		return errW
-	}
-
-	_, errW = i.itemRepository.FindByID(itemID)
-
-	if errW != nil{
-		return errW
-	}
-
-	_, errW = i.branchRepository.FindByID(branchID)
-
-	if errW != nil{
-		return errW
-	}
-
-	return i.itemPurchaseChainRepository.Create(ctx, itemID, branchID, *purchase)
+type itemPurchaseChainService struct {
+	itemPurchaseChainRepository itempurchasechain.ItemPurchaseChainRepository
+	purchaseRepository          purchase.PurchaseRepository
+	itemRepository              item.ItemRepository
+	branchRepository            branch.BranchRepository
 }

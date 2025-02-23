@@ -5,6 +5,7 @@ import (
 
 	"github.com/inventory-service/internal/model"
 	"github.com/inventory-service/lib/error_wrapper"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func (i *itemPurchaseChainRepository) Create(ctx context.Context, itemID string, branchID string, purchase model.Purchase) *error_wrapper.ErrorWrapper {
@@ -30,12 +31,66 @@ func (i *itemPurchaseChainRepository) Create(ctx context.Context, itemID string,
 }
 
 // Find By Item Id dan BranchId
+func (i *itemPurchaseChainRepository) Get(ctx context.Context, payload model.ItemPurchaseChain) ([]model.ItemPurchaseChainGet, *error_wrapper.ErrorWrapper) {
+	var (
+		result []model.ItemPurchaseChainGet
+	)
+
+	filter := bson.M{}
+	if payload.ItemID != "" {
+		filter["item_id"] = payload.ItemID
+	}
+
+	if payload.BranchID != "" {
+		filter["branch_id"] = payload.BranchID
+	}
+
+	if payload.Purchase.UUID != "" {
+		filter["purchase.uuid"] = payload.Purchase.UUID
+	}
+
+	cur, err := i.itemPurchaseChainCollection.Find(ctx, filter)
+
+	if err != nil {
+		return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
+	}
+
+	if err = cur.Decode(&result); err != nil {
+		return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
+	}
+
+	if len(result) == 0 {
+		return nil, error_wrapper.New(model.RErrDataNotFound, "Item purchase chain not found")
+	}
+
+	return result, nil
+}
 
 // Update -> bisa update quantity / status
 
-// CalculateCost -> terima parameter item id sama berapa banyak butuhnya. Return []item_purchase_chain. Dipake sama sales nanti buat ngisi cost
+func (i *itemPurchaseChainRepository) Update(ctx context.Context, id string, payload model.ItemPurchaseChain) *error_wrapper.ErrorWrapper {
+	filter := bson.D{{Key: "_id", Value: id}}
 
-// Logic : 
-// 1. Cari berdasarkan item id dan branch id + status = in use 
-// 2. IF no 1 cukup -> cost = quantity di request * price purchase. Update stock dan status nomor 1
-// 3. If no 1 ga cukup -> cost = quantity no 1 * price no 1 + quantity no 2 * price no 2. Update stock dan status di nomor 1 dan nomor 2
+	updatedData := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "item_id", Value: payload.ItemID},
+			{Key: "branch_id", Value: payload.BranchID},
+			{Key: "purchase", Value: payload.Purchase},
+			{Key: "quantity", Value: payload.Quantity},
+			{Key: "status", Value: payload.Status},
+			{Key: "sales", Value: payload.SalesRecords},
+		}},
+	}
+
+	_, err := i.itemPurchaseChainCollection.UpdateOne(
+		ctx,
+		filter,
+		updatedData,
+	)
+
+	if err != nil {
+		return error_wrapper.New(model.RErrMongoDBCreateDocument, err.Error())
+	}
+
+	return nil
+}
