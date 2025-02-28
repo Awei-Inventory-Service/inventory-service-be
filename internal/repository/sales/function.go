@@ -5,13 +5,13 @@ import (
 	"github.com/inventory-service/lib/error_wrapper"
 )
 
-func (s *salesRepository) Create(sale model.Sales) *error_wrapper.ErrorWrapper {
+func (s *salesRepository) Create(sale model.Sales) (*model.Sales, *error_wrapper.ErrorWrapper) {
 	result := s.db.Create(&sale)
 	if result.Error != nil {
-		return error_wrapper.New(model.RErrPostgresCreateDocument, result.Error.Error())
+		return nil, error_wrapper.New(model.RErrPostgresCreateDocument, result.Error.Error())
 	}
 
-	return nil
+	return &sale, nil
 }
 
 func (s *salesRepository) FindAll() ([]model.Sales, *error_wrapper.ErrorWrapper) {

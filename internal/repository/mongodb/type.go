@@ -25,10 +25,24 @@ type MongoDBCollectionWrapper interface {
 	UpdateOne(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 	FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) MongoDBSingleResultWrapper
 	DeleteOne(ctx context.Context, filter interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error)
+	Database() MongoDBDatabaseWrapper // Add this method
+}
+
+type MongoDBSessionWrapper interface {
+	StartTransaction() error
+	CommitTransaction(ctx context.Context) error
+	AbortTransaction(ctx context.Context) error
+	EndSession(ctx context.Context)
+	WithTransaction(ctx context.Context, fn func(sc mongo.SessionContext) error) error
+}
+
+type MongoSession struct {
+	session mongo.Session
 }
 
 type MongoDBDatabaseWrapper interface {
 	Collection(collectionName string, opts ...*options.CollectionOptions) MongoDBCollectionWrapper
+	StartSession(ctx context.Context) (MongoDBSessionWrapper, error)
 }
 
 type MongoDBClientWrapper interface {
@@ -48,6 +62,7 @@ type MongoDatabase struct {
 
 type MongoCollection struct {
 	collection *mongo.Collection
+	database   *mongo.Database
 }
 
 type MongoCursor struct {

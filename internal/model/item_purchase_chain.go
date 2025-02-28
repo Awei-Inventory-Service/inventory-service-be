@@ -9,20 +9,20 @@ const (
 )
 
 type ItemPurchaseChain struct {
-	ItemID       string   `json:"item_id"`
-	BranchID     string   `json:"branch_id"`
-	Purchase     Purchase `json:"purchase"`
-	Quantity     int      `json:"quantity"`
-	Status       Status   `json:"status"`
-	SalesRecords []Sales  `json:"sales"`
+	ItemID   string   `json:"item_id"`
+	BranchID string   `json:"branch_id"`
+	Purchase Purchase `json:"purchase"`
+	Quantity int      `json:"quantity"`
+	Status   Status   `json:"status"`
+	Sales    []string `json:"sales"`
 }
 
 type ItemPurchaseChainGet struct {
-	ID           string   `json:"_id"`
-	ItemID       string   `json:"item_id"`
-	BranchID     string   `json:"branch_id"`
-	Purchase     Purchase `json:"purchase"`
-	Quantity     int      `json:"quantity"`
-	Status       Status   `json:"status"`
-	SalesRecords []Sales  `json:"sales"`
+	ID       string   `json:"_id"`
+	ItemID   string   `json:"item_id"`
+	BranchID string   `json:"branch_id"`
+	Purchase Purchase `json:"purchase"`
+	Quantity int      `json:"quantity"`
+	Status   Status   `json:"status"`
+	Sales    []string `json:"sales"`
 }

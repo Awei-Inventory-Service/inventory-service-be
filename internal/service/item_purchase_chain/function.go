@@ -29,10 +29,10 @@ func (i *itemPurchaseChainService) Create(ctx context.Context, itemID string, br
 	return i.itemPurchaseChainRepository.Create(ctx, itemID, branchID, *purchase)
 }
 
-func (i *itemPurchaseChainService) CalculateCost(ctx context.Context, itemID string, branchID string, quantity int) (int, []model.ItemPurchaseChainGet, *error_wrapper.ErrorWrapper) {
+func (i *itemPurchaseChainService) CalculateCost(ctx context.Context, itemID string, branchID string, quantity int) (float64, []model.ItemPurchaseChainGet, *error_wrapper.ErrorWrapper) {
 	var (
 		results []model.ItemPurchaseChainGet
-		cost    = 0
+		cost    = 0.0
 	)
 	purchaseChain, errW := i.itemPurchaseChainRepository.Get(ctx, model.ItemPurchaseChain{
 		ItemID:   itemID,
@@ -48,15 +48,8 @@ func (i *itemPurchaseChainService) CalculateCost(ctx context.Context, itemID str
 		purchaseChain[0].Quantity = 0
 		purchaseChain[0].Status = model.StatusUsed
 		quantityLeft := quantity - purchaseChain[0].Quantity
-		errW = i.itemPurchaseChainRepository.Update(ctx, purchaseChain[0].ID, model.ItemPurchaseChain{
-			ItemID:       purchaseChain[0].ItemID,
-			BranchID:     purchaseChain[0].BranchID,
-			Purchase:     purchaseChain[0].Purchase,
-			Quantity:     0,
-			Status:       model.StatusUsed,
-			SalesRecords: purchaseChain[0].SalesRecords,
-		})
-		cost += (purchaseChain[0].Quantity * int(purchaseChain[0].Purchase.Item.Price))
+
+		cost += float64(purchaseChain[0].Quantity) * purchaseChain[0].Purchase.Item.Price
 		nextPurchaseChain, errW := i.itemPurchaseChainRepository.Get(ctx, model.ItemPurchaseChain{
 			ItemID:   itemID,
 			BranchID: branchID,
@@ -70,20 +63,14 @@ func (i *itemPurchaseChainService) CalculateCost(ctx context.Context, itemID str
 		// TO DO : Edge case kalau 2 item purchase chain masih ga cukup
 
 		if nextPurchaseChain[0].Quantity >= quantityLeft {
-			errW = i.itemPurchaseChainRepository.Update(ctx, nextPurchaseChain[0].ID, model.ItemPurchaseChain{
-				ItemID:       nextPurchaseChain[0].ItemID,
-				BranchID:     nextPurchaseChain[0].BranchID,
-				Purchase:     nextPurchaseChain[0].Purchase,
-				Quantity:     nextPurchaseChain[0].Quantity - quantityLeft,
-				Status:       model.StatusInUse,
-				SalesRecords: nextPurchaseChain[0].SalesRecords,
-			})
+			nextPurchaseChain[0].Quantity -= quantityLeft
+			nextPurchaseChain[0].Status = model.StatusInUse
 			results = append(results, nextPurchaseChain[0])
-			cost += quantityLeft * int(nextPurchaseChain[0].Purchase.Item.Price)
+			cost += (float64(quantityLeft) * nextPurchaseChain[0].Purchase.Item.Price)
 		}
 	} else {
 		purchaseChain[0].Quantity = purchaseChain[0].Quantity - quantity
-		cost += (quantity * int(purchaseChain[0].Purchase.Item.Price))
+		cost += float64(quantity) * purchaseChain[0].Purchase.Item.Price
 	}
 	return cost, results, nil
 }

@@ -31,11 +31,23 @@ func (r *MongoClient) Database(name string, opts ...*options.DatabaseOptions) Mo
 
 func (r *MongoDatabase) Collection(collectionName string, opts ...*options.CollectionOptions) MongoDBCollectionWrapper {
 	collection := r.database.Collection(collectionName, opts...)
-	return &MongoCollection{collection: collection}
+	return &MongoCollection{collection: collection, database: r.database}
 }
 
 func (r *MongoCollection) InsertOne(ctx context.Context, document interface{}, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error) {
 	return r.collection.InsertOne(ctx, document, opts...)
+}
+
+func (r *MongoCollection) Database() MongoDBDatabaseWrapper {
+	return &MongoDatabase{database: r.database}
+}
+
+func (d *MongoDatabase) StartSession(ctx context.Context) (MongoDBSessionWrapper, error) {
+	session, err := d.database.Client().StartSession()
+	if err != nil {
+		return nil, err
+	}
+	return &MongoSession{session: session}, nil
 }
 
 func (r *MongoCollection) Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (MongoDBCursorWrapper, error) {
@@ -72,4 +84,47 @@ func (c *MongoCursor) Err() error {
 
 func (c *MongoCursor) Close(ctx context.Context) error {
 	return c.cursor.Close(ctx)
+}
+
+func (s *MongoSession) StartTransaction() error {
+	return s.session.StartTransaction()
+}
+
+// Commit the transaction
+func (s *MongoSession) CommitTransaction(ctx context.Context) error {
+	sc, ok := ctx.(mongo.SessionContext)
+	if !ok {
+		return mongo.ErrClientDisconnected
+	}
+	return sc.CommitTransaction(ctx)
+}
+
+// Abort (Rollback) the transaction
+func (s *MongoSession) AbortTransaction(ctx context.Context) error {
+	sc, ok := ctx.(mongo.SessionContext)
+	if !ok {
+		return mongo.ErrClientDisconnected
+	}
+	return sc.AbortTransaction(ctx)
+}
+
+// End the session
+func (s *MongoSession) EndSession(ctx context.Context) {
+	s.session.EndSession(ctx)
+}
+
+// Execute a function within a transaction
+func (s *MongoSession) WithTransaction(ctx context.Context, fn func(sc mongo.SessionContext) error) error {
+	return mongo.WithSession(ctx, s.session, func(sc mongo.SessionContext) error {
+		if err := s.StartTransaction(); err != nil {
+			return err
+		}
+
+		if err := fn(sc); err != nil {
+			s.AbortTransaction(sc)
+			return err
+		}
+
+		return s.CommitTransaction(sc)
+	})
 }

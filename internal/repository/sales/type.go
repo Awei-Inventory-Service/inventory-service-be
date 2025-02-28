@@ -7,7 +7,7 @@ import (
 )
 
 type SalesRepository interface {
-	Create(sale model.Sales) *error_wrapper.ErrorWrapper
+	Create(sale model.Sales) (*model.Sales, *error_wrapper.ErrorWrapper)
 	FindAll() ([]model.Sales, *error_wrapper.ErrorWrapper)
 	FindByID(id string) (*model.Sales, *error_wrapper.ErrorWrapper)
 	Update(id string, sale model.Sales) *error_wrapper.ErrorWrapper
