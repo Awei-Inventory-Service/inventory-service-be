@@ -43,10 +43,10 @@ func (i *itemPurchaseChainService) CalculateCost(ctx context.Context, itemID str
 	if errW != nil {
 		return 0, nil, errW
 	}
-	results = append(results, purchaseChain[0])
 	if purchaseChain[0].Quantity < quantity {
 		purchaseChain[0].Quantity = 0
 		purchaseChain[0].Status = model.StatusUsed
+		results = append(results, purchaseChain[0])
 		quantityLeft := quantity - purchaseChain[0].Quantity
 
 		cost += float64(purchaseChain[0].Quantity) * purchaseChain[0].Purchase.Item.Price
@@ -67,10 +67,13 @@ func (i *itemPurchaseChainService) CalculateCost(ctx context.Context, itemID str
 			nextPurchaseChain[0].Status = model.StatusInUse
 			results = append(results, nextPurchaseChain[0])
 			cost += (float64(quantityLeft) * nextPurchaseChain[0].Purchase.Item.Price)
+			results = append(results, nextPurchaseChain[0])
 		}
+
 	} else {
 		purchaseChain[0].Quantity = purchaseChain[0].Quantity - quantity
 		cost += float64(quantity) * purchaseChain[0].Purchase.Item.Price
+		results = append(results, purchaseChain[0])
 	}
 	return cost, results, nil
 }
