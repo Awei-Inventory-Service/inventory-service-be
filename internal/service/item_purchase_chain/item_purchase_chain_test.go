@@ -31,16 +31,25 @@ func TestCalculateCost(t *testing.T) {
 	)
 	itemId := "item-1"
 	branchId := "branch-1"
-	firstPurchaseChain := []model.ItemPurchaseChainGet{
-		{
-			ItemID:   itemId,
-			BranchID: branchId,
-			Quantity: 10,
-			Status:   model.StatusInUse,
-			Purchase: model.Purchase{
-				Item: model.Item{
-					Price: 5.0,
-				},
+	firstPurchaseChain := model.ItemPurchaseChainGet{
+		ItemID:   itemId,
+		BranchID: branchId,
+		Quantity: 10,
+		Status:   model.StatusInUse,
+		Purchase: model.Purchase{
+			Item: model.Item{
+				Price: 5.0,
+			},
+		},
+	}
+	secondPurchaseChain := model.ItemPurchaseChainGet{
+		ItemID:   itemId,
+		BranchID: branchId,
+		Quantity: 8,
+		Status:   model.StatusNotUsed,
+		Purchase: model.Purchase{
+			Item: model.Item{
+				Price: 4.3,
 			},
 		},
 	}
@@ -48,11 +57,11 @@ func TestCalculateCost(t *testing.T) {
 	t.Run("Enough stock in first purchase chain", func(t *testing.T) {
 		expectedItemPurchaseChain := []model.ItemPurchaseChainGet{
 			{
-				ID:       firstPurchaseChain[0].ID,
-				ItemID:   firstPurchaseChain[0].ItemID,
-				BranchID: firstPurchaseChain[0].BranchID,
+				ID:       firstPurchaseChain.ID,
+				ItemID:   firstPurchaseChain.ItemID,
+				BranchID: firstPurchaseChain.BranchID,
 				Quantity: 5,
-				Status:   firstPurchaseChain[0].Status,
+				Status:   firstPurchaseChain.Status,
 				Purchase: model.Purchase{
 					Item: model.Item{
 						Price: 5.0,
@@ -62,11 +71,41 @@ func TestCalculateCost(t *testing.T) {
 		}
 		mockItemPurchaseChainRepo.EXPECT().
 			Get(ctx, gomock.Any()).
-			Return(firstPurchaseChain, nil)
+			Return([]model.ItemPurchaseChainGet{firstPurchaseChain}, nil)
 
 		cost, purchaseChainResults, errW := itemPurchaseChainService.CalculateCost(ctx, itemId, branchId, 5)
 		assert.Nil(t, errW)
 		assert.Equal(t, expectedItemPurchaseChain, purchaseChainResults)
 		assert.Equal(t, 25.0, cost)
+	})
+
+	t.Run("Not enough stock in second purchase chain", func(t *testing.T) {
+		expectedItemPurchaseChain := []model.ItemPurchaseChainGet{
+			{
+				ID:       firstPurchaseChain.ID,
+				ItemID:   firstPurchaseChain.ItemID,
+				BranchID: firstPurchaseChain.BranchID,
+				Quantity: 0,
+				Status:   model.StatusUsed,
+				Purchase: firstPurchaseChain.Purchase,
+			},
+			{
+				ID:       secondPurchaseChain.ID,
+				ItemID:   secondPurchaseChain.ItemID,
+				BranchID: secondPurchaseChain.BranchID,
+				Quantity: 6,
+				Status:   model.StatusInUse,
+				Purchase: secondPurchaseChain.Purchase,
+			},
+		}
+		gomock.InOrder(
+			mockItemPurchaseChainRepo.EXPECT().Get(ctx, gomock.Any()).Return([]model.ItemPurchaseChainGet{firstPurchaseChain}, nil).Times(1),
+			mockItemPurchaseChainRepo.EXPECT().Get(ctx, gomock.Any()).Return([]model.ItemPurchaseChainGet{secondPurchaseChain}, nil).Times(1),
+		)
+		cost, purchaseChainResults, errW := itemPurchaseChainService.CalculateCost(ctx, itemId, branchId, 12)
+		assert.Nil(t, errW)
+		assert.Equal(t, expectedItemPurchaseChain, purchaseChainResults)
+		assert.Equal(t, 58.6, cost)
+		// fmt.Println("iNI COST", cost)
 	})
 }

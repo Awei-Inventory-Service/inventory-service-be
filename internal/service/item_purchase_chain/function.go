@@ -2,6 +2,7 @@ package itempurchasechain
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/inventory-service/internal/model"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -44,12 +45,12 @@ func (i *itemPurchaseChainService) CalculateCost(ctx context.Context, itemID str
 		return 0, nil, errW
 	}
 	if purchaseChain[0].Quantity < quantity {
-		purchaseChain[0].Quantity = 0
-		purchaseChain[0].Status = model.StatusUsed
-		results = append(results, purchaseChain[0])
 		quantityLeft := quantity - purchaseChain[0].Quantity
 
 		cost += float64(purchaseChain[0].Quantity) * purchaseChain[0].Purchase.Item.Price
+		purchaseChain[0].Quantity = 0
+		purchaseChain[0].Status = model.StatusUsed
+		results = append(results, purchaseChain[0])
 		nextPurchaseChain, errW := i.itemPurchaseChainRepository.Get(ctx, model.ItemPurchaseChain{
 			ItemID:   itemID,
 			BranchID: branchID,
@@ -59,13 +60,12 @@ func (i *itemPurchaseChainService) CalculateCost(ctx context.Context, itemID str
 		if errW != nil {
 			return 0, nil, errW
 		}
-
+		fmt.Println("INI COST", cost)
 		// TO DO : Edge case kalau 2 item purchase chain masih ga cukup
-
+		fmt.Println("INI QUANTITY LEFT", quantityLeft)
 		if nextPurchaseChain[0].Quantity >= quantityLeft {
 			nextPurchaseChain[0].Quantity -= quantityLeft
 			nextPurchaseChain[0].Status = model.StatusInUse
-			results = append(results, nextPurchaseChain[0])
 			cost += (float64(quantityLeft) * nextPurchaseChain[0].Purchase.Item.Price)
 			results = append(results, nextPurchaseChain[0])
 		}
