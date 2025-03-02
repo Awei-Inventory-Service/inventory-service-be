@@ -3,11 +3,15 @@ package sales
 import (
 	"context"
 
+	"github.com/inventory-service/internal/dto"
 	"github.com/inventory-service/internal/model"
 	"github.com/inventory-service/lib/error_wrapper"
 )
 
-func (s *salesService) Create(ctx context.Context, payload model.Sales) *error_wrapper.ErrorWrapper {
+func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesRequest) *error_wrapper.ErrorWrapper {
+	var (
+		sales model.Sales
+	)
 
 	product, errW := s.productRepository.FindByID(ctx, payload.ProductID)
 
@@ -35,8 +39,13 @@ func (s *salesService) Create(ctx context.Context, payload model.Sales) *error_w
 		totalCost += cost
 	}
 
-	payload.Cost = totalCost
-	newSales, errW := s.salesRepository.Create(payload)
+	sales.Cost = totalCost
+	sales.BranchID = payload.BranchID
+	sales.ProductID = payload.ProductID
+	sales.Quantity = payload.Quantity
+	sales.Type = payload.Type
+
+	newSales, errW := s.salesRepository.Create(sales)
 
 	if errW != nil {
 		return errW

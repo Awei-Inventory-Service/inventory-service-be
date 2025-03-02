@@ -3,7 +3,7 @@ package sales
 import (
 	"context"
 
-	"github.com/inventory-service/internal/model"
+	"github.com/inventory-service/internal/dto"
 	itempurchasechain_repository "github.com/inventory-service/internal/repository/item_purchase_chain"
 	"github.com/inventory-service/internal/repository/product"
 	"github.com/inventory-service/internal/repository/sales"
@@ -13,7 +13,7 @@ import (
 )
 
 type SalesService interface {
-	Create(ctx context.Context, payload model.Sales) *error_wrapper.ErrorWrapper
+	Create(ctx context.Context, payload dto.CreateSalesRequest) *error_wrapper.ErrorWrapper
 }
 
 type salesService struct {

@@ -2,7 +2,6 @@ package itempurchasechain_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/inventory-service/internal/model"
@@ -138,10 +137,6 @@ func TestCalculateCost(t *testing.T) {
 				Return(nil),
 		)
 		cost, _, errW := itemPurchaseChainService.CalculateCost(ctx, itemId, branchId, 5)
-		if errW != nil {
-			fmt.Println("Ada errw", errW)
-		}
-		// fmt.Println(errW.ActualError())
 		assert.Nil(t, errW)
 		assert.Equal(t, 25.0, cost)
 	})
