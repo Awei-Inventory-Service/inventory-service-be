@@ -16,6 +16,7 @@ import (
 	sales_controller "github.com/inventory-service/internal/controller/sales"
 	stock_controller "github.com/inventory-service/internal/controller/stock"
 	supplier_controller "github.com/inventory-service/internal/controller/supplier"
+	upload_controller "github.com/inventory-service/internal/controller/upload"
 
 	"github.com/inventory-service/internal/middleware"
 	branch_repository "github.com/inventory-service/internal/repository/branch"
@@ -42,7 +43,7 @@ import (
 	sales_service "github.com/inventory-service/internal/service/sales"
 	stock_service "github.com/inventory-service/internal/service/stock"
 	supplier_service "github.com/inventory-service/internal/service/supplier"
-
+	upload_service "github.com/inventory-service/internal/service/upload"
 	"gorm.io/gorm"
 )
 
@@ -89,6 +90,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	stockService := stock_service.NewStockService(stockTransactionRepository)
 	itemPurchaseChainService := item_purchase_chain_service.NewItemPurchaseChainService(itemPurchaseChainRepository, purchaseRepository, itemRepository, branchRepository)
 	salesService := sales_service.NewSalesService(salesRepository, productRepository, itemPurchaseChainRepository, itemPurchaseChainService)
+	uploadService := upload_service.NewUploadService(salesRepository)
 
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)
@@ -102,6 +104,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 	inventoryStockCountController := inventory_stock_count_controller.NewInventoryStockCountController(inventoryStockCountService)
 	stockController := stock_controller.NewStockController(stockService)
+	uploadController := upload_controller.NewUploadController(uploadService)
 
 	router.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -202,6 +205,11 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		salesRoutes := apiV1.Group("/sales")
 		{
 			salesRoutes.POST("/", salesController.Create)
+		}
+
+		uploadRoutes := apiV1.Group("/upload")
+		{
+			uploadRoutes.POST("/transaction", uploadController.UploadTransaction)
 		}
 	}
 
