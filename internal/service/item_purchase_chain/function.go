@@ -42,15 +42,9 @@ func (i *itemPurchaseChainService) CalculateCost(ctx context.Context, itemID str
 	})
 
 	if errW != nil {
-		return 0, nil, errW
-	}
-	if purchaseChain[0].Quantity < quantity {
-		quantityLeft := quantity - purchaseChain[0].Quantity
-
-		cost += float64(purchaseChain[0].Quantity) * purchaseChain[0].Purchase.Item.Price
-		purchaseChain[0].Quantity = 0
-		purchaseChain[0].Status = model.StatusUsed
-		results = append(results, purchaseChain[0])
+		if !errW.Is(model.RErrDataNotFound) {
+			return 0, nil, errW
+		}
 		nextPurchaseChain, errW := i.itemPurchaseChainRepository.Get(ctx, model.ItemPurchaseChain{
 			ItemID:   itemID,
 			BranchID: branchID,
@@ -60,20 +54,55 @@ func (i *itemPurchaseChainService) CalculateCost(ctx context.Context, itemID str
 		if errW != nil {
 			return 0, nil, errW
 		}
-		fmt.Println("INI COST", cost)
-		// TO DO : Edge case kalau 2 item purchase chain masih ga cukup
-		fmt.Println("INI QUANTITY LEFT", quantityLeft)
-		if nextPurchaseChain[0].Quantity >= quantityLeft {
-			nextPurchaseChain[0].Quantity -= quantityLeft
-			nextPurchaseChain[0].Status = model.StatusInUse
-			cost += (float64(quantityLeft) * nextPurchaseChain[0].Purchase.Item.Price)
-			results = append(results, nextPurchaseChain[0])
-		}
+		nextPurchaseChain[0].Status = model.StatusInUse
 
-	} else {
-		purchaseChain[0].Quantity = purchaseChain[0].Quantity - quantity
-		cost += float64(quantity) * purchaseChain[0].Purchase.Item.Price
-		results = append(results, purchaseChain[0])
+		errW = i.itemPurchaseChainRepository.Update(ctx, nextPurchaseChain[0].ID, model.ItemPurchaseChain{
+			ItemID:   nextPurchaseChain[0].ItemID,
+			BranchID: nextPurchaseChain[0].BranchID,
+			Status:   model.StatusInUse,
+			Purchase: nextPurchaseChain[0].Purchase,
+			Sales:    nextPurchaseChain[0].Sales,
+		})
+
+		if errW != nil {
+			fmt.Println("Error di update")
+			return 0, nil, errW
+		}
+		purchaseChain = nextPurchaseChain
+	}
+
+	quantityLeft := quantity
+	for quantityLeft > 0 {
+		if purchaseChain[0].Quantity < quantityLeft {
+			cost += float64(purchaseChain[0].Quantity) * purchaseChain[0].Purchase.Item.Price
+			quantityLeft -= purchaseChain[0].Quantity
+			purchaseChain[0].Quantity = 0
+			purchaseChain[0].Status = model.StatusUsed
+			results = append(results, purchaseChain[0])
+			nextPurchaseChain, errW := i.itemPurchaseChainRepository.Get(
+				ctx,
+				model.ItemPurchaseChain{
+					ItemID:   itemID,
+					BranchID: branchID,
+					Status:   model.StatusNotUsed,
+				},
+			)
+
+			if errW != nil {
+				return 0, nil, errW
+			}
+			nextPurchaseChain[0].Status = model.StatusInUse
+			purchaseChain[0] = nextPurchaseChain[0]
+		} else {
+			cost += float64(quantityLeft) * purchaseChain[0].Purchase.Item.Price
+			purchaseChain[0].Quantity -= quantityLeft
+
+			if purchaseChain[0].Quantity == 0 {
+				purchaseChain[0].Status = model.StatusUsed
+			}
+			quantityLeft = 0
+			results = append(results, purchaseChain[0])
+		}
 	}
 	return cost, results, nil
 }

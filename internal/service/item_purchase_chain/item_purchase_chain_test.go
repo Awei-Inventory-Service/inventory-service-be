@@ -2,10 +2,12 @@ package itempurchasechain_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/inventory-service/internal/model"
 	itempurchasechain "github.com/inventory-service/internal/service/item_purchase_chain"
+	"github.com/inventory-service/lib/error_wrapper"
 	mock_branch "github.com/inventory-service/mocks/repository/branch"
 	mock_item "github.com/inventory-service/mocks/repository/item"
 	mock_itempurchasechain "github.com/inventory-service/mocks/repository/item_purchase_chain"
@@ -106,6 +108,41 @@ func TestCalculateCost(t *testing.T) {
 		assert.Nil(t, errW)
 		assert.Equal(t, expectedItemPurchaseChain, purchaseChainResults)
 		assert.Equal(t, 58.6, cost)
-		// fmt.Println("iNI COST", cost)
+	})
+
+	t.Run("No purchase chain with status in use", func(t *testing.T) {
+		itemPurchaseChain := []model.ItemPurchaseChainGet{
+			{
+				ID:       "purchase-1",
+				ItemID:   itemId,
+				BranchID: branchId,
+				Quantity: 10,
+				Status:   model.StatusNotUsed,
+				Purchase: model.Purchase{
+					Item: model.Item{
+						Price: 5.0,
+					},
+				},
+			},
+		}
+		gomock.InOrder(
+			mockItemPurchaseChainRepo.EXPECT().Get(ctx, gomock.Any()).Return(nil, error_wrapper.New(model.RErrDataNotFound, gomock.Any())),
+			mockItemPurchaseChainRepo.EXPECT().Get(ctx, gomock.Any()).Return(itemPurchaseChain, nil),
+			mockItemPurchaseChainRepo.EXPECT().
+				Update(ctx, "purchase-1", gomock.Any()).
+				Do(func(_ context.Context, id string, item model.ItemPurchaseChain) {
+					assert.Equal(t, "purchase-1", id)
+					assert.Equal(t, model.StatusInUse, item.Status)
+					assert.Equal(t, itemPurchaseChain[0].ItemID, item.ItemID)
+				}).
+				Return(nil),
+		)
+		cost, _, errW := itemPurchaseChainService.CalculateCost(ctx, itemId, branchId, 5)
+		if errW != nil {
+			fmt.Println("Ada errw", errW)
+		}
+		// fmt.Println(errW.ActualError())
+		assert.Nil(t, errW)
+		assert.Equal(t, 25.0, cost)
 	})
 }
