@@ -10,9 +10,9 @@ import (
 
 func main() {
 	// Load .env file
-	err := godotenv.Load()
+	err := godotenv.Load(".env.local", ".env")
 	if err != nil {
-		log.Fatalf("Error loading .env file")
+		log.Fatalf("Error loading environment files")
 		return
 	}
 
