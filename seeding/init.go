@@ -1,6 +1,7 @@
 package seeding
 
 import (
+	"fmt"
 	"os"
 
 	constant "github.com/inventory-service/lib/constants"
@@ -8,6 +9,7 @@ import (
 )
 
 func MainSeed(pgDB *gorm.DB) {
+	fmt.Println(os.Getenv(constant.FeatureFlagSeedInitialData))
 	if os.Getenv(constant.FeatureFlagSeedInitialData) == "true" {
 		Seed(pgDB)
 	}

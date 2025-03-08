@@ -53,12 +53,14 @@ var (
 
 	SErrConfigApproverKeyNotFound = errW.NewDefinition(202000, "Error Approver Key Not Found. Approver Key: %s", false, CategoryBadRequest)
 
-	SErrUserNotBranchManager   = errW.NewDefinition(205000, "Error User Not Branch Manager", false, CategoryBadRequest)
-	SErrAuthInvalidCredentials = errW.NewDefinition(202000, "Error Invalid Credentials %s", false, CategoryUnAuthorized)
-	SErrAuthGenerateToken      = errW.NewDefinition(202001, "Error generating JWT token", true, CategoryInternalServerError)
-	SErrBranchNotExist         = errW.NewDefinition(203000, "Error Branch Not Found. Branch ID: %s", true, CategoryBadRequest)
-	SErrItemNotExist           = errW.NewDefinition(204000, "Error Item Not Found. Item ID: %s", true, CategoryBadRequest)
-	//	- Usecase -
+	SErrUserNotBranchManager     = errW.NewDefinition(205000, "Error User Not Branch Manager", false, CategoryBadRequest)
+	SErrAuthInvalidCredentials   = errW.NewDefinition(202000, "Error Invalid Credentials %s", false, CategoryUnAuthorized)
+	SErrAuthGenerateToken        = errW.NewDefinition(202001, "Error generating JWT token", true, CategoryInternalServerError)
+	SErrBranchNotExist           = errW.NewDefinition(203000, "Error Branch Not Found. Branch ID: %s", true, CategoryBadRequest)
+	SErrItemNotExist             = errW.NewDefinition(204000, "Error Item Not Found. Item ID: %s", true, CategoryBadRequest)
+	SErrFailParseExcel           = errW.NewDefinition(206000, "Error parsing excel data", false, CategoryInternalServerError)
+	SErrExcelMissingRequiredData = errW.NewDefinition(206001, "Error missing data from excel", false, CategoryBadRequest)
+	SErrParsingExcelQuantity     = errW.NewDefinition(206002, "Error parsing quantity from excel to int", true, CategoryInternalServerError)
 
 	//	Repository
 	RErrMongoDBCollection      = errW.NewDefinition(400000, "Error MongoDB Collection", true, CategoryInternalServerError)

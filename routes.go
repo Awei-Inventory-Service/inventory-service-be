@@ -83,14 +83,14 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	supplierService := supplier_service.NewSupplierService(supplierRepository)
 	itemService := item_service.NewItemService(itemRepository)
 	branchService := branch_service.NewBranchService(branchRepository, userRepository)
-	purchaseService := purchase_service.NewPurchaseService(purchaseRepository, supplierRepository, branchRepository, itemRepository)
+	purchaseService := purchase_service.NewPurchaseService(purchaseRepository, supplierRepository, branchRepository, itemRepository, itemPurchaseChainRepository)
 	inventoryStockCountService := inventory_stock_count_service.NewInventoryStockCountService(inventoryStockCountRepository, branchRepository, itemRepository)
 	productService := product_service.NewProductservice(productRepository, itemRepository)
 	invoiceService := invoice_service.NewInvoiceService(invoiceRepository)
 	stockService := stock_service.NewStockService(stockTransactionRepository)
 	itemPurchaseChainService := item_purchase_chain_service.NewItemPurchaseChainService(itemPurchaseChainRepository, purchaseRepository, itemRepository, branchRepository)
 	salesService := sales_service.NewSalesService(salesRepository, productRepository, itemPurchaseChainRepository, itemPurchaseChainService)
-	uploadService := upload_service.NewUploadService(salesRepository)
+	uploadService := upload_service.NewUploadService(salesRepository, productRepository, salesService)
 
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)

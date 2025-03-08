@@ -57,6 +57,7 @@ func (p *purchaseController) CreatePurchase(c *gin.Context) {
 	}
 
 	errW = p.purchaseService.Create(
+		c,
 		createPurchaseRequest.SupplierID,
 		createPurchaseRequest.BranchID,
 		createPurchaseRequest.ItemID,

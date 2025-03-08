@@ -1,5 +1,5 @@
 package dto
 
 type UploadTransaction struct {
-	BranchID string
+	BranchID string `json:"branch_id"`
 }

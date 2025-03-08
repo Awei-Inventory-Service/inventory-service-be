@@ -20,10 +20,18 @@ func (u *uploadControllter) UploadTransaction(c *gin.Context) {
 		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
 	}()
 
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+	// if err := c.ShouldBindJSON(&payload); err != nil {
+	// 	errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+	// 	return
+	// }
+
+	branchId := c.GetHeader("branch_id")
+
+	if branchId == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "Branch id is required")
 		return
 	}
+	payload.BranchID = branchId
 
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -37,7 +45,7 @@ func (u *uploadControllter) UploadTransaction(c *gin.Context) {
 		return
 	}
 
-	errW = u.uploadService.ParseTransactionExcel(filePath)
+	errW = u.uploadService.ParseTransactionExcel(c, filePath)
 
 	if errW != nil {
 		return
