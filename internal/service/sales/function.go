@@ -13,7 +13,6 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 	var (
 		sales model.Sales
 	)
-	fmt.Println("ini payload", payload)
 	product, errW := s.productRepository.FindByID(ctx, payload.ProductID)
 
 	if errW != nil {

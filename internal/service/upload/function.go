@@ -12,7 +12,7 @@ import (
 	excel "github.com/inventory-service/lib/utils"
 )
 
-func (u *uploadService) ParseTransactionExcel(ctx context.Context, fileName string) *error_wrapper.ErrorWrapper {
+func (u *uploadService) ParseTransactionExcel(ctx context.Context, fileName string, branchId string) *error_wrapper.ErrorWrapper {
 	requiredHeaders := []string{
 		constant.Date,
 		constant.ProductCode,
@@ -22,18 +22,16 @@ func (u *uploadService) ParseTransactionExcel(ctx context.Context, fileName stri
 	_, content, err := excel.ReadExcel(fileName, "transaction")
 
 	if err != nil {
-		fmt.Println("Error parsing excel data", err.Error())
 		return error_wrapper.New(model.SErrFailParseExcel, err.Error())
 	}
-	fmt.Println("REQUIRED", requiredHeaders)
-	fmt.Println("INI CONTENT", content)
 
 	missingHeaders := []string{}
 
 	for _, line := range content {
 		createSales := dto.CreateSalesRequest{
-			BranchID: fmt.Sprint(ctx.Value("branch_id")),
+			BranchID: branchId,
 		}
+
 		for _, requiredHeader := range requiredHeaders {
 			if line[requiredHeader] == "" {
 				missingHeaders = append(missingHeaders, requiredHeader)
@@ -45,11 +43,10 @@ func (u *uploadService) ParseTransactionExcel(ctx context.Context, fileName stri
 		}
 
 		productCode := line[constant.ProductCode]
-		fmt.Println("iNi product code", productCode)
 		product, errW := u.productRespository.Find(ctx, model.GetProduct{
 			Code: productCode,
 		})
-		fmt.Println("iNI PRODUCT", product)
+
 		if errW != nil {
 			return errW
 		}

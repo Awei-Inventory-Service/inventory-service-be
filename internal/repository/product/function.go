@@ -2,7 +2,6 @@ package product
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/inventory-service/internal/model"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -78,7 +77,7 @@ func (p *productRepository) Find(ctx context.Context, payload model.GetProduct) 
 			}
 		}
 	}
-	fmt.Println("iNI FILTER", filter)
+
 	cursor, err := p.productCollection.Find(ctx, filter)
 	if err != nil {
 		return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())

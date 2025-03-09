@@ -11,7 +11,7 @@ import (
 )
 
 type UploadService interface {
-	ParseTransactionExcel(ctx context.Context, fileName string) *error_wrapper.ErrorWrapper
+	ParseTransactionExcel(ctx context.Context, fileName string, branchId string) *error_wrapper.ErrorWrapper
 }
 
 type uploadService struct {

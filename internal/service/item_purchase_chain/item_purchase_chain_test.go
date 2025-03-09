@@ -37,10 +37,8 @@ func TestCalculateCost(t *testing.T) {
 		BranchID: branchId,
 		Quantity: 10,
 		Status:   model.StatusInUse,
-		Purchase: model.Purchase{
-			Item: model.Item{
-				Price: 5.0,
-			},
+		Purchase: model.ItemPurchaseChainPurchase{
+			PurchaseCost: 5.0,
 		},
 	}
 	secondPurchaseChain := model.ItemPurchaseChainGet{
@@ -48,10 +46,8 @@ func TestCalculateCost(t *testing.T) {
 		BranchID: branchId,
 		Quantity: 8,
 		Status:   model.StatusNotUsed,
-		Purchase: model.Purchase{
-			Item: model.Item{
-				Price: 4.3,
-			},
+		Purchase: model.ItemPurchaseChainPurchase{
+			PurchaseCost: 4.3,
 		},
 	}
 
@@ -63,10 +59,8 @@ func TestCalculateCost(t *testing.T) {
 				BranchID: firstPurchaseChain.BranchID,
 				Quantity: 5,
 				Status:   firstPurchaseChain.Status,
-				Purchase: model.Purchase{
-					Item: model.Item{
-						Price: 5.0,
-					},
+				Purchase: model.ItemPurchaseChainPurchase{
+					PurchaseCost: 5.0,
 				},
 			},
 		}
@@ -117,10 +111,8 @@ func TestCalculateCost(t *testing.T) {
 				BranchID: branchId,
 				Quantity: 10,
 				Status:   model.StatusNotUsed,
-				Purchase: model.Purchase{
-					Item: model.Item{
-						Price: 5.0,
-					},
+				Purchase: model.ItemPurchaseChainPurchase{
+					PurchaseCost: 5.0,
 				},
 			},
 		}

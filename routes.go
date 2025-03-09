@@ -76,7 +76,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	invoiceRepository := invoice_repository.NewInvoiceRepository(pgDB)
 	stockTransactionRepository := stock_transaction_repository.NewStockTransactionRepository(pgDB)
 	salesRepository := sales_repository.NewSalesRepository(pgDB)
-	itemPurchaseChainRepository := item_purchase_chain_repository.NewItemPurchaseChainRepository(mongodbRepository, "inventory_service", "item_purchase_chain")
+	itemPurchaseChainRepository := item_purchase_chain_repository.NewItemPurchaseChainRepository(mongodbRepository, "inventory_service", "itempurchasechain")
 
 	// initialize service
 	userService := auth_service.NewUserService(userRepository)

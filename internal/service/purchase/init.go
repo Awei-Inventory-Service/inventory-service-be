@@ -16,9 +16,10 @@ func NewPurchaseService(
 	itemPurchaseChainRepository itempurchasechain.ItemPurchaseChainRepository,
 ) PurchaseService {
 	return &purchaseService{
-		purchaseRepository: purchaseRepository,
-		supplierRepository: supplierRepository,
-		branchRepository:   branchRepository,
-		itemRepository:     itemRepository,
+		purchaseRepository:          purchaseRepository,
+		supplierRepository:          supplierRepository,
+		branchRepository:            branchRepository,
+		itemRepository:              itemRepository,
+		itemPurchaseChainRepository: itemPurchaseChainRepository,
 	}
 }

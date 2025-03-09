@@ -45,7 +45,7 @@ func (u *uploadControllter) UploadTransaction(c *gin.Context) {
 		return
 	}
 
-	errW = u.uploadService.ParseTransactionExcel(c, filePath)
+	errW = u.uploadService.ParseTransactionExcel(c, filePath, branchId)
 
 	if errW != nil {
 		return

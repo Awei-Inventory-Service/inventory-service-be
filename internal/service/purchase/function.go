@@ -11,66 +11,68 @@ import (
 
 func (p *purchaseService) Create(c *gin.Context, supplierId, branchId, itemId string, quantity int, purchaseCost float64) *error_wrapper.ErrorWrapper {
 	var (
-		errChan = make(chan *error_wrapper.ErrorWrapper, 3) // Buffered channel untuk 3 goroutines
+		errChan = make(chan *error_wrapper.ErrorWrapper, 3) // Buffered channel for 3 goroutines
 		wg      sync.WaitGroup
-		errors  []*error_wrapper.ErrorWrapper // Slice untuk menyimpan semua error
 	)
 
-	// supplier check
+	// Supplier check
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		_, err := p.supplierRepository.FindByID(supplierId)
-		errChan <- err
+		if _, err := p.supplierRepository.FindByID(supplierId); err != nil {
+			errChan <- err
+		} else {
+			errChan <- nil
+		}
 	}()
 
-	// branch check
+	// Branch check
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		_, err := p.branchRepository.FindByID(branchId)
-		errChan <- err
+		if _, err := p.branchRepository.FindByID(branchId); err != nil {
+			errChan <- err
+		} else {
+			errChan <- nil
+		}
 	}()
 
-	// item check
+	// Item check
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		_, err := p.itemRepository.FindByID(itemId)
-		errChan <- err
+		if _, err := p.itemRepository.FindByID(itemId); err != nil {
+			errChan <- err
+		} else {
+			errChan <- nil
+		}
 	}()
 
-	// Goroutine untuk menutup channel setelah semua selesai
+	// Wait for all goroutines to complete
 	go func() {
 		wg.Wait()
-		close(errChan)
+		close(errChan) // Close the channel when all goroutines are done
 	}()
 
-	// Kumpulkan semua error dari channel
+	// Collect all errors from the channel
 	for err := range errChan {
 		if err != nil {
-			errors = append(errors, err) // Simpan error
+			return err // If there's an error, return immediately
 		}
 	}
 
-	// Jika ada error, return error pertama yang ditemukan
-	if len(errors) > 0 {
-		return errors[0]
-	}
-
-	// Lanjutkan proses pembuatan purchase
+	// All checks completed, proceed to create purchase
 	newPurchase, errW := p.purchaseRepository.Create(supplierId, branchId, itemId, quantity, purchaseCost)
 	if errW != nil {
 		return errW
 	}
-	fmt.Println("iNI NEW PURCHASE", newPurchase)
-	fmt.Println("Creating item purchase chain")
-	errW = p.itemPurchaseChainRepository.Create(c, itemId, branchId, *newPurchase)
 
+	errW = p.itemPurchaseChainRepository.Create(c, itemId, branchId, *newPurchase)
 	if errW != nil {
+		fmt.Println("Error : ", errW.StackTrace(), errW.ActualError())
 		return errW
 	}
-	fmt.Println("Done creating ipc")
+
 	return nil
 }
 

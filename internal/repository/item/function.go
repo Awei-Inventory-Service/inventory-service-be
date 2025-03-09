@@ -28,7 +28,6 @@ func (i *itemRepository) FindAll() ([]model.Item, *error_wrapper.ErrorWrapper) {
 	var items []model.Item
 	result := i.db.Preload("Supplier").Find(&items)
 	if result.Error != nil {
-		fmt.Println("INI ERROR", result.Error)
 		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
 	}
 
