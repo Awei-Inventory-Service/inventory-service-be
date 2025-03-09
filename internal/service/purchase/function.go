@@ -1,51 +1,76 @@
 package purchase
 
 import (
+	"fmt"
+	"sync"
+
+	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/internal/model"
 	"github.com/inventory-service/lib/error_wrapper"
 )
 
-func (p *purchaseService) Create(supplierId, branchId, itemId string, quantity int, purchaseCost float64) *error_wrapper.ErrorWrapper {
-	errChan := make(chan *error_wrapper.ErrorWrapper, 3)
-	// supplier check
+func (p *purchaseService) Create(c *gin.Context, supplierId, branchId, itemId string, quantity int, purchaseCost float64) *error_wrapper.ErrorWrapper {
+	var (
+		errChan = make(chan *error_wrapper.ErrorWrapper, 3) // Buffered channel for 3 goroutines
+		wg      sync.WaitGroup
+	)
+
+	// Supplier check
+	wg.Add(1)
 	go func() {
-		_, err := p.supplierRepository.FindByID(supplierId)
-		if err != nil {
+		defer wg.Done()
+		if _, err := p.supplierRepository.FindByID(supplierId); err != nil {
 			errChan <- err
 		} else {
 			errChan <- nil
 		}
 	}()
 
-	// branch check
+	// Branch check
+	wg.Add(1)
 	go func() {
-		_, err := p.branchRepository.FindByID(branchId)
-		if err != nil {
+		defer wg.Done()
+		if _, err := p.branchRepository.FindByID(branchId); err != nil {
 			errChan <- err
 		} else {
 			errChan <- nil
 		}
 	}()
 
-	// item check
+	// Item check
+	wg.Add(1)
 	go func() {
-		_, err := p.itemRepository.FindByID(itemId)
-		if err != nil {
+		defer wg.Done()
+		if _, err := p.itemRepository.FindByID(itemId); err != nil {
 			errChan <- err
 		} else {
 			errChan <- nil
 		}
 	}()
 
-	for i := 0; i < 3; i++ {
-		if err := <-errChan; err != nil {
-			return err
+	// Wait for all goroutines to complete
+	go func() {
+		wg.Wait()
+		close(errChan) // Close the channel when all goroutines are done
+	}()
+
+	// Collect all errors from the channel
+	for err := range errChan {
+		if err != nil {
+			return err // If there's an error, return immediately
 		}
 	}
 
-	err := p.purchaseRepository.Create(supplierId, branchId, itemId, quantity, purchaseCost)
-	if err != nil {
-		return err
+	// All checks completed, proceed to create purchase
+	newPurchase, errW := p.purchaseRepository.Create(supplierId, branchId, itemId, quantity, purchaseCost)
+	if errW != nil {
+		return errW
+	}
+
+	errW = p.itemPurchaseChainRepository.Create(c, itemId, branchId, *newPurchase)
+	if errW != nil {
+		fmt.Println("Error : ", errW.StackTrace(), errW.ActualError())
+		return errW
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package itempurchasechain
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/inventory-service/internal/model"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -13,7 +14,13 @@ func (i *itemPurchaseChainRepository) Create(ctx context.Context, itemID string,
 	itemPurchaseChain := model.ItemPurchaseChain{
 		ItemID:   itemID,
 		BranchID: branchID,
-		Purchase: purchase,
+		Purchase: model.ItemPurchaseChainPurchase{
+			UUID:         purchase.UUID,
+			ItemId:       purchase.ItemID,
+			BranchId:     purchase.BranchID,
+			Quantity:     purchase.Quantity,
+			PurchaseCost: purchase.PurchaseCost,
+		},
 		Quantity: purchase.Quantity,
 		Status:   model.StatusNotUsed,
 		Sales:    make([]string, 0),
@@ -25,6 +32,7 @@ func (i *itemPurchaseChainRepository) Create(ctx context.Context, itemID string,
 	)
 
 	if err != nil {
+		fmt.Println("Error", err.Error())
 		return error_wrapper.New(model.RErrMongoDBCreateDocument, err.Error())
 	}
 
@@ -56,8 +64,21 @@ func (i *itemPurchaseChainRepository) Get(ctx context.Context, payload model.Ite
 		return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 	}
 
-	if err = cur.Decode(&result); err != nil {
-		return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
+	for cur.Next(ctx) {
+		var itemPurchaseChain model.ItemPurchaseChain
+
+		if err = cur.Decode(&itemPurchaseChain); err != nil {
+			return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
+		}
+		result = append(result, model.ItemPurchaseChainGet{
+			ID:       itemPurchaseChain.UUID.Hex(),
+			ItemID:   itemPurchaseChain.ItemID,
+			BranchID: itemPurchaseChain.BranchID,
+			Purchase: itemPurchaseChain.Purchase,
+			Quantity: itemPurchaseChain.Quantity,
+			Status:   itemPurchaseChain.Status,
+			Sales:    itemPurchaseChain.Sales,
+		})
 	}
 
 	if len(result) == 0 {

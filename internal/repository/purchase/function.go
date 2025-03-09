@@ -5,7 +5,7 @@ import (
 	"github.com/inventory-service/lib/error_wrapper"
 )
 
-func (p *purchaseRepository) Create(supplierId, branchId, itemId string, quantity int, purchaseCost float64) *error_wrapper.ErrorWrapper {
+func (p *purchaseRepository) Create(supplierId, branchId, itemId string, quantity int, purchaseCost float64) (*model.Purchase, *error_wrapper.ErrorWrapper) {
 	purchase := model.Purchase{
 		SupplierID:   supplierId,
 		BranchID:     branchId,
@@ -16,10 +16,10 @@ func (p *purchaseRepository) Create(supplierId, branchId, itemId string, quantit
 
 	result := p.db.Create(&purchase)
 	if result.Error != nil {
-		return error_wrapper.New(model.RErrPostgresCreateDocument, result.Error.Error())
+		return nil, error_wrapper.New(model.RErrPostgresCreateDocument, result.Error.Error())
 	}
 
-	return nil
+	return &purchase, nil
 }
 
 func (p *purchaseRepository) FindAll() ([]model.Purchase, *error_wrapper.ErrorWrapper) {

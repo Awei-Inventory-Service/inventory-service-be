@@ -2,6 +2,7 @@ package sales
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/inventory-service/internal/dto"
 	"github.com/inventory-service/internal/model"
@@ -12,10 +13,10 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 	var (
 		sales model.Sales
 	)
-
 	product, errW := s.productRepository.FindByID(ctx, payload.ProductID)
 
 	if errW != nil {
+		fmt.Println(errW.StackTrace(), errW.ActualError())
 		return errW
 	}
 	var (
@@ -32,6 +33,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 		)
 
 		if errW != nil {
+			fmt.Println(errW.StackTrace(), errW.ActualError())
 			return errW
 		}
 
@@ -48,6 +50,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 	newSales, errW := s.salesRepository.Create(sales)
 
 	if errW != nil {
+		fmt.Println(errW.StackTrace(), errW.ActualError())
 		return errW
 	}
 
@@ -59,6 +62,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 	errW = s.itemPurchaseChainRepository.BulkUpdate(ctx, itemPurchaseWithSales)
 
 	if errW != nil {
+		fmt.Println(errW.StackTrace(), errW.ActualError())
 		return errW
 	}
 

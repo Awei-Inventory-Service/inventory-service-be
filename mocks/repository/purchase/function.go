@@ -42,11 +42,12 @@ func (m *MockPurchaseRepository) EXPECT() *MockPurchaseRepositoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockPurchaseRepository) Create(supplierId, branchId, itemId string, quantity int, purchaseCost float64) *error_wrapper.ErrorWrapper {
+func (m *MockPurchaseRepository) Create(supplierId, branchId, itemId string, quantity int, purchaseCost float64) (*model.Purchase, *error_wrapper.ErrorWrapper) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", supplierId, branchId, itemId, quantity, purchaseCost)
-	ret0, _ := ret[0].(*error_wrapper.ErrorWrapper)
-	return ret0
+	ret0, _ := ret[0].(*model.Purchase)
+	ret1, _ := ret[1].(*error_wrapper.ErrorWrapper)
+	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.

@@ -3,7 +3,6 @@ package product_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/inventory-service/internal/model"
@@ -344,7 +343,6 @@ func TestFindByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockF()
 			result, err := repo.FindByID(tt.args.ctx, tt.args.productID)
-			fmt.Println("INI RESULT DAN ERR", result, err)
 			if err != nil {
 				assert.Equal(t, model.Product{}, result)
 				assert.Equal(t, tt.err.StatusCode(), err.StatusCode())

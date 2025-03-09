@@ -47,16 +47,14 @@ func (p *purchaseController) CreatePurchase(c *gin.Context) {
 		errW                  *error_wrapper.ErrorWrapper
 	)
 
-	defer func() {
-		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
-	}()
-
 	if err := c.ShouldBindJSON(&createPurchaseRequest); err != nil {
 		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+		response_wrapper.New(&c.Writer, c, false, nil, errW)
 		return
 	}
 
 	errW = p.purchaseService.Create(
+		c,
 		createPurchaseRequest.SupplierID,
 		createPurchaseRequest.BranchID,
 		createPurchaseRequest.ItemID,
@@ -64,8 +62,11 @@ func (p *purchaseController) CreatePurchase(c *gin.Context) {
 		createPurchaseRequest.PurchaseCost,
 	)
 	if errW != nil {
+		response_wrapper.New(&c.Writer, c, false, nil, errW)
 		return
 	}
+
+	response_wrapper.New(&c.Writer, c, true, nil, errW)
 }
 
 func (p *purchaseController) UpdatePurchase(c *gin.Context) {

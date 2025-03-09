@@ -14,6 +14,7 @@ type ProductRepository interface {
 	FindByID(ctx context.Context, productID string) (model.Product, *error_wrapper.ErrorWrapper)
 	Update(ctx context.Context, productID string, name string, ingredients []model.Ingredient) *error_wrapper.ErrorWrapper
 	Delete(ctx context.Context, productID string) *error_wrapper.ErrorWrapper
+	Find(ctx context.Context, payload model.GetProduct) ([]model.GetProduct, *error_wrapper.ErrorWrapper)
 }
 
 type productRepository struct {

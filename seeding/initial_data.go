@@ -11,6 +11,7 @@ import (
 )
 
 func Seed(pgDB *gorm.DB) {
+	fmt.Println("Seeding db")
 	mongodDb, err := mongodb.InitMongoDB()
 
 	if err != nil {
@@ -40,12 +41,12 @@ func Seed(pgDB *gorm.DB) {
 			continue
 		}
 		createdUserIDs = append(createdUserIDs, user.UUID)
-		fmt.Println("iNI USER", user)
 	}
 
 	if len(createdUserIDs) < 5 {
 		panic("There is no enough user for creating branches")
 	}
+	fmt.Println("Done seeding user")
 
 	for i := 0; i < 5; i++ {
 		branch := model.Branch{
@@ -60,7 +61,7 @@ func Seed(pgDB *gorm.DB) {
 			continue
 		}
 	}
-
+	fmt.Println("Done seeding branch")
 	// Insert Suppliers
 
 	for i := 0; i < 5; i++ {
@@ -82,7 +83,7 @@ func Seed(pgDB *gorm.DB) {
 	if len(createdSupplierIDS) < 5 {
 		panic("Supplier id is not enough")
 	}
-
+	fmt.Println("Done seeding supplier")
 	// Insert Items
 	for i := 0; i < 5; i++ {
 		item := model.Item{
@@ -100,7 +101,7 @@ func Seed(pgDB *gorm.DB) {
 
 		createdItem = append(createdItem, item)
 	}
-
+	fmt.Println("Done seeding items")
 	// Insert Products
 	productCollection := mongodDb.Database("inventory_service").Collection("products")
 
@@ -120,6 +121,7 @@ func Seed(pgDB *gorm.DB) {
 		product := model.Product{
 			Name:        fmt.Sprintf("Product %d", i),
 			Ingredients: ingredients,
+			Code:        fmt.Sprintf("P00%d", i),
 		}
 
 		_, err := productCollection.InsertOne(context.TODO(), product)
@@ -128,4 +130,5 @@ func Seed(pgDB *gorm.DB) {
 			continue
 		}
 	}
+	fmt.Println("Done seeding products")
 }

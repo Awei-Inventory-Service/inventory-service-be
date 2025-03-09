@@ -1,6 +1,7 @@
 CREATE TABLE sales (
     uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     branch_id UUID NOT NULL,
+    product_id VARCHAR(255) NOT NULL,
     -- product_id UUID,
     type VARCHAR(255) NOT NULL,
     quantity INT NOT NULL,
