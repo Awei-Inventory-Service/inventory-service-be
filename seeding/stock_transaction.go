@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/inventory-service/internal/model"
+	"github.com/inventory-service/app/model"
 	"gorm.io/gorm"
 )
 
@@ -62,7 +62,7 @@ func SeedStockTransaction(pgDB *gorm.DB) {
 			ItemID:              item.UUID,        // Item 1
 			IssuerID:            users[0].UUID,    // First user as issuer
 			Type:                "IN",
-			Quantity:            inQuantity, // Always greater than outQuantity
+			Quantity:            inQuantity,                   // Always greater than outQuantity
 			Cost:                float64(inQuantity) * 1000.0, // Adjusted cost
 			Reference:           fmt.Sprintf("IN-REF-%d", i),
 			Remarks:             "Stock moved in",

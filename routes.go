@@ -6,44 +6,56 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	auth_controller "github.com/inventory-service/internal/controller/auth"
-	branch_controller "github.com/inventory-service/internal/controller/branch"
-	inventory_stock_count_controller "github.com/inventory-service/internal/controller/inventory_stock_count"
-	invoice_controller "github.com/inventory-service/internal/controller/invoice"
-	item_controller "github.com/inventory-service/internal/controller/item"
-	product_controller "github.com/inventory-service/internal/controller/product"
-	purchase_controller "github.com/inventory-service/internal/controller/purchase"
-	sales_controller "github.com/inventory-service/internal/controller/sales"
-	stock_controller "github.com/inventory-service/internal/controller/stock"
-	supplier_controller "github.com/inventory-service/internal/controller/supplier"
-	upload_controller "github.com/inventory-service/internal/controller/upload"
+	auth_controller "github.com/inventory-service/app/handler/auth"
+	branch_controller "github.com/inventory-service/app/handler/branch"
+	inventory_stock_count_controller "github.com/inventory-service/app/handler/inventory_stock_count"
+	invoice_controller "github.com/inventory-service/app/handler/invoice"
+	item_controller "github.com/inventory-service/app/handler/item"
+	product_controller "github.com/inventory-service/app/handler/product"
+	purchase_controller "github.com/inventory-service/app/handler/purchase"
+	sales_controller "github.com/inventory-service/app/handler/sales"
+	stock_controller "github.com/inventory-service/app/handler/stock"
+	supplier_controller "github.com/inventory-service/app/handler/supplier"
+	upload_controller "github.com/inventory-service/app/handler/upload"
 
-	"github.com/inventory-service/internal/middleware"
-	branch_repository "github.com/inventory-service/internal/repository/branch"
-	inventory_stock_count_repository "github.com/inventory-service/internal/repository/inventory_stock_count"
-	invoice_repository "github.com/inventory-service/internal/repository/invoice"
-	item_repository "github.com/inventory-service/internal/repository/item"
-	item_purchase_chain_repository "github.com/inventory-service/internal/repository/item_purchase_chain"
-	"github.com/inventory-service/internal/repository/mongodb"
-	product_repository "github.com/inventory-service/internal/repository/product"
-	purchase_repository "github.com/inventory-service/internal/repository/purchase"
-	sales_repository "github.com/inventory-service/internal/repository/sales"
-	stock_transaction_repository "github.com/inventory-service/internal/repository/stock_transaction"
-	supplier_repository "github.com/inventory-service/internal/repository/supplier"
-	user_repository "github.com/inventory-service/internal/repository/user"
+	"github.com/inventory-service/app/middleware"
+	branch_resource "github.com/inventory-service/app/resource/branch"
+	inventory_stock_count_resource "github.com/inventory-service/app/resource/inventory_stock_count"
+	invoice_resource "github.com/inventory-service/app/resource/invoice"
+	item_resource "github.com/inventory-service/app/resource/item"
+	item_purchase_chain_resource "github.com/inventory-service/app/resource/item_purchase_chain"
+	"github.com/inventory-service/app/resource/mongodb"
+	product_resource "github.com/inventory-service/app/resource/product"
+	purchase_resource "github.com/inventory-service/app/resource/purchase"
+	sales_resource "github.com/inventory-service/app/resource/sales"
+	stock_transaction_resource "github.com/inventory-service/app/resource/stock_transaction"
+	supplier_resource "github.com/inventory-service/app/resource/supplier"
+	user_resource "github.com/inventory-service/app/resource/user"
 
-	auth_service "github.com/inventory-service/internal/service/auth"
-	branch_service "github.com/inventory-service/internal/service/branch"
-	inventory_stock_count_service "github.com/inventory-service/internal/service/inventory_stock_count"
-	invoice_service "github.com/inventory-service/internal/service/invoice"
-	item_service "github.com/inventory-service/internal/service/item"
-	item_purchase_chain_service "github.com/inventory-service/internal/service/item_purchase_chain"
-	product_service "github.com/inventory-service/internal/service/product"
-	purchase_service "github.com/inventory-service/internal/service/purchase"
-	sales_service "github.com/inventory-service/internal/service/sales"
-	stock_service "github.com/inventory-service/internal/service/stock"
-	supplier_service "github.com/inventory-service/internal/service/supplier"
-	upload_service "github.com/inventory-service/internal/service/upload"
+	branch_domain "github.com/inventory-service/app/domain/branch"
+	inventory_stock_count_domain "github.com/inventory-service/app/domain/inventory_stock_count"
+	invoice_domain "github.com/inventory-service/app/domain/invoice"
+	item_domain "github.com/inventory-service/app/domain/item"
+	item_purchase_chain_domain "github.com/inventory-service/app/domain/item_purchase_chain"
+	product_domain "github.com/inventory-service/app/domain/product"
+	purchase_domain "github.com/inventory-service/app/domain/purchase"
+	sales_domain "github.com/inventory-service/app/domain/sales"
+	stock_transaction_domain "github.com/inventory-service/app/domain/stock_transaction"
+	supplier_domain "github.com/inventory-service/app/domain/supplier"
+	user_domain "github.com/inventory-service/app/domain/user"
+
+	auth_service "github.com/inventory-service/app/usecase/auth"
+	branch_service "github.com/inventory-service/app/usecase/branch"
+	inventory_stock_count_service "github.com/inventory-service/app/usecase/inventory_stock_count"
+	invoice_service "github.com/inventory-service/app/usecase/invoice"
+	item_service "github.com/inventory-service/app/usecase/item"
+	item_purchase_chain_service "github.com/inventory-service/app/usecase/item_purchase_chain"
+	product_service "github.com/inventory-service/app/usecase/product"
+	purchase_service "github.com/inventory-service/app/usecase/purchase"
+	sales_service "github.com/inventory-service/app/usecase/sales"
+	stock_service "github.com/inventory-service/app/usecase/stock"
+	supplier_service "github.com/inventory-service/app/usecase/supplier"
+	upload_service "github.com/inventory-service/app/usecase/upload"
 	"gorm.io/gorm"
 )
 
@@ -60,37 +72,50 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	}))
 
 	// initialize repository
-	userRepository := user_repository.NewUserRepository(pgDB)
-	supplierRepository := supplier_repository.NewSupplierRepository(pgDB)
-	itemRepository := item_repository.NewItemRepository(pgDB)
-	branchRepository := branch_repository.NewBranchRepository(pgDB)
-	purchaseRepository := purchase_repository.NewPurchaseRepository(pgDB)
-	mongodbRepository, err := mongodb.InitMongoDB()
+	userResource := user_resource.NewUserResource(pgDB)
+	supplierResource := supplier_resource.NewSupplierResource(pgDB)
+	itemResource := item_resource.NewItemResource(pgDB)
+	branchResource := branch_resource.NewBranchResource(pgDB)
+	purchaseResource := purchase_resource.NewPurchaseResource(pgDB)
+	mongodbResource, err := mongodb.InitMongoDB()
 
 	if err != nil {
 		fmt.Println("Error iniitalizing mongo db")
 	}
 
-	productRepository := product_repository.NewProductRepository(mongodbRepository, "inventory_service", "products")
-	inventoryStockCountRepository := inventory_stock_count_repository.NewInventoryStockCountRepository(mongodbRepository, "inventory_service", "inventory_stock_counts")
-	invoiceRepository := invoice_repository.NewInvoiceRepository(pgDB)
-	stockTransactionRepository := stock_transaction_repository.NewStockTransactionRepository(pgDB)
-	salesRepository := sales_repository.NewSalesRepository(pgDB)
-	itemPurchaseChainRepository := item_purchase_chain_repository.NewItemPurchaseChainRepository(mongodbRepository, "inventory_service", "itempurchasechain")
+	productResource := product_resource.NewProductResource(mongodbResource, "inventory_service", "products")
+	inventoryStockCountResource := inventory_stock_count_resource.NewInventoryStockCountResource(mongodbResource, "inventory_service", "inventory_stock_counts")
+	invoiceResource := invoice_resource.NewInvoiceResource(pgDB)
+	stockTransactionResource := stock_transaction_resource.NewStockTransactionResource(pgDB)
+	salesResource := sales_resource.NewSalesResource(pgDB)
+	itemPurchaseChainResource := item_purchase_chain_resource.NewItemPurchaseChainResource(mongodbResource, "inventory_service", "itempurchasechain")
+
+	// Initialize usecase
+	userDomain := user_domain.NewUserDomain(userResource)
+	supplierDomain := supplier_domain.NewSupplierDomain(supplierResource)
+	itemDomain := item_domain.NewItemDomain(itemResource)
+	branchDomain := branch_domain.NewBranchDomain(branchResource)
+	purchaseDomain := purchase_domain.NewPurchaseDomain(purchaseResource)
+	inventoryStockCountDomain := inventory_stock_count_domain.NewInventoryStockCountDomain(inventoryStockCountResource)
+	productDomain := product_domain.NewProductDomain(productResource)
+	invoiceDomain := invoice_domain.NewInvoiceDomain(invoiceResource)
+	stockDomain := stock_transaction_domain.NewStockTransactionDomain(stockTransactionResource)
+	itemPurchaseChainDomain := item_purchase_chain_domain.NewItemPurchaseChainDomain(itemPurchaseChainResource)
+	salesDomain := sales_domain.NewSalesDomain(salesResource)
 
 	// initialize service
-	userService := auth_service.NewUserService(userRepository)
-	supplierService := supplier_service.NewSupplierService(supplierRepository)
-	itemService := item_service.NewItemService(itemRepository)
-	branchService := branch_service.NewBranchService(branchRepository, userRepository)
-	purchaseService := purchase_service.NewPurchaseService(purchaseRepository, supplierRepository, branchRepository, itemRepository, itemPurchaseChainRepository)
-	inventoryStockCountService := inventory_stock_count_service.NewInventoryStockCountService(inventoryStockCountRepository, branchRepository, itemRepository)
-	productService := product_service.NewProductservice(productRepository, itemRepository)
-	invoiceService := invoice_service.NewInvoiceService(invoiceRepository)
-	stockService := stock_service.NewStockService(stockTransactionRepository)
-	itemPurchaseChainService := item_purchase_chain_service.NewItemPurchaseChainService(itemPurchaseChainRepository, purchaseRepository, itemRepository, branchRepository)
-	salesService := sales_service.NewSalesService(salesRepository, productRepository, itemPurchaseChainRepository, itemPurchaseChainService)
-	uploadService := upload_service.NewUploadService(salesRepository, productRepository, salesService)
+	userService := auth_service.NewUserService(userDomain)
+	supplierService := supplier_service.NewSupplierService(supplierDomain)
+	itemService := item_service.NewItemService(itemDomain)
+	branchService := branch_service.NewBranchService(branchDomain, userDomain)
+	purchaseService := purchase_service.NewPurchaseService(purchaseDomain, supplierDomain, branchDomain, itemDomain, itemPurchaseChainDomain)
+	inventoryStockCountService := inventory_stock_count_service.NewInventoryStockCountService(inventoryStockCountDomain, branchDomain, itemDomain)
+	productService := product_service.NewProductservice(productDomain, itemDomain)
+	invoiceService := invoice_service.NewInvoiceService(invoiceDomain)
+	stockService := stock_service.NewStockService(stockDomain)
+	itemPurchaseChainService := item_purchase_chain_service.NewItemPurchaseChainService(itemPurchaseChainDomain, purchaseDomain, itemDomain, branchDomain)
+	salesService := sales_service.NewSalesService(salesDomain, productDomain, itemPurchaseChainDomain, itemPurchaseChainService)
+	uploadService := upload_service.NewUploadService(salesResource, productResource, salesService)
 
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)
