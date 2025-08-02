@@ -7,10 +7,10 @@ import (
 	"github.com/inventory-service/app/model"
 	itempurchasechain "github.com/inventory-service/app/usecase/item_purchase_chain"
 	"github.com/inventory-service/lib/error_wrapper"
-	mock_branch "github.com/inventory-service/mocks/resource/branch"
-	mock_item "github.com/inventory-service/mocks/resource/item"
-	mock_itempurchasechain "github.com/inventory-service/mocks/resource/item_purchase_chain"
-	mock_purchase "github.com/inventory-service/mocks/resource/purchase"
+	mock_branch "github.com/inventory-service/mocks/domain/branch"
+	mock_item "github.com/inventory-service/mocks/domain/item"
+	mock_itempurchasechain "github.com/inventory-service/mocks/domain/item_purchase_chain"
+	mock_purchase "github.com/inventory-service/mocks/domain/purchase"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -19,16 +19,16 @@ func TestCalculateCost(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	mockItemPurchaseChainRepo := mock_itempurchasechain.NewMockItemPurchaseChainResource(ctrl)
-	mockItemRepo := mock_item.NewMockItemResource(ctrl)
-	mockBranchRepo := mock_branch.NewMockBranchResource(ctrl)
-	mockPurchaseRepo := mock_purchase.NewMockPurchaseResource(ctrl)
+	mockItemPurchaseChainDomain := mock_itempurchasechain.NewMockItemPurchaseChainDomain(ctrl)
+	mockPurchaseDomain := mock_purchase.NewMockPurchaseDomain(ctrl)
+	mockItemDomain := mock_item.NewMockItemDomain(ctrl)
+	mockBranchDomain := mock_branch.NewMockBranchDomain(ctrl)
 
 	itemPurchaseChainService := itempurchasechain.NewItemPurchaseChainService(
-		mockItemPurchaseChainRepo,
-		mockPurchaseRepo,
-		mockItemRepo,
-		mockBranchRepo,
+		mockItemPurchaseChainDomain,
+		mockPurchaseDomain,
+		mockItemDomain,
+		mockBranchDomain,
 	)
 	itemId := "item-1"
 	branchId := "branch-1"
@@ -64,7 +64,7 @@ func TestCalculateCost(t *testing.T) {
 				},
 			},
 		}
-		mockItemPurchaseChainRepo.EXPECT().
+		mockItemPurchaseChainDomain.EXPECT().
 			Get(ctx, gomock.Any()).
 			Return([]model.ItemPurchaseChainGet{firstPurchaseChain}, nil)
 
@@ -94,8 +94,8 @@ func TestCalculateCost(t *testing.T) {
 			},
 		}
 		gomock.InOrder(
-			mockItemPurchaseChainRepo.EXPECT().Get(ctx, gomock.Any()).Return([]model.ItemPurchaseChainGet{firstPurchaseChain}, nil).Times(1),
-			mockItemPurchaseChainRepo.EXPECT().Get(ctx, gomock.Any()).Return([]model.ItemPurchaseChainGet{secondPurchaseChain}, nil).Times(1),
+			mockItemPurchaseChainDomain.EXPECT().Get(ctx, gomock.Any()).Return([]model.ItemPurchaseChainGet{firstPurchaseChain}, nil).Times(1),
+			mockItemPurchaseChainDomain.EXPECT().Get(ctx, gomock.Any()).Return([]model.ItemPurchaseChainGet{secondPurchaseChain}, nil).Times(1),
 		)
 		cost, purchaseChainResults, errW := itemPurchaseChainService.CalculateCost(ctx, itemId, branchId, 12)
 		assert.Nil(t, errW)
@@ -117,9 +117,9 @@ func TestCalculateCost(t *testing.T) {
 			},
 		}
 		gomock.InOrder(
-			mockItemPurchaseChainRepo.EXPECT().Get(ctx, gomock.Any()).Return(nil, error_wrapper.New(model.RErrDataNotFound, gomock.Any())),
-			mockItemPurchaseChainRepo.EXPECT().Get(ctx, gomock.Any()).Return(itemPurchaseChain, nil),
-			mockItemPurchaseChainRepo.EXPECT().
+			mockItemPurchaseChainDomain.EXPECT().Get(ctx, gomock.Any()).Return(nil, error_wrapper.New(model.RErrDataNotFound, gomock.Any())),
+			mockItemPurchaseChainDomain.EXPECT().Get(ctx, gomock.Any()).Return(itemPurchaseChain, nil),
+			mockItemPurchaseChainDomain.EXPECT().
 				Update(ctx, "purchase-1", gomock.Any()).
 				Do(func(_ context.Context, id string, item model.ItemPurchaseChain) {
 					assert.Equal(t, "purchase-1", id)

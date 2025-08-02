@@ -5,8 +5,8 @@ import (
 	"github.com/inventory-service/lib/error_wrapper"
 )
 
-func (i *itemService) Create(name, supplierID string, category string, price float64, unit string) *error_wrapper.ErrorWrapper {
-	err := i.itemDomain.Create(name, supplierID, category, price, unit)
+func (i *itemService) Create(name, supplierID, category, unit string, price, portionSize float64) *error_wrapper.ErrorWrapper {
+	err := i.itemDomain.Create(name, supplierID, category, unit, price, portionSize)
 	if err != nil {
 		return err
 	}

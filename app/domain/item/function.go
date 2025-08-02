@@ -5,13 +5,14 @@ import (
 	"github.com/inventory-service/lib/error_wrapper"
 )
 
-func (i *itemDomain) Create(name, supplierId string, category string, price float64, unit string) *error_wrapper.ErrorWrapper {
+func (i *itemDomain) Create(name, supplierId, category, unit string, price, portionSize float64) *error_wrapper.ErrorWrapper {
 	item := model.Item{
-		Name:       name,
-		Category:   category,
-		Price:      price,
-		Unit:       unit,
-		SupplierID: supplierId,
+		Name:        name,
+		Category:    category,
+		Price:       price,
+		Unit:        unit,
+		SupplierID:  supplierId,
+		PortionSize: portionSize,
 	}
 	return i.itemResource.Create(item)
 }

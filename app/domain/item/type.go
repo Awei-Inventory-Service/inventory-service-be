@@ -7,7 +7,7 @@ import (
 )
 
 type ItemDomain interface {
-	Create(name, supplierID string, category string, price float64, unit string) *error_wrapper.ErrorWrapper
+	Create(name, supplierID, category, unit string, price, portionSize float64) *error_wrapper.ErrorWrapper
 	FindAll() ([]model.Item, *error_wrapper.ErrorWrapper)
 	FindByID(id string) (*model.Item, *error_wrapper.ErrorWrapper)
 	Update(id, supplierID string, name, category string, price float64, unit string) *error_wrapper.ErrorWrapper

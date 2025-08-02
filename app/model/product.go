@@ -17,9 +17,10 @@ type GetProduct struct {
 }
 
 type Ingredient struct {
-	ID       string `bson:"_id,omitempty" json:"id"`
-	ItemID   string `bson:"item_id" json:"item_id"`
-	ItemName string `bson:"item_name" json:"item_name"`
-	Quantity int    `bson:"quantity" json:"quantity"`
-	Unit     string `bson:"unit" json:"unit"`
+	ID          string  `bson:"_id,omitempty" json:"id"`
+	ItemID      string  `bson:"item_id" json:"item_id"`
+	ItemName    string  `bson:"item_name" json:"item_name"`
+	ItemPortion float64 `bson:"item_portion" json:"item_portion"`
+	Quantity    int     `bson:"quantity" json:"quantity"`
+	Unit        string  `bson:"unit" json:"unit"`
 }

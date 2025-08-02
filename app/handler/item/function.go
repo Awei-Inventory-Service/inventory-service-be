@@ -59,11 +59,19 @@ func (i *itemController) CreateItem(c *gin.Context) {
 		return
 	}
 
-	errW = i.itemService.Create(createItemRequest.Name, createItemRequest.SupplierID, createItemRequest.Category, createItemRequest.Price, createItemRequest.Unit)
-	if errW != nil {
-		return
+	// Apply default value if not set (i.e., 0 means omitted)
+	if createItemRequest.PortionSize == 0 {
+		createItemRequest.PortionSize = 1.0
 	}
 
+	errW = i.itemService.Create(
+		createItemRequest.Name,
+		createItemRequest.SupplierID,
+		createItemRequest.Category,
+		createItemRequest.Unit,
+		createItemRequest.Price,
+		createItemRequest.PortionSize,
+	)
 }
 
 func (i *itemController) UpdateItem(c *gin.Context) {
