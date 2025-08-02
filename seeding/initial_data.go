@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/inventory-service/app/model"
-	"github.com/inventory-service/app/resource/mongodb"
+	"github.com/inventory-service/model"
+	"github.com/inventory-service/resource/mongodb"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )

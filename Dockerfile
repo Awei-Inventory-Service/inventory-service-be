@@ -11,16 +11,20 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o main .
-
-# Build binary
+RUN go build -o main ./cmd/http
 
 FROM alpine:latest
 
+# Install ca-certificates for HTTPS requests
+RUN apk --no-cache add ca-certificates
+
 WORKDIR /app
 
+# Copy the binary from builder stage
 COPY --from=builder /app/main .
-COPY --from=builder /app/.env .env
+
+# Copy environment files if they exist
+COPY --from=builder /app/.env* ./
 
 EXPOSE 8080
 

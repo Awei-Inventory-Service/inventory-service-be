@@ -1,7 +1,0 @@
-package inventorystockcount
-
-import inventorystockcount "github.com/inventory-service/app/resource/inventory_stock_count"
-
-func NewInventoryStockCountDomain(inventoryStockCountResource inventorystockcount.InventoryStockCountResource) InventoryStockCountDomain {
-	return &inventoryStockCountDomain{inventoryStockCountResource: inventoryStockCountResource}
-}

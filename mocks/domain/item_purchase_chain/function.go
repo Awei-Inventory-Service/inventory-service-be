@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	model "github.com/inventory-service/app/model"
+	model "github.com/inventory-service/model"
 	error_wrapper "github.com/inventory-service/lib/error_wrapper"
 	gomock "go.uber.org/mock/gomock"
 )

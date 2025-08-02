@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/inventory-service/app/model"
+	"github.com/inventory-service/model"
 	"gorm.io/gorm"
 )
 
