@@ -87,11 +87,12 @@ func Seed(pgDB *gorm.DB) {
 	// Insert Items
 	for i := 0; i < 5; i++ {
 		item := model.Item{
-			Name:       fmt.Sprintf("Item %d", i),
-			Category:   fmt.Sprintf("Category %d", i),
-			Price:      11100.5,
-			Unit:       "kg",
-			SupplierID: createdSupplierIDS[i],
+			Name:        fmt.Sprintf("Item %d", i),
+			Category:    fmt.Sprintf("Category %d", i),
+			Price:       11100.5,
+			Unit:        "gram",
+			SupplierID:  createdSupplierIDS[i],
+			PortionSize: 50.0,
 		}
 		result := pgDB.Create(&item)
 
@@ -111,10 +112,9 @@ func Seed(pgDB *gorm.DB) {
 		// Each product has 2 random ingredients
 		for j := 0; j < 2; j++ {
 			ingredients = append(ingredients, model.Ingredient{
-				ItemID:   createdItem[j].UUID,
-				ItemName: createdItem[j].Name,
-				Quantity: (j + 1) * 10, // Example quantity
-				Unit:     createdItem[j].Unit,
+				ItemID:      createdItem[j].UUID,
+				ItemName:    createdItem[j].Name,
+				ItemPortion: 1,
 			})
 		}
 

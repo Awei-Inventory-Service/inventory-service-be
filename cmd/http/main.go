@@ -5,6 +5,7 @@ import (
 
 	"github.com/inventory-service/config"
 	"github.com/inventory-service/routes"
+	"github.com/inventory-service/seeding"
 	"github.com/joho/godotenv"
 )
 
@@ -24,7 +25,7 @@ func main() {
 	}
 
 	// Seed data
-	// seeding.MainSeed(pgDB)
+	seeding.MainSeed(pgDB)
 
 	// Initialize and start the router
 	router := routes.InitRoutes(pgDB)

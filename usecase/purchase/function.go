@@ -61,10 +61,18 @@ func (p *purchaseService) Create(c *gin.Context, supplierId, branchId, itemId st
 		}
 	}
 
+	userId := c.GetHeader("user_id")
+
 	// All checks completed, proceed to create purchase
-	newPurchase, errW := p.purchaseDomain.Create(supplierId, branchId, itemId, quantity, purchaseCost)
+	newPurchase, errW := p.purchaseDomain.Create(supplierId, branchId, itemId, userId, quantity, purchaseCost)
 	if errW != nil {
 		return errW
+	}
+
+	errW = p.stockBalanceDomain.SyncCurrentBalance(branchId, itemId)
+
+	if errW != nil {
+		fmt.Println("Fail sync stock balance domain")
 	}
 
 	errW = p.itemPurchaseChainDomain.Create(c, itemId, branchId, *newPurchase)

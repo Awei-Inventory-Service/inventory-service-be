@@ -1,6 +1,8 @@
 package product
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -73,7 +75,6 @@ func (p *productController) Update(ctx *gin.Context) {
 		updatedData dto.UpdateProductRequest
 		errW        *error_wrapper.ErrorWrapper
 	)
-
 	defer func() {
 		response_wrapper.New(&ctx.Writer, ctx, errW == nil, nil, errW)
 	}()
@@ -83,20 +84,21 @@ func (p *productController) Update(ctx *gin.Context) {
 		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
+	fmt.Println("Start update with payload ", updatedData)
 
 	var ingredients []model.Ingredient
 
 	for _, ingredient := range updatedData.Ingredients {
 		ingredients = append(ingredients, model.Ingredient{
-			ItemID:   ingredient.ItemID,
-			Unit:     ingredient.Unit,
-			Quantity: ingredient.Quantity,
+			ItemID:      ingredient.ItemID,
+			ItemPortion: ingredient.PortionSize,
 		})
 	}
 
 	errW = p.productService.Update(ctx, id, updatedData.Name, ingredients)
 
 	if errW != nil {
+		fmt.Println("Error", errW)
 		return
 	}
 

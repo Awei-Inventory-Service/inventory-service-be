@@ -17,10 +17,9 @@ func (p *productService) Create(ctx context.Context, name string, ingredientsDto
 			return error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 		}
 		ingredients = append(ingredients, model.Ingredient{
-			ItemID:   ingredient.ItemID,
-			ItemName: item.Name,
-			Quantity: ingredient.Quantity,
-			Unit:     ingredient.Unit,
+			ItemID:      ingredient.ItemID,
+			ItemName:    item.Name,
+			ItemPortion: ingredient.PortionSize,
 		})
 	}
 	err := p.productDomain.Create(ctx, name, ingredients)

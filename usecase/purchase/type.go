@@ -6,6 +6,7 @@ import (
 	"github.com/inventory-service/domain/item"
 	itempurchasechain "github.com/inventory-service/domain/item_purchase_chain"
 	"github.com/inventory-service/domain/purchase"
+	stockbalance "github.com/inventory-service/domain/stock_balance"
 	"github.com/inventory-service/domain/supplier"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
@@ -27,4 +28,5 @@ type purchaseService struct {
 	branchDomain            branch.BranchDomain
 	itemDomain              item.ItemDomain
 	itemPurchaseChainDomain itempurchasechain.ItemPurchaseChainDomain
+	stockBalanceDomain      stockbalance.StockBalanceDomain
 }

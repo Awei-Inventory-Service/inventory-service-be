@@ -29,7 +29,8 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 			ctx,
 			ingredient.ItemID,
 			payload.BranchID,
-			ingredient.Quantity*payload.Quantity,
+			// ingredient.Quantity*payload.Quantity,
+			0,
 		)
 
 		if errW != nil {

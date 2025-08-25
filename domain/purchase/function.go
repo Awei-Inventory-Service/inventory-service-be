@@ -5,7 +5,7 @@ import (
 	"github.com/inventory-service/model"
 )
 
-func (p *purchaseDomain) Create(supplierId, branchId, itemId string, quantity int, purchaseCost float64) (*model.Purchase, *error_wrapper.ErrorWrapper) {
+func (p *purchaseDomain) Create(supplierId, branchId, itemId, userId string, quantity int, purchaseCost float64) (*model.Purchase, *error_wrapper.ErrorWrapper) {
 	purchase := model.Purchase{
 		SupplierID:   supplierId,
 		BranchID:     branchId,
@@ -13,6 +13,40 @@ func (p *purchaseDomain) Create(supplierId, branchId, itemId string, quantity in
 		Quantity:     quantity,
 		PurchaseCost: purchaseCost,
 	}
+
+	_, errW := p.stockBalanceResource.FindByBranchAndItem(branchId, itemId)
+
+	if errW != nil {
+		if errW.Is(model.RErrDataNotFound) {
+			// If there is no stock balance, create one
+			errW = p.stockBalanceResource.Create(model.StockBalance{
+				BranchID:     branchId,
+				ItemID:       itemId,
+				CurrentStock: quantity,
+			})
+		} else {
+			return nil, errW
+
+		}
+	}
+
+	// Inserting new stock transaction
+
+	errW = p.stockTransactionResource.Create(model.StockTransaction{
+		BranchOriginID:      branchId,
+		BranchDestinationID: branchId,
+		ItemID:              itemId,
+		Type:                "IN",
+		IssuerID:            userId,
+		Quantity:            quantity,
+		Cost:                purchaseCost,
+	})
+
+	if errW != nil {
+		return nil, errW
+	}
+
+	// currentItemStock, errW := p.item
 	return p.purchaseResource.Create(supplierId, purchase)
 }
 

@@ -1,8 +1,11 @@
 package stockbalance
 
 import (
+	"errors"
+
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
+	"gorm.io/gorm"
 )
 
 func (s *stockBalanceResource) Create(stockBalance model.StockBalance) *error_wrapper.ErrorWrapper {
@@ -48,6 +51,9 @@ func (s *stockBalanceResource) FindByBranchAndItem(branchID, itemID string) (*mo
 	var balance model.StockBalance
 	result := s.db.Where("branch_id = ? AND item_id = ?", branchID, itemID).First(&balance)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, error_wrapper.New(model.RErrDataNotFound, "Stock balance record not found")
+		}
 		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
 	}
 

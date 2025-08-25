@@ -38,3 +38,25 @@ func (s *stockBalanceDomain) Update(branchID, itemID string, currentStock int) *
 func (s *stockBalanceDomain) Delete(branchID, itemID string) *error_wrapper.ErrorWrapper {
 	return s.stockBalanceResource.Delete(branchID, itemID)
 }
+
+func (s *stockBalanceDomain) SyncCurrentBalance(branchID, itemID string) *error_wrapper.ErrorWrapper {
+	allTransactions, err := s.stockTransactionResource.FindAll()
+	if err != nil {
+		return err
+	}
+
+	var totalBalance int
+	for _, transaction := range allTransactions {
+		if transaction.ItemID != itemID {
+			continue
+		}
+
+		if transaction.Type == "IN" && transaction.BranchDestinationID == branchID {
+			totalBalance += transaction.Quantity
+		} else if transaction.Type == "OUT" && transaction.BranchOriginID == branchID {
+			totalBalance -= transaction.Quantity
+		}
+	}
+
+	return s.stockBalanceResource.Update(branchID, itemID, totalBalance)
+}
