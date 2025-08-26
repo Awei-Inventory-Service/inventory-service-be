@@ -12,7 +12,7 @@ import (
 
 func (p *productController) Create(ctx *gin.Context) {
 	var (
-		product dto.CreateProductRequest
+		product model.Product
 		errW    *error_wrapper.ErrorWrapper
 	)
 
@@ -25,7 +25,7 @@ func (p *productController) Create(ctx *gin.Context) {
 		return
 	}
 
-	errW = p.productService.Create(ctx, product.Name, product.Ingredients)
+	errW = p.productService.Create(ctx, product)
 
 	if errW != nil {
 		return
@@ -35,7 +35,7 @@ func (p *productController) Create(ctx *gin.Context) {
 
 func (p *productController) FindAll(ctx *gin.Context) {
 	var (
-		products []model.Product
+		products []dto.GetProductResponse
 		errW     *error_wrapper.ErrorWrapper
 	)
 
@@ -84,14 +84,14 @@ func (p *productController) Update(ctx *gin.Context) {
 		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
-	fmt.Println("Start update with payload ", updatedData)
 
 	var ingredients []model.Ingredient
 
 	for _, ingredient := range updatedData.Ingredients {
+
 		ingredients = append(ingredients, model.Ingredient{
-			ItemID:      ingredient.ItemID,
-			ItemPortion: ingredient.PortionSize,
+			ItemID: ingredient.ItemID,
+			Ratio:  ingredient.Ratio,
 		})
 	}
 

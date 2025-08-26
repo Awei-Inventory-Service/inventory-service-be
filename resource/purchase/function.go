@@ -16,7 +16,7 @@ func (p *purchaseResource) Create(supplierId string, purchase model.Purchase) (*
 
 func (p *purchaseResource) FindAll() ([]model.Purchase, *error_wrapper.ErrorWrapper) {
 	var purchases []model.Purchase
-	result := p.db.Find(&purchases)
+	result := p.db.Preload("Branch").Preload("Supplier").Preload("Item").Find(&purchases)
 	if result.Error != nil {
 		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
 	}
@@ -26,7 +26,7 @@ func (p *purchaseResource) FindAll() ([]model.Purchase, *error_wrapper.ErrorWrap
 
 func (p *purchaseResource) FindByID(id string) (*model.Purchase, *error_wrapper.ErrorWrapper) {
 	var purchase model.Purchase
-	result := p.db.Where("uuid = ?", id).First(&purchase)
+	result := p.db.Preload("Supplier").Preload("Branch").Where("uuid = ?", id).First(&purchase)
 	if result.Error != nil {
 		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
 	}

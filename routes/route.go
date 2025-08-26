@@ -104,7 +104,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	branchDomain := branch_domain.NewBranchDomain(branchResource)
 	purchaseDomain := purchase_domain.NewPurchaseDomain(purchaseResource, stockBalanceResource, stockTransactionResource)
 	inventoryStockCountDomain := inventory_stock_count_domain.NewInventoryStockCountDomain(inventoryStockCountResource)
-	productDomain := product_domain.NewProductDomain(productResource)
+	productDomain := product_domain.NewProductDomain(productResource, itemResource)
 	invoiceDomain := invoice_domain.NewInvoiceDomain(invoiceResource)
 	stockDomain := stock_transaction_domain.NewStockTransactionDomain(stockTransactionResource)
 	itemPurchaseChainDomain := item_purchase_chain_domain.NewItemPurchaseChainDomain(itemPurchaseChainResource)
@@ -249,7 +249,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 		stockBalanceRoutes := apiV1.Group("/stock-balance")
 		{
-			stockBalanceRoutes.GET("/", stockBalanceController.FindByBranchIdAndItemId)
+			stockBalanceRoutes.GET("/", stockBalanceController.FindAllStockBalance)
 		}
 	}
 

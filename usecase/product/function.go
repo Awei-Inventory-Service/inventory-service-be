@@ -8,21 +8,8 @@ import (
 	"github.com/inventory-service/model"
 )
 
-func (p *productService) Create(ctx context.Context, name string, ingredientsDto []dto.Ingredient) *error_wrapper.ErrorWrapper {
-	var ingredients []model.Ingredient
-
-	for _, ingredient := range ingredientsDto {
-		item, err := p.itemDomain.FindByID(ingredient.ItemID)
-		if err != nil {
-			return error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
-		}
-		ingredients = append(ingredients, model.Ingredient{
-			ItemID:      ingredient.ItemID,
-			ItemName:    item.Name,
-			ItemPortion: ingredient.PortionSize,
-		})
-	}
-	err := p.productDomain.Create(ctx, name, ingredients)
+func (p *productService) Create(ctx context.Context, payload model.Product) *error_wrapper.ErrorWrapper {
+	err := p.productDomain.Create(ctx, payload)
 
 	if err != nil {
 		return err
@@ -30,7 +17,7 @@ func (p *productService) Create(ctx context.Context, name string, ingredientsDto
 	return nil
 }
 
-func (p *productService) FindAll(ctx context.Context) ([]model.Product, *error_wrapper.ErrorWrapper) {
+func (p *productService) FindAll(ctx context.Context) ([]dto.GetProductResponse, *error_wrapper.ErrorWrapper) {
 	products, err := p.productDomain.FindAll(ctx)
 
 	if err != nil {

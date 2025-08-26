@@ -9,3 +9,11 @@ import (
 func (s *stockBalanceUsecase) FindByBranchIdAndItemId(payload dto.GetStockBalanceRequest) (*model.StockBalance, *error_wrapper.ErrorWrapper) {
 	return s.stockBalanceDomain.FindByBranchAndItem(payload.BranchId, payload.ItemId)
 }
+
+func (s *stockBalanceUsecase) FindByBranchId(branchId string) ([]model.StockBalance, *error_wrapper.ErrorWrapper) {
+	return s.stockBalanceDomain.FindByBranch(branchId)
+}
+
+func (s *stockBalanceUsecase) FindAll() ([]model.StockBalance, *error_wrapper.ErrorWrapper) {
+	return s.stockBalanceDomain.FindAll()
+}

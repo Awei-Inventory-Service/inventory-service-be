@@ -9,6 +9,8 @@ import (
 
 type StockBalanceUsecase interface {
 	FindByBranchIdAndItemId(payload dto.GetStockBalanceRequest) (*model.StockBalance, *error_wrapper.ErrorWrapper)
+	FindByBranchId(branchId string) ([]model.StockBalance, *error_wrapper.ErrorWrapper)
+	FindAll() ([]model.StockBalance, *error_wrapper.ErrorWrapper)
 }
 
 type stockBalanceUsecase struct {

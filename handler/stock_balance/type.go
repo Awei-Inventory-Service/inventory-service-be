@@ -7,6 +7,7 @@ import (
 
 type StockBalanceHandler interface {
 	FindByBranchIdAndItemId(c *gin.Context)
+	FindAllStockBalance(c *gin.Context)
 }
 
 type stockBalanceHandler struct {

@@ -19,7 +19,7 @@ func (s *stockBalanceResource) Create(stockBalance model.StockBalance) *error_wr
 
 func (s *stockBalanceResource) FindAll() ([]model.StockBalance, *error_wrapper.ErrorWrapper) {
 	var balances []model.StockBalance
-	result := s.db.Find(&balances)
+	result := s.db.Preload("Branch").Preload("Item").Find(&balances)
 	if result.Error != nil {
 		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
 	}

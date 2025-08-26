@@ -31,3 +31,21 @@ func (s *stockBalanceHandler) FindByBranchIdAndItemId(c *gin.Context) {
 	}
 	return
 }
+
+func (s *stockBalanceHandler) FindAllStockBalance(c *gin.Context) {
+	var (
+		errW          *error_wrapper.ErrorWrapper
+		stockBalances []model.StockBalance
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, stockBalances, errW)
+	}()
+	stockBalances, errW = s.stockBalanceUsecase.FindAll()
+
+	if errW != nil {
+		return
+	}
+
+	return
+}

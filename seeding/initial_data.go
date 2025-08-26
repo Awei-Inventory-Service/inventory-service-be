@@ -112,9 +112,8 @@ func Seed(pgDB *gorm.DB) {
 		// Each product has 2 random ingredients
 		for j := 0; j < 2; j++ {
 			ingredients = append(ingredients, model.Ingredient{
-				ItemID:      createdItem[j].UUID,
-				ItemName:    createdItem[j].Name,
-				ItemPortion: 1,
+				ItemID: createdItem[j].UUID,
+				Ratio:  1,
 			})
 		}
 
