@@ -1,133 +1,123 @@
 package seeding
 
-import (
-	"context"
-	"fmt"
+// func Seed(pgDB *gorm.DB) {
+// 	fmt.Println("Seeding db")
+// 	mongodDb, err := mongodb.InitMongoDB()
 
-	"github.com/inventory-service/model"
-	"github.com/inventory-service/resource/mongodb"
-	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
-)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	var (
+// 		createdUserIDs     []string
+// 		createdSupplierIDS []string
+// 		createdItem        []model.Item
+// 	)
+// 	for i := 0; i < 10; i++ {
 
-func Seed(pgDB *gorm.DB) {
-	fmt.Println("Seeding db")
-	mongodDb, err := mongodb.InitMongoDB()
+// 		hashed, err := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		user := model.User{
+// 			Username: fmt.Sprintf("username%d", i),
+// 			Email:    fmt.Sprintf("user%d@gmail.com", i),
+// 			Password: string(hashed),
+// 			Role:     model.RoleBranchManager,
+// 		}
 
-	if err != nil {
-		panic(err)
-	}
-	var (
-		createdUserIDs     []string
-		createdSupplierIDS []string
-		createdItem        []model.Item
-	)
-	for i := 0; i < 10; i++ {
+// 		result := pgDB.Create(&user)
 
-		hashed, err := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
-		if err != nil {
-			panic(err)
-		}
-		user := model.User{
-			Username: fmt.Sprintf("username%d", i),
-			Email:    fmt.Sprintf("user%d@gmail.com", i),
-			Password: string(hashed),
-			Role:     model.RoleBranchManager,
-		}
+// 		if result.Error != nil {
+// 			continue
+// 		}
+// 		createdUserIDs = append(createdUserIDs, user.UUID)
+// 	}
 
-		result := pgDB.Create(&user)
+// 	if len(createdUserIDs) < 5 {
+// 		panic("There is no enough user for creating branches")
+// 	}
+// 	fmt.Println("Done seeding user")
 
-		if result.Error != nil {
-			continue
-		}
-		createdUserIDs = append(createdUserIDs, user.UUID)
-	}
+// 	for i := 0; i < 5; i++ {
+// 		branch := model.Branch{
+// 			Name:            fmt.Sprintf("Branch %d", i),
+// 			Location:        fmt.Sprintf("Jalan ke-%d", i),
+// 			BranchManagerID: createdUserIDs[i],
+// 		}
 
-	if len(createdUserIDs) < 5 {
-		panic("There is no enough user for creating branches")
-	}
-	fmt.Println("Done seeding user")
+// 		result := pgDB.Create(&branch)
 
-	for i := 0; i < 5; i++ {
-		branch := model.Branch{
-			Name:            fmt.Sprintf("Branch %d", i),
-			Location:        fmt.Sprintf("Jalan ke-%d", i),
-			BranchManagerID: createdUserIDs[i],
-		}
+// 		if result.Error != nil {
+// 			continue
+// 		}
+// 	}
+// 	fmt.Println("Done seeding branch")
+// 	// Insert Suppliers
 
-		result := pgDB.Create(&branch)
+// 	for i := 0; i < 5; i++ {
+// 		supplier := model.Supplier{
+// 			Name:        fmt.Sprintf("Supplier %d", i),
+// 			PhoneNumber: fmt.Sprintf("0812%d", i),
+// 			Address:     fmt.Sprintf("Alamat Supplier %d", i),
+// 			PICName:     fmt.Sprintf("PIC Supplier %d", i),
+// 		}
 
-		if result.Error != nil {
-			continue
-		}
-	}
-	fmt.Println("Done seeding branch")
-	// Insert Suppliers
+// 		result := pgDB.Create(&supplier)
 
-	for i := 0; i < 5; i++ {
-		supplier := model.Supplier{
-			Name:        fmt.Sprintf("Supplier %d", i),
-			PhoneNumber: fmt.Sprintf("0812%d", i),
-			Address:     fmt.Sprintf("Alamat Supplier %d", i),
-			PICName:     fmt.Sprintf("PIC Supplier %d", i),
-		}
+// 		if result.Error != nil {
+// 			continue
+// 		}
+// 		createdSupplierIDS = append(createdSupplierIDS, supplier.UUID)
+// 	}
 
-		result := pgDB.Create(&supplier)
+// 	if len(createdSupplierIDS) < 5 {
+// 		panic("Supplier id is not enough")
+// 	}
+// 	fmt.Println("Done seeding supplier")
+// 	// Insert Items
+// 	for i := 0; i < 5; i++ {
+// 		item := model.Item{
+// 			Name:        fmt.Sprintf("Item %d", i),
+// 			Category:    fmt.Sprintf("Category %d", i),
+// 			Price:       11100.5,
+// 			Unit:        "gram",
+// 			SupplierID:  createdSupplierIDS[i],
+// 			PortionSize: 50.0,
+// 		}
+// 		result := pgDB.Create(&item)
 
-		if result.Error != nil {
-			continue
-		}
-		createdSupplierIDS = append(createdSupplierIDS, supplier.UUID)
-	}
+// 		if result.Error != nil {
+// 			continue
+// 		}
 
-	if len(createdSupplierIDS) < 5 {
-		panic("Supplier id is not enough")
-	}
-	fmt.Println("Done seeding supplier")
-	// Insert Items
-	for i := 0; i < 5; i++ {
-		item := model.Item{
-			Name:        fmt.Sprintf("Item %d", i),
-			Category:    fmt.Sprintf("Category %d", i),
-			Price:       11100.5,
-			Unit:        "gram",
-			SupplierID:  createdSupplierIDS[i],
-			PortionSize: 50.0,
-		}
-		result := pgDB.Create(&item)
+// 		createdItem = append(createdItem, item)
+// 	}
+// 	fmt.Println("Done seeding items")
+// 	// Insert Products
+// 	productCollection := mongodDb.Database("inventory_service").Collection("products")
 
-		if result.Error != nil {
-			continue
-		}
+// 	for i := 0; i < 5; i++ {
+// 		ingredients := []model.Ingredient{}
 
-		createdItem = append(createdItem, item)
-	}
-	fmt.Println("Done seeding items")
-	// Insert Products
-	productCollection := mongodDb.Database("inventory_service").Collection("products")
+// 		// Each product has 2 random ingredients
+// 		for j := 0; j < 2; j++ {
+// 			ingredients = append(ingredients, model.Ingredient{
+// 				ItemID: createdItem[j].UUID,
+// 				Ratio:  1,
+// 			})
+// 		}
 
-	for i := 0; i < 5; i++ {
-		ingredients := []model.Ingredient{}
+// 		product := model.Product{
+// 			Name:        fmt.Sprintf("Product %d", i),
+// 			Ingredients: ingredients,
+// 			Code:        fmt.Sprintf("P00%d", i),
+// 		}
 
-		// Each product has 2 random ingredients
-		for j := 0; j < 2; j++ {
-			ingredients = append(ingredients, model.Ingredient{
-				ItemID: createdItem[j].UUID,
-				Ratio:  1,
-			})
-		}
-
-		product := model.Product{
-			Name:        fmt.Sprintf("Product %d", i),
-			Ingredients: ingredients,
-			Code:        fmt.Sprintf("P00%d", i),
-		}
-
-		_, err := productCollection.InsertOne(context.TODO(), product)
-		if err != nil {
-			fmt.Println("Error inserting product:", err)
-			continue
-		}
-	}
-	fmt.Println("Done seeding products")
-}
+// 		_, err := productCollection.InsertOne(context.TODO(), product)
+// 		if err != nil {
+// 			fmt.Println("Error inserting product:", err)
+// 			continue
+// 		}
+// 	}
+// 	fmt.Println("Done seeding products")
+// }

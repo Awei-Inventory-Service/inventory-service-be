@@ -12,7 +12,7 @@ import (
 
 func (p *productController) Create(ctx *gin.Context) {
 	var (
-		product model.Product
+		product dto.CreateProductRequest
 		errW    *error_wrapper.ErrorWrapper
 	)
 
@@ -21,6 +21,7 @@ func (p *productController) Create(ctx *gin.Context) {
 	}()
 
 	if err := ctx.ShouldBindJSON(&product); err != nil {
+		fmt.Println("Err: ", err.Error())
 		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
@@ -53,7 +54,7 @@ func (p *productController) FindAll(ctx *gin.Context) {
 
 func (p *productController) FindByID(ctx *gin.Context) {
 	var (
-		product model.Product
+		product *model.Product
 		errW    *error_wrapper.ErrorWrapper
 	)
 
@@ -72,30 +73,22 @@ func (p *productController) FindByID(ctx *gin.Context) {
 
 func (p *productController) Update(ctx *gin.Context) {
 	var (
-		updatedData dto.UpdateProductRequest
-		errW        *error_wrapper.ErrorWrapper
+		errW    *error_wrapper.ErrorWrapper
+		product model.Product
 	)
 	defer func() {
 		response_wrapper.New(&ctx.Writer, ctx, errW == nil, nil, errW)
 	}()
 
 	id := ctx.Param("id")
-	if err := ctx.ShouldBindJSON(&updatedData); err != nil {
+	product.UUID = id
+
+	if err := ctx.ShouldBindJSON(&product); err != nil {
 		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
 
-	var ingredients []model.Ingredient
-
-	for _, ingredient := range updatedData.Ingredients {
-
-		ingredients = append(ingredients, model.Ingredient{
-			ItemID: ingredient.ItemID,
-			Ratio:  ingredient.Ratio,
-		})
-	}
-
-	errW = p.productService.Update(ctx, id, updatedData.Name, ingredients)
+	errW = p.productService.Update(ctx, product)
 
 	if errW != nil {
 		fmt.Println("Error", errW)

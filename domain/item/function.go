@@ -5,7 +5,7 @@ import (
 	"github.com/inventory-service/model"
 )
 
-func (i *itemDomain) Create(name, supplierId, category, unit string, price, portionSize float64) *error_wrapper.ErrorWrapper {
+func (i *itemDomain) Create(name, supplierId, unit string, category model.ItemCategory, price, portionSize float64) *error_wrapper.ErrorWrapper {
 	item := model.Item{
 		Name:        name,
 		Category:    category,
@@ -25,7 +25,7 @@ func (i *itemDomain) FindByID(id string) (*model.Item, *error_wrapper.ErrorWrapp
 	return i.itemResource.FindByID(id)
 }
 
-func (i *itemDomain) Update(id, supplierID string, name, category string, price float64, unit string) *error_wrapper.ErrorWrapper {
+func (i *itemDomain) Update(id, supplierID, name, unit string, category model.ItemCategory, price float64) *error_wrapper.ErrorWrapper {
 	item := model.Item{
 		Name:       name,
 		Category:   category,

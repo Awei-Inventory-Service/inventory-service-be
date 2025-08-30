@@ -2,18 +2,41 @@ package product
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 )
 
-func (p *productService) Create(ctx context.Context, payload model.Product) *error_wrapper.ErrorWrapper {
-	err := p.productDomain.Create(ctx, payload)
+func (p *productService) Create(ctx context.Context, payload dto.CreateProductRequest) *error_wrapper.ErrorWrapper {
 
-	if err != nil {
-		return err
+	product, errW := p.productDomain.Create(ctx, model.Product{
+		Name:         payload.Name,
+		Code:         payload.Code,
+		Category:     payload.Category,
+		Unit:         payload.Unit,
+		SellingPrice: payload.SellingPrice,
+	})
+
+	if errW != nil {
+		return errW
 	}
+
+	for _, composition := range payload.ProductCompositions {
+		fmt.Println("INI PRODUCT ", product)
+		errW = p.productCompositionDomain.Create(ctx, model.ProductComposition{
+			ProductID: product.UUID,
+			ItemID:    composition.ItemID,
+			Ratio:     composition.Ratio,
+			Notes:     composition.Notes,
+		})
+
+		if errW != nil {
+			return errW
+		}
+	}
+
 	return nil
 }
 
@@ -27,18 +50,18 @@ func (p *productService) FindAll(ctx context.Context) ([]dto.GetProductResponse,
 	return products, nil
 }
 
-func (p *productService) FindByID(ctx context.Context, productID string) (model.Product, *error_wrapper.ErrorWrapper) {
+func (p *productService) FindByID(ctx context.Context, productID string) (*model.Product, *error_wrapper.ErrorWrapper) {
 	product, err := p.productDomain.FindByID(ctx, productID)
 
 	if err != nil {
-		return model.Product{}, err
+		return nil, err
 	}
 
 	return product, err
 }
 
-func (p *productService) Update(ctx context.Context, productID string, name string, ingredients []model.Ingredient) *error_wrapper.ErrorWrapper {
-	return p.productDomain.Update(ctx, productID, name, ingredients)
+func (p *productService) Update(ctx context.Context, product model.Product) *error_wrapper.ErrorWrapper {
+	return p.productDomain.Update(ctx, product)
 }
 
 func (p *productService) Delete(ctx context.Context, producID string) *error_wrapper.ErrorWrapper {

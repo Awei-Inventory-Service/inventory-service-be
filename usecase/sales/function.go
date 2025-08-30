@@ -13,7 +13,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 	var (
 		sales model.Sales
 	)
-	product, errW := s.productDomain.FindByID(ctx, payload.ProductID)
+	_, errW := s.productDomain.FindByID(ctx, payload.ProductID)
 
 	if errW != nil {
 		fmt.Println(errW.StackTrace(), errW.ActualError())
@@ -24,23 +24,23 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 		itemPurchaseWithSales             []model.ItemPurchaseChainGet
 		totalCost                         float64
 	)
-	for _, ingredient := range product.Ingredients {
-		cost, itemPurchaseChainDocuments, errW := s.itemPurchaseChainService.CalculateCost(
-			ctx,
-			ingredient.ItemID,
-			payload.BranchID,
-			// ingredient.Quantity*payload.Quantity,
-			0,
-		)
+	// for _, ingredient := range product.Ingredients {
+	// 	cost, itemPurchaseChainDocuments, errW := s.itemPurchaseChainService.CalculateCost(
+	// 		ctx,
+	// 		ingredient.ItemID,
+	// 		payload.BranchID,
+	// 		// ingredient.Quantity*payload.Quantity,
+	// 		0,
+	// 	)
 
-		if errW != nil {
-			fmt.Println(errW.StackTrace(), errW.ActualError())
-			return errW
-		}
+	// 	if errW != nil {
+	// 		fmt.Println(errW.StackTrace(), errW.ActualError())
+	// 		return errW
+	// 	}
 
-		updatedItemPurchaseChainDocuments = append(updatedItemPurchaseChainDocuments, itemPurchaseChainDocuments...)
-		totalCost += cost
-	}
+	// 	updatedItemPurchaseChainDocuments = append(updatedItemPurchaseChainDocuments, itemPurchaseChainDocuments...)
+	// 	totalCost += cost
+	// }
 
 	sales.Cost = totalCost
 	sales.BranchID = payload.BranchID

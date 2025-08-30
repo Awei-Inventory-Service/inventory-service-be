@@ -10,9 +10,9 @@ import (
 
 func MainSeed(pgDB *gorm.DB) {
 	fmt.Println(os.Getenv(constant.FeatureFlagSeedInitialData))
-	if os.Getenv(constant.FeatureFlagSeedInitialData) == "true" {
-		Seed(pgDB)
-	}
+	// if os.Getenv(constant.FeatureFlagSeedInitialData) == "true" {
+	// 	Seed(pgDB)
+	// }
 
 	if os.Getenv(constant.FeatureFlagSeedStockTransactionData) == "true" {
 		SeedStockTransaction(pgDB)

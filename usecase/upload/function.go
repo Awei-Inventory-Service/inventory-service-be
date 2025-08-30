@@ -43,15 +43,13 @@ func (u *uploadService) ParseTransactionExcel(ctx context.Context, fileName stri
 		}
 
 		productCode := line[constant.ProductCode]
-		product, errW := u.productRespository.Find(ctx, model.GetProduct{
-			Code: productCode,
-		})
+		product, errW := u.productRespository.FindByID(ctx, productCode)
 
 		if errW != nil {
 			return errW
 		}
 
-		createSales.ProductID = product[0].ID
+		createSales.ProductID = product.UUID
 		quantity := line[constant.Quantity]
 		number, err := strconv.Atoi(quantity)
 

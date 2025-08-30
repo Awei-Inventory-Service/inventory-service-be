@@ -85,7 +85,7 @@ func TestCreateItem(t *testing.T) {
 			tt.mockF(mock)
 			item := model.Item{
 				Name:       tt.item.name,
-				Category:   tt.item.category,
+				Category:   model.ItemCategoryOther,
 				SupplierID: tt.item.supplierId,
 				Price:      tt.item.price,
 				Unit:       tt.item.unit,

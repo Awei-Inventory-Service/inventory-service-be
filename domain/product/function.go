@@ -8,7 +8,7 @@ import (
 	"github.com/inventory-service/model"
 )
 
-func (p *productDomain) Create(ctx context.Context, payload model.Product) *error_wrapper.ErrorWrapper {
+func (p *productDomain) Create(ctx context.Context, payload model.Product) (*model.Product, *error_wrapper.ErrorWrapper) {
 
 	return p.productResource.Create(ctx, payload)
 }
@@ -23,9 +23,9 @@ func (p *productDomain) FindAll(ctx context.Context) ([]dto.GetProductResponse, 
 
 	for _, rawProduct := range products {
 		var product dto.GetProductResponse
-		product.Id = rawProduct.ID.Hex()
+		product.Id = rawProduct.UUID
 		product.Name = rawProduct.Name
-		for _, ingredient := range rawProduct.Ingredients {
+		for _, ingredient := range rawProduct.ProductComposition {
 			item, errW := p.itemResource.FindByID(ingredient.ItemID)
 
 			if errW != nil {
@@ -46,16 +46,12 @@ func (p *productDomain) FindAll(ctx context.Context) ([]dto.GetProductResponse, 
 	return productsResponse, nil
 }
 
-func (p *productDomain) Find(ctx context.Context, payload model.GetProduct) ([]model.GetProduct, *error_wrapper.ErrorWrapper) {
-	return p.productResource.Find(ctx, payload)
-}
-
-func (p *productDomain) FindByID(ctx context.Context, productID string) (model.Product, *error_wrapper.ErrorWrapper) {
+func (p *productDomain) FindByID(ctx context.Context, productID string) (*model.Product, *error_wrapper.ErrorWrapper) {
 	return p.productResource.FindByID(ctx, productID)
 }
 
-func (p *productDomain) Update(ctx context.Context, productID string, name string, ingredients []model.Ingredient) *error_wrapper.ErrorWrapper {
-	return p.productResource.Update(ctx, productID, name, ingredients)
+func (p *productDomain) Update(ctx context.Context, payload model.Product) *error_wrapper.ErrorWrapper {
+	return p.productResource.Update(ctx, payload)
 }
 
 func (p *productDomain) Delete(ctx context.Context, productID string) *error_wrapper.ErrorWrapper {

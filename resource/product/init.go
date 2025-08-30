@@ -1,11 +1,10 @@
 package product
 
 import (
-	"github.com/inventory-service/resource/mongodb"
+	"gorm.io/gorm"
 )
 
-func NewProductResource(mongoDb mongodb.MongoDBClientWrapper, dbName string, collectionName string) ProductResource {
-	collection := mongoDb.Database(dbName).Collection(collectionName)
+func NewProductResource(db *gorm.DB) ProductResource {
 
-	return &productResource{productCollection: collection}
+	return &productResource{db: db}
 }
