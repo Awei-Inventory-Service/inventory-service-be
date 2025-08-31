@@ -10,6 +10,7 @@ import (
 
 type ProductCompositionResource interface {
 	Create(ctx context.Context, productComposition model.ProductComposition) *error_wrapper.ErrorWrapper
+	DeleteByProductID(ctx context.Context, productID string) (errW *error_wrapper.ErrorWrapper)
 }
 
 type productCompositionResource struct {

@@ -1,27 +1,56 @@
 package item
 
 import (
+	"context"
+
+	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/lib/utils"
 	"github.com/inventory-service/model"
 )
 
-func (i *itemService) Create(name, supplierID, category, unit string, price, portionSize float64) (errW *error_wrapper.ErrorWrapper) {
-	itemCategory, errW := utils.ParseItemCategory(category)
+func (i *itemUsecase) Create(ctx context.Context, payload dto.CreateItemRequest) (errW *error_wrapper.ErrorWrapper) {
+	itemCategory, errW := utils.ParseItemCategory(payload.Category)
 
 	if errW != nil {
 		return
 	}
 
-	errW = i.itemDomain.Create(name, supplierID, unit, itemCategory, price, portionSize)
+	item, errW := i.itemDomain.Create(model.Item{
+		Name:        payload.Name,
+		Category:    itemCategory,
+		Price:       payload.Price,
+		Unit:        payload.Unit,
+		PortionSize: payload.PortionSize,
+		SupplierID: func() *string {
+			if payload.SupplierID == "" {
+				return nil
+			}
+			return &payload.SupplierID
+		}(),
+	})
+
 	if errW != nil {
 		return errW
+	}
+
+	for _, childItem := range payload.ItemCompositions {
+		errW = i.itemCompositionDomain.Create(ctx, model.ItemComposition{
+			ParentItemID: item.UUID,
+			ChildItemID:  childItem.ItemID,
+			Ratio:        childItem.Ratio,
+			Notes:        childItem.Notes,
+		})
+
+		if errW != nil {
+			return errW
+		}
 	}
 
 	return nil
 }
 
-func (i *itemService) FindAll() ([]model.Item, *error_wrapper.ErrorWrapper) {
+func (i *itemUsecase) FindAll() ([]model.Item, *error_wrapper.ErrorWrapper) {
 	items, err := i.itemDomain.FindAll()
 	if err != nil {
 		return nil, err
@@ -30,7 +59,7 @@ func (i *itemService) FindAll() ([]model.Item, *error_wrapper.ErrorWrapper) {
 	return items, nil
 }
 
-func (i *itemService) FindByID(id string) (*model.Item, *error_wrapper.ErrorWrapper) {
+func (i *itemUsecase) FindByID(id string) (*model.Item, *error_wrapper.ErrorWrapper) {
 	item, err := i.itemDomain.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -39,7 +68,7 @@ func (i *itemService) FindByID(id string) (*model.Item, *error_wrapper.ErrorWrap
 	return item, nil
 }
 
-func (i *itemService) Update(id, supplierID string, name, category string, price float64, unit string) (errW *error_wrapper.ErrorWrapper) {
+func (i *itemUsecase) Update(id, name, category, unit string, supplierID *string, price float64) (errW *error_wrapper.ErrorWrapper) {
 
 	itemCategory, errW := utils.ParseItemCategory(category)
 
@@ -47,7 +76,7 @@ func (i *itemService) Update(id, supplierID string, name, category string, price
 		return
 	}
 
-	errW = i.itemDomain.Update(id, supplierID, name, unit, itemCategory, price)
+	errW = i.itemDomain.Update(id, name, unit, supplierID, itemCategory, price)
 	if errW != nil {
 		return errW
 	}
@@ -55,7 +84,7 @@ func (i *itemService) Update(id, supplierID string, name, category string, price
 	return nil
 }
 
-func (i *itemService) Delete(id string) *error_wrapper.ErrorWrapper {
+func (i *itemUsecase) Delete(id string) *error_wrapper.ErrorWrapper {
 	err := i.itemDomain.Delete(id)
 	if err != nil {
 		return err

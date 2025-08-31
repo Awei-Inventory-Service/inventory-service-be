@@ -18,7 +18,7 @@ func (i *itemController) GetItems(c *gin.Context) {
 		response_wrapper.New(&c.Writer, c, errW == nil, items, errW)
 	}()
 
-	items, errW = i.itemService.FindAll()
+	items, errW = i.itemUsecase.FindAll()
 	if errW != nil {
 		return
 	}
@@ -37,7 +37,7 @@ func (i *itemController) GetItem(c *gin.Context) {
 
 	id := c.Param("id")
 
-	item, errW = i.itemService.FindByID(id)
+	item, errW = i.itemUsecase.FindByID(id)
 	if errW != nil {
 		return
 	}
@@ -64,13 +64,9 @@ func (i *itemController) CreateItem(c *gin.Context) {
 		createItemRequest.PortionSize = 1.0
 	}
 
-	errW = i.itemService.Create(
-		createItemRequest.Name,
-		createItemRequest.SupplierID,
-		createItemRequest.Category,
-		createItemRequest.Unit,
-		createItemRequest.Price,
-		createItemRequest.PortionSize,
+	errW = i.itemUsecase.Create(
+		c,
+		createItemRequest,
 	)
 }
 
@@ -90,7 +86,7 @@ func (i *itemController) UpdateItem(c *gin.Context) {
 		return
 	}
 
-	errW = i.itemService.Update(id, updateItemRequest.SupplierID, updateItemRequest.Name, updateItemRequest.Category, updateItemRequest.Price, updateItemRequest.Unit)
+	errW = i.itemUsecase.Update(id, updateItemRequest.Name, updateItemRequest.Category, updateItemRequest.Unit, &updateItemRequest.SupplierID, updateItemRequest.Price)
 	if errW != nil {
 		return
 	}
@@ -105,7 +101,7 @@ func (i *itemController) DeleteItem(c *gin.Context) {
 	}()
 
 	id := c.Param("id")
-	errW = i.itemService.Delete(id)
+	errW = i.itemUsecase.Delete(id)
 	if errW != nil {
 		return
 	}

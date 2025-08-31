@@ -2,7 +2,6 @@ package product
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -24,7 +23,6 @@ func (p *productService) Create(ctx context.Context, payload dto.CreateProductRe
 	}
 
 	for _, composition := range payload.ProductCompositions {
-		fmt.Println("INI PRODUCT ", product)
 		errW = p.productCompositionDomain.Create(ctx, model.ProductComposition{
 			ProductID: product.UUID,
 			ItemID:    composition.ItemID,
@@ -60,8 +58,9 @@ func (p *productService) FindByID(ctx context.Context, productID string) (*model
 	return product, err
 }
 
-func (p *productService) Update(ctx context.Context, product model.Product) *error_wrapper.ErrorWrapper {
-	return p.productDomain.Update(ctx, product)
+func (p *productService) Update(ctx context.Context, product dto.UpdateProductRequest, productID string) *error_wrapper.ErrorWrapper {
+
+	return p.productDomain.Update(ctx, product, productID)
 }
 
 func (p *productService) Delete(ctx context.Context, producID string) *error_wrapper.ErrorWrapper {

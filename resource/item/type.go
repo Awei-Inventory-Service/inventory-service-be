@@ -7,7 +7,7 @@ import (
 )
 
 type ItemResource interface {
-	Create(item model.Item) *error_wrapper.ErrorWrapper
+	Create(item model.Item) (*model.Item, *error_wrapper.ErrorWrapper)
 	FindAll() ([]model.Item, *error_wrapper.ErrorWrapper)
 	FindByID(id string) (*model.Item, *error_wrapper.ErrorWrapper)
 	Update(id string, item model.Item) *error_wrapper.ErrorWrapper

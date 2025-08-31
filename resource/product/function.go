@@ -45,12 +45,12 @@ func (p *productResource) FindByID(ctx context.Context, productID string) (*mode
 	return &product, nil
 }
 
-func (p *productResource) Update(ctx context.Context, product model.Product) *error_wrapper.ErrorWrapper {
+func (p *productResource) Update(ctx context.Context, product model.Product) (*model.Product, *error_wrapper.ErrorWrapper) {
 	result := p.db.Where("uuid = ?", product.UUID).Updates(&product)
 	if result.Error != nil {
-		return error_wrapper.New(model.RErrPostgresUpdateDocument, result.Error.Error())
+		return nil, error_wrapper.New(model.RErrPostgresUpdateDocument, result.Error.Error())
 	}
-	return nil
+	return &product, nil
 }
 
 func (p *productResource) Delete(ctx context.Context, productID string) *error_wrapper.ErrorWrapper {

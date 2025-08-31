@@ -2,6 +2,7 @@ package product
 
 import (
 	"context"
+	"time"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -50,8 +51,45 @@ func (p *productDomain) FindByID(ctx context.Context, productID string) (*model.
 	return p.productResource.FindByID(ctx, productID)
 }
 
-func (p *productDomain) Update(ctx context.Context, payload model.Product) *error_wrapper.ErrorWrapper {
-	return p.productResource.Update(ctx, payload)
+func (p *productDomain) Update(ctx context.Context, payload dto.UpdateProductRequest, productID string) *error_wrapper.ErrorWrapper {
+	product := model.Product{
+		UUID:         productID,
+		Code:         payload.Code,
+		Name:         payload.Name,
+		Category:     payload.Category,
+		Unit:         payload.Unit,
+		SellingPrice: payload.SellingPrice,
+		UpdatedAt:    time.Now(),
+	}
+
+	updatedProduct, errW := p.productResource.Update(ctx, product)
+
+	if errW != nil {
+		return errW
+	}
+
+	errW = p.productCompositionResource.DeleteByProductID(ctx, updatedProduct.UUID)
+
+	if errW != nil {
+		return errW
+	}
+
+	for _, productComposition := range payload.ProductCompositions {
+		errW = p.productCompositionResource.Create(ctx, model.ProductComposition{
+			ProductID: updatedProduct.UUID,
+			Ratio:     productComposition.Ratio,
+			Notes:     productComposition.Notes,
+			ItemID:    productComposition.ItemID,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		})
+
+		if errW != nil {
+			return errW
+		}
+	}
+
+	return nil
 }
 
 func (p *productDomain) Delete(ctx context.Context, productID string) *error_wrapper.ErrorWrapper {

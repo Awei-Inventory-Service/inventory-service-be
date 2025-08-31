@@ -22,7 +22,7 @@ type Item struct {
 	CreatedAt   time.Time    `json:"created_at"`
 	UpdatedAt   time.Time    `json:"updated_at"`
 
-	SupplierID string   `gorm:"type:uuid;not null" json:"supplier_id" validate:"required"`
+	SupplierID *string  `gorm:"type:uuid" json:"supplier_id"`
 	Supplier   Supplier `gorm:"foreignKey:SupplierID;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL" json:"supplier"`
 
 	// Relationships
@@ -48,4 +48,8 @@ type ItemComposition struct {
 
 func (Item) TableName() string {
 	return "items"
+}
+
+func (ItemComposition) TableName() string {
+	return "item_compositions"
 }

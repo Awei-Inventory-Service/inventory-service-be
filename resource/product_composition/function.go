@@ -15,3 +15,13 @@ func (p *productCompositionResource) Create(ctx context.Context, productComposit
 	}
 	return nil
 }
+
+func(p *productCompositionResource) DeleteByProductID(ctx context.Context, productID string) (errW *error_wrapper.ErrorWrapper){
+	result := p.db.WithContext(ctx).Where("product_id = ?", productID).Delete(&model.ProductComposition{})
+
+	if result.Error != nil {
+		return error_wrapper.New(model.RErrPostgresDeleteDocument, result.Error)
+	}
+
+	return nil
+}

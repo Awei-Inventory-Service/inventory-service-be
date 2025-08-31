@@ -5,14 +5,14 @@ import (
 	"github.com/inventory-service/model"
 )
 
-func (i *itemResource) Create(item model.Item) *error_wrapper.ErrorWrapper {
+func (i *itemResource) Create(item model.Item) (*model.Item, *error_wrapper.ErrorWrapper) {
 
 	result := i.db.Create(&item)
 	if result.Error != nil {
-		return error_wrapper.New(model.RErrPostgresCreateDocument, result.Error.Error())
+		return nil, error_wrapper.New(model.RErrPostgresCreateDocument, result.Error.Error())
 	}
 
-	return nil
+	return &item, nil
 }
 
 func (i *itemResource) FindAll() ([]model.Item, *error_wrapper.ErrorWrapper) {

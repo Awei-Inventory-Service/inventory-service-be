@@ -74,21 +74,20 @@ func (p *productController) FindByID(ctx *gin.Context) {
 func (p *productController) Update(ctx *gin.Context) {
 	var (
 		errW    *error_wrapper.ErrorWrapper
-		product model.Product
+		product dto.UpdateProductRequest
 	)
 	defer func() {
 		response_wrapper.New(&ctx.Writer, ctx, errW == nil, nil, errW)
 	}()
 
 	id := ctx.Param("id")
-	product.UUID = id
 
 	if err := ctx.ShouldBindJSON(&product); err != nil {
 		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
 
-	errW = p.productService.Update(ctx, product)
+	errW = p.productService.Update(ctx, product, id)
 
 	if errW != nil {
 		fmt.Println("Error", errW)

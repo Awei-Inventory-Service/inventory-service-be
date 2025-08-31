@@ -9,12 +9,26 @@ type CreateProductRequest struct {
 	ProductCompositions []CreateProductComposition `json:"product_compositions" binding:"required"`
 }
 
+type UpdateProductRequest struct {
+	Name                string                     `json:"name" binding:"required"`
+	Code                string                     `json:"code" binding:"required"`
+	Category            string                     `json:"category" binding:"required"`
+	Unit                string                     `json:"unit" binding:"required"`
+	SellingPrice        float64                    `json:"selling_price" binding:"required"`
+	ProductCompositions []UpdateProductComposition `json:"product_compositions" binding:"required"`
+}
+
 type CreateProductComposition struct {
 	ItemID string  `json:"item_id" binding:"required"`
 	Ratio  float64 `json:"ratio" binding:"required"`
 	Notes  string  `json:"notes"`
 }
 
+type UpdateProductComposition struct {
+	ItemID string  `json:"item_id" binding:"required"`
+	Ratio  float64 `json:"ratio" binding:"required"`
+	Notes  string  `json:"notes"`
+}
 type Ingredient struct {
 	ItemID string  `json:"item_id" binding:"required"`
 	Ratio  float64 `json:"ratio" binding:"required"`

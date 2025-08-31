@@ -2,8 +2,8 @@ package item
 
 import "github.com/inventory-service/usecase/item"
 
-func NewItemController(itemService item.ItemService) ItemController {
+func NewItemController(itemUsecase item.ItemUsecase) ItemController {
 	return &itemController{
-		itemService: itemService,
+		itemUsecase: itemUsecase,
 	}
 }

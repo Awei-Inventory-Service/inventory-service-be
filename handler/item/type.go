@@ -14,5 +14,5 @@ type ItemController interface {
 }
 
 type itemController struct {
-	itemService item.ItemService
+	itemUsecase item.ItemUsecase
 }

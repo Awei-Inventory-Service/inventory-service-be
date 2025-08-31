@@ -159,12 +159,11 @@ func TestFindAll(t *testing.T) {
 			err: nil,
 			expectedData: []model.Item{
 				{
-					UUID:       "uuid-1",
-					Name:       "Item 1",
-					Category:   "Category 1",
-					Price:      100.0,
-					Unit:       "piece",
-					SupplierID: "supplier-1",
+					UUID:     "uuid-1",
+					Name:     "Item 1",
+					Category: "Category 1",
+					Price:    100.0,
+					Unit:     "piece",
 					Supplier: model.Supplier{
 						UUID:        "supplier-1",
 						Name:        "Supplier 1",

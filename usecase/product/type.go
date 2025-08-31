@@ -15,7 +15,7 @@ type ProductService interface {
 	Create(ctx context.Context, payload dto.CreateProductRequest) *error_wrapper.ErrorWrapper
 	FindAll(ctx context.Context) ([]dto.GetProductResponse, *error_wrapper.ErrorWrapper)
 	FindByID(ctx context.Context, prodcutID string) (*model.Product, *error_wrapper.ErrorWrapper)
-	Update(ctx context.Context, payload model.Product) *error_wrapper.ErrorWrapper
+	Update(ctx context.Context, payload dto.UpdateProductRequest, productID string) *error_wrapper.ErrorWrapper
 	Delete(ctx context.Context, productID string) *error_wrapper.ErrorWrapper
 }
 
