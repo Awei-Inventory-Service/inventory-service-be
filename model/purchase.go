@@ -11,7 +11,8 @@ type Purchase struct {
 	Branch       Branch    `gorm:"foreignKey:BranchID;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL" json:"branch"`
 	ItemID       string    `gorm:"type:uuid;not null" json:"item_id"`
 	Item         Item      `gorm:"foreignKey:ItemID;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL" json:"item"`
-	Quantity     int       `gorm:"type:integer;not null" json:"quantity"`
+	Quantity     float64   `gorm:"type:decimal(10,2);not null" json:"quantity"`
+	Unit         string    `gorm:"unit;not null" json:"unit"`
 	PurchaseCost float64   `gorm:"type:decimal;not null" json:"purchase_cost"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`

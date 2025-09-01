@@ -15,9 +15,10 @@ type StockTransaction struct {
 	IssuerID            string  `gorm:"type:uuid;not null"`
 	Issuer              User    `gorm:"foreignKey:IssuerID;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL"`
 	Type                string  `gorm:"type:varchar(255);not null"`
-	Quantity            int     `gorm:"type:integer;not null"`
+	Quantity            float64 `gorm:"type:decimal;not null"`
 	Cost                float64 `gorm:"type:decimal;not null"`
 	Reference           string  `gorm:"type:varchar(255);not null"`
+	Unit                string  `gorm:"type:varchar(255);not null"`
 	Remarks             string  `gorm:"type:text"`
 	CreatedAt           time.Time
 	UpdatedAt           time.Time

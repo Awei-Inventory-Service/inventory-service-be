@@ -2,6 +2,7 @@ package stockbalance
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
@@ -49,6 +50,7 @@ func (s *stockBalanceResource) FindByItem(itemID string) ([]model.StockBalance, 
 
 func (s *stockBalanceResource) FindByBranchAndItem(branchID, itemID string) (*model.StockBalance, *error_wrapper.ErrorWrapper) {
 	var balance model.StockBalance
+	fmt.Println("INI BRANCH ID DAN ITEM ID", branchID, itemID)
 	result := s.db.Where("branch_id = ? AND item_id = ?", branchID, itemID).First(&balance)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -60,7 +62,7 @@ func (s *stockBalanceResource) FindByBranchAndItem(branchID, itemID string) (*mo
 	return &balance, nil
 }
 
-func (s *stockBalanceResource) Update(branchID, itemID string, currentStock int) *error_wrapper.ErrorWrapper {
+func (s *stockBalanceResource) Update(branchID, itemID string, currentStock float64) *error_wrapper.ErrorWrapper {
 	result := s.db.Model(&model.StockBalance{}).
 		Where("branch_id = ? AND item_id = ?", branchID, itemID).
 		Update("current_stock", currentStock)

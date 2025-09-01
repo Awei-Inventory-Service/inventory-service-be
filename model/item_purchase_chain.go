@@ -12,7 +12,7 @@ const (
 
 type ItemPurchaseChainPurchase struct {
 	UUID         string  `json:"uuid" bson:"_id"`
-	Quantity     int     `json:"quantity" bson:"quantity"`
+	Quantity     float64 `json:"quantity" bson:"quantity"`
 	BranchId     string  `json:"branch_id" bson:"branch_id"`
 	PurchaseCost float64 `json:"purchase_cost" bson:"purchase_cost"`
 	ItemId       string  `json:"item_id" bson:"item_id"`
@@ -23,7 +23,7 @@ type ItemPurchaseChain struct {
 	ItemID   string                    `json:"item_id" bson:"item_id"`
 	BranchID string                    `json:"branch_id" bson:"branch_id"`
 	Purchase ItemPurchaseChainPurchase `json:"purchase" bson:"purchase"`
-	Quantity int                       `json:"quantity" bson:"quantity"`
+	Quantity float64                   `json:"quantity" bson:"quantity"`
 	Status   Status                    `json:"status" bson:"status"`
 	Sales    []string                  `json:"sales" bson:"sales"`
 }
@@ -33,7 +33,7 @@ type ItemPurchaseChainGet struct {
 	ItemID   string                    `json:"item_id"`
 	BranchID string                    `json:"branch_id"`
 	Purchase ItemPurchaseChainPurchase `json:"purchase"`
-	Quantity int                       `json:"quantity"`
+	Quantity float64                   `json:"quantity"`
 	Status   Status                    `json:"status"`
 	Sales    []string                  `json:"sales"`
 }

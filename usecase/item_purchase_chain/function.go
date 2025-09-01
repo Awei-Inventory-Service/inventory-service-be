@@ -15,7 +15,7 @@ func (i *itemPurchaseChainService) Create(ctx context.Context, itemID string, br
 		return errW
 	}
 
-	_, errW = i.itemDomain.FindByID(itemID)
+	_, errW = i.itemDomain.FindByID(ctx, itemID)
 
 	if errW != nil {
 		return errW
@@ -30,7 +30,7 @@ func (i *itemPurchaseChainService) Create(ctx context.Context, itemID string, br
 	return i.itemPurchaseChainDomain.Create(ctx, itemID, branchID, *purchase)
 }
 
-func (i *itemPurchaseChainService) CalculateCost(ctx context.Context, itemID string, branchID string, quantity int) (float64, []model.ItemPurchaseChainGet, *error_wrapper.ErrorWrapper) {
+func (i *itemPurchaseChainService) CalculateCost(ctx context.Context, itemID string, branchID string, quantity float64) (float64, []model.ItemPurchaseChainGet, *error_wrapper.ErrorWrapper) {
 	var (
 		results []model.ItemPurchaseChainGet
 		cost    = 0.0

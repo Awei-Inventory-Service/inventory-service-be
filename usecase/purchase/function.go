@@ -1,15 +1,17 @@
 package purchase
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 )
 
-func (p *purchaseService) Create(c *gin.Context, supplierId, branchId, itemId string, quantity int, purchaseCost float64) *error_wrapper.ErrorWrapper {
+func (p *purchaseService) Create(c *gin.Context, payload dto.CreatePurchaseRequest) *error_wrapper.ErrorWrapper {
 	var (
 		errChan = make(chan *error_wrapper.ErrorWrapper, 3) // Buffered channel for 3 goroutines
 		wg      sync.WaitGroup
@@ -19,7 +21,7 @@ func (p *purchaseService) Create(c *gin.Context, supplierId, branchId, itemId st
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if _, err := p.supplierDomain.FindByID(supplierId); err != nil {
+		if _, err := p.supplierDomain.FindByID(payload.SupplierID); err != nil {
 			errChan <- err
 		} else {
 			errChan <- nil
@@ -30,7 +32,7 @@ func (p *purchaseService) Create(c *gin.Context, supplierId, branchId, itemId st
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if _, err := p.branchDomain.FindByID(branchId); err != nil {
+		if _, err := p.branchDomain.FindByID(payload.BranchID); err != nil {
 			errChan <- err
 		} else {
 			errChan <- nil
@@ -41,7 +43,7 @@ func (p *purchaseService) Create(c *gin.Context, supplierId, branchId, itemId st
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if _, err := p.itemDomain.FindByID(itemId); err != nil {
+		if _, err := p.itemDomain.FindByID(c, payload.ItemID); err != nil {
 			errChan <- err
 		} else {
 			errChan <- nil
@@ -62,24 +64,23 @@ func (p *purchaseService) Create(c *gin.Context, supplierId, branchId, itemId st
 	}
 
 	userId := c.GetHeader("user_id")
-
 	// All checks completed, proceed to create purchase
-	newPurchase, errW := p.purchaseDomain.Create(supplierId, branchId, itemId, userId, quantity, purchaseCost)
+	_, errW := p.purchaseDomain.Create(payload, userId)
 	if errW != nil {
 		return errW
 	}
 
-	errW = p.stockBalanceDomain.SyncCurrentBalance(branchId, itemId)
+	errW = p.stockBalanceDomain.SyncCurrentBalance(payload.BranchID, payload.ItemID)
 
 	if errW != nil {
 		fmt.Println("Fail sync stock balance domain")
 	}
 
-	errW = p.itemPurchaseChainDomain.Create(c, itemId, branchId, *newPurchase)
-	if errW != nil {
-		fmt.Println("Error : ", errW.StackTrace(), errW.ActualError())
-		return errW
-	}
+	// errW = p.itemPurchaseChainDomain.Create(c, itemId, branchId, *newPurchase)
+	// if errW != nil {
+	// 	fmt.Println("Error : ", errW.StackTrace(), errW.ActualError())
+	// 	return errW
+	// }
 
 	return nil
 }
@@ -102,7 +103,7 @@ func (p *purchaseService) FindByID(id string) (*model.Purchase, *error_wrapper.E
 	return purchase, nil
 }
 
-func (p *purchaseService) Update(id, supplierId, branchId, itemId string, quantity int, purchaseCost float64) *error_wrapper.ErrorWrapper {
+func (p *purchaseService) Update(ctx context.Context, id, supplierId, branchId, itemId string, quantity float64, purchaseCost float64) *error_wrapper.ErrorWrapper {
 	errChan := make(chan *error_wrapper.ErrorWrapper, 3)
 
 	// Supplier check
@@ -127,7 +128,7 @@ func (p *purchaseService) Update(id, supplierId, branchId, itemId string, quanti
 
 	// Item check
 	go func() {
-		_, err := p.itemDomain.FindByID(itemId)
+		_, err := p.itemDomain.FindByID(ctx, itemId)
 		if err != nil {
 			errChan <- err
 		} else {

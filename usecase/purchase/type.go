@@ -1,6 +1,8 @@
 package purchase
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/domain/branch"
 	"github.com/inventory-service/domain/item"
@@ -8,6 +10,7 @@ import (
 	"github.com/inventory-service/domain/purchase"
 	stockbalance "github.com/inventory-service/domain/stock_balance"
 	"github.com/inventory-service/domain/supplier"
+	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 	// "github.com/inventory-service/lib/error_wrapper"
@@ -15,10 +18,10 @@ import (
 
 // TODO: Change error with error_wrapper.ErrorWrapper
 type PurchaseService interface {
-	Create(c *gin.Context, supplierId, branchId, itemId string, quantity int, purchaseCost float64) *error_wrapper.ErrorWrapper
+	Create(c *gin.Context, payload dto.CreatePurchaseRequest) *error_wrapper.ErrorWrapper
 	FindAll() ([]model.Purchase, *error_wrapper.ErrorWrapper)
 	FindByID(id string) (*model.Purchase, *error_wrapper.ErrorWrapper)
-	Update(id, supplierId, branchId, itemId string, quantity int, purchaseCost float64) *error_wrapper.ErrorWrapper
+	Update(ctx context.Context, id, supplierId, branchId, itemId string, quantity float64, purchaseCost float64) *error_wrapper.ErrorWrapper
 	Delete(id string) *error_wrapper.ErrorWrapper
 }
 

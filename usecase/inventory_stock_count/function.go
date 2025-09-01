@@ -20,7 +20,7 @@ func (i *inventoryStockCountService) Create(ctx context.Context, branchID string
 	}
 	var itemsData []model.ItemCount
 	for _, item := range items {
-		itemData, err := i.itemDomain.FindByID(item.ItemID)
+		itemData, err := i.itemDomain.FindByID(ctx, item.ItemID)
 		if err != nil {
 			return err
 		}
@@ -58,7 +58,7 @@ func (i *inventoryStockCountService) Update(ctx context.Context, stockCountID st
 	}
 	var itemsData []model.ItemCount
 	for _, item := range items {
-		itemData, err := i.itemDomain.FindByID(item.ItemID)
+		itemData, err := i.itemDomain.FindByID(ctx, item.ItemID)
 		if err != nil {
 			return err
 		}

@@ -37,7 +37,7 @@ func (i *itemController) GetItem(c *gin.Context) {
 
 	id := c.Param("id")
 
-	item, errW = i.itemUsecase.FindByID(id)
+	item, errW = i.itemUsecase.FindByID(c, id)
 	if errW != nil {
 		return
 	}

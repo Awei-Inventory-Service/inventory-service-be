@@ -19,8 +19,20 @@ func (i *itemDomain) FindAll() ([]model.Item, *error_wrapper.ErrorWrapper) {
 	return i.itemResource.FindAll()
 }
 
-func (i *itemDomain) FindByID(id string) (*model.Item, *error_wrapper.ErrorWrapper) {
-	return i.itemResource.FindByID(id)
+func (i *itemDomain) FindByID(ctx context.Context, id string) (*model.Item, *error_wrapper.ErrorWrapper) {
+	// itemPrice, errW := i.calculatePrice(ctx, id)
+	// fmt.Println("INI ITEMPRICE", itemPrice)
+	// if errW != nil {
+	// 	return nil, errW
+	// }
+
+	item, errW := i.itemResource.FindByID(id)
+
+	if errW != nil {
+		return nil, errW
+	}
+
+	return item, nil
 }
 
 func (i *itemDomain) Update(ctx context.Context, payload dto.UpdateItemRequest, itemID string) *error_wrapper.ErrorWrapper {
@@ -71,4 +83,51 @@ func (i *itemDomain) Update(ctx context.Context, payload dto.UpdateItemRequest, 
 
 func (i *itemDomain) Delete(id string) *error_wrapper.ErrorWrapper {
 	return i.itemResource.Delete(id)
+}
+
+func (i *itemDomain) calculatePrice(ctx context.Context, itemID string) (float64, *error_wrapper.ErrorWrapper) {
+	branchId := ctx.Value("branch_id")
+	limit := 10
+	offset := 0
+
+	stockBalance, errW := i.stockBalanceResource.FindByBranchAndItem(fmt.Sprint(branchId), itemID)
+	if errW != nil {
+		return 0.0, errW
+	}
+
+	purchaseStock := 0.0
+	var allPurchases []model.Purchase
+
+	for purchaseStock < stockBalance.CurrentStock {
+		purchases, errW := i.purchaseResource.FindByBranchAndItem(fmt.Sprint(branchId), itemID, offset, limit)
+		if errW != nil {
+			return 0.0, errW
+		}
+
+		if len(purchases) == 0 {
+			break
+		}
+
+		for _, purchase := range purchases {
+			allPurchases = append(allPurchases, purchase)
+			purchaseStock += purchase.Quantity
+			if purchaseStock >= stockBalance.CurrentStock {
+				break
+			}
+		}
+
+		offset += limit
+	}
+
+	totalPrice := 0.0
+	totalItem := 0.0
+
+	for _, purchase := range allPurchases {
+		totalItem += float64(purchase.Quantity)
+		totalPrice += purchase.PurchaseCost
+	}
+
+	avgPrice := totalPrice / totalItem
+
+	return avgPrice, nil
 }

@@ -6,7 +6,7 @@ import (
 )
 
 func (s *stockService) GetStockByItemID(itemID string) (model.Stock, *error_wrapper.ErrorWrapper) {
-	var quantity int
+	var quantity = 0.0
 
 	// TODO: create type safe filter
 	itemIdFilter := make(map[string]interface{})
@@ -28,6 +28,6 @@ func (s *stockService) GetStockByItemID(itemID string) (model.Stock, *error_wrap
 
 	return model.Stock{
 		ItemID:   itemID,
-		Quantity: quantity,
+		Quantity: 0.0,
 	}, nil
 }

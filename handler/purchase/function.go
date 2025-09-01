@@ -41,7 +41,7 @@ func (p *purchaseController) GetPurchase(c *gin.Context) {
 	}
 }
 
-func (p *purchaseController) CreatePurchase(c *gin.Context) {
+func (p *purchaseController) Create(c *gin.Context) {
 	var (
 		createPurchaseRequest dto.CreatePurchaseRequest
 		errW                  *error_wrapper.ErrorWrapper
@@ -55,11 +55,7 @@ func (p *purchaseController) CreatePurchase(c *gin.Context) {
 
 	errW = p.purchaseService.Create(
 		c,
-		createPurchaseRequest.SupplierID,
-		createPurchaseRequest.BranchID,
-		createPurchaseRequest.ItemID,
-		createPurchaseRequest.Quantity,
-		createPurchaseRequest.PurchaseCost,
+		createPurchaseRequest,
 	)
 	if errW != nil {
 		response_wrapper.New(&c.Writer, c, false, nil, errW)
@@ -86,6 +82,7 @@ func (p *purchaseController) UpdatePurchase(c *gin.Context) {
 	}
 
 	errW = p.purchaseService.Update(
+		c,
 		id,
 		updatePurchaseRequest.SupplierID,
 		updatePurchaseRequest.BranchID,

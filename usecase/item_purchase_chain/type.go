@@ -13,7 +13,7 @@ import (
 
 type ItemPurchaseChainService interface {
 	Create(ctx context.Context, itemID string, branchID string, purchaseID string) *error_wrapper.ErrorWrapper
-	CalculateCost(ctx context.Context, itemID string, branchID string, quantity int) (float64, []model.ItemPurchaseChainGet, *error_wrapper.ErrorWrapper)
+	CalculateCost(ctx context.Context, itemID string, branchID string, quantity float64) (float64, []model.ItemPurchaseChainGet, *error_wrapper.ErrorWrapper)
 }
 
 type itemPurchaseChainService struct {

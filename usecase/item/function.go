@@ -59,8 +59,8 @@ func (i *itemUsecase) FindAll() ([]model.Item, *error_wrapper.ErrorWrapper) {
 	return items, nil
 }
 
-func (i *itemUsecase) FindByID(id string) (*model.Item, *error_wrapper.ErrorWrapper) {
-	item, err := i.itemDomain.FindByID(id)
+func (i *itemUsecase) FindByID(ctx context.Context, id string) (*model.Item, *error_wrapper.ErrorWrapper) {
+	item, err := i.itemDomain.FindByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}

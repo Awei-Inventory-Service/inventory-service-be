@@ -8,7 +8,7 @@ import (
 type PurchaseController interface {
 	GetPurchases(c *gin.Context)
 	GetPurchase(c *gin.Context)
-	CreatePurchase(c *gin.Context)
+	Create(c *gin.Context)
 	UpdatePurchase(c *gin.Context)
 	DeletePurchase(c *gin.Context)
 }

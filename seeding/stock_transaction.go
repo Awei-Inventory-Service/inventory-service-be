@@ -47,7 +47,7 @@ func SeedStockTransaction(pgDB *gorm.DB) {
 			ItemID:              item.UUID,        // Item 1
 			IssuerID:            users[0].UUID,    // First user as issuer
 			Type:                "OUT",
-			Quantity:            outQuantity,
+			Quantity:            0.0,
 			Cost:                float64(outQuantity) * 1000.0, // Example cost calculation
 			Reference:           fmt.Sprintf("OUT-REF-%d", i),
 			Remarks:             "Stock moved out",
@@ -62,7 +62,7 @@ func SeedStockTransaction(pgDB *gorm.DB) {
 			ItemID:              item.UUID,        // Item 1
 			IssuerID:            users[0].UUID,    // First user as issuer
 			Type:                "IN",
-			Quantity:            inQuantity,                   // Always greater than outQuantity
+			Quantity:            0.0,                          // Always greater than outQuantity
 			Cost:                float64(inQuantity) * 1000.0, // Adjusted cost
 			Reference:           fmt.Sprintf("IN-REF-%d", i),
 			Remarks:             "Stock moved in",

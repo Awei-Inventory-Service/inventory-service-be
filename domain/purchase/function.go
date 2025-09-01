@@ -1,29 +1,32 @@
 package purchase
 
 import (
+	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 )
 
-func (p *purchaseDomain) Create(supplierId, branchId, itemId, userId string, quantity int, purchaseCost float64) (*model.Purchase, *error_wrapper.ErrorWrapper) {
+func (p *purchaseDomain) Create(payload dto.CreatePurchaseRequest, userID string) (*model.Purchase, *error_wrapper.ErrorWrapper) {
 	purchase := model.Purchase{
-		SupplierID:   supplierId,
-		BranchID:     branchId,
-		ItemID:       itemId,
-		Quantity:     quantity,
-		PurchaseCost: purchaseCost,
+		SupplierID:   payload.SupplierID,
+		BranchID:     payload.BranchID,
+		ItemID:       payload.ItemID,
+		Quantity:     payload.Quantity,
+		PurchaseCost: payload.PurchaseCost,
+		Unit:         payload.Unit,
 	}
 
-	_, errW := p.stockBalanceResource.FindByBranchAndItem(branchId, itemId)
+	_, errW := p.stockBalanceResource.FindByBranchAndItem(payload.BranchID, payload.ItemID)
 
 	if errW != nil {
 		if errW.Is(model.RErrDataNotFound) {
 			// If there is no stock balance, create one
 			errW = p.stockBalanceResource.Create(model.StockBalance{
-				BranchID:     branchId,
-				ItemID:       itemId,
-				CurrentStock: quantity,
+				BranchID:     payload.BranchID,
+				ItemID:       payload.ItemID,
+				CurrentStock: payload.Quantity,
 			})
+
 		} else {
 			return nil, errW
 
@@ -33,13 +36,14 @@ func (p *purchaseDomain) Create(supplierId, branchId, itemId, userId string, qua
 	// Inserting new stock transaction
 
 	errW = p.stockTransactionResource.Create(model.StockTransaction{
-		BranchOriginID:      branchId,
-		BranchDestinationID: branchId,
-		ItemID:              itemId,
+		BranchOriginID:      payload.BranchID,
+		BranchDestinationID: payload.BranchID,
+		ItemID:              payload.ItemID,
 		Type:                "IN",
-		IssuerID:            userId,
-		Quantity:            quantity,
-		Cost:                purchaseCost,
+		IssuerID:            userID,
+		Quantity:            payload.Quantity,
+		Cost:                payload.PurchaseCost,
+		Unit:                purchase.Unit,
 	})
 
 	if errW != nil {
@@ -47,7 +51,7 @@ func (p *purchaseDomain) Create(supplierId, branchId, itemId, userId string, qua
 	}
 
 	// currentItemStock, errW := p.item
-	return p.purchaseResource.Create(supplierId, purchase)
+	return p.purchaseResource.Create(payload.SupplierID, purchase)
 }
 
 func (p *purchaseDomain) FindAll() ([]model.Purchase, *error_wrapper.ErrorWrapper) {
@@ -58,7 +62,7 @@ func (p *purchaseDomain) FindByID(id string) (*model.Purchase, *error_wrapper.Er
 	return p.purchaseResource.FindByID(id)
 }
 
-func (p *purchaseDomain) Update(id, supplierId, branchId, itemId string, quantity int, purchaseCost float64) *error_wrapper.ErrorWrapper {
+func (p *purchaseDomain) Update(id, supplierId, branchId, itemId string, quantity float64, purchaseCost float64) *error_wrapper.ErrorWrapper {
 	purchase := model.Purchase{
 		SupplierID:   supplierId,
 		BranchID:     branchId,

@@ -1,0 +1,1 @@
+ALTER TABLE stock_transactions ADD COLUMN unit VARCHAR(50) NOT NULL DEFAULT 'piece';

@@ -51,3 +51,21 @@ func (p *purchaseResource) Delete(id string) *error_wrapper.ErrorWrapper {
 
 	return nil
 }
+
+func (p *purchaseResource) FindByItemID(itemID string) ([]model.Purchase, *error_wrapper.ErrorWrapper) {
+	var purchases []model.Purchase
+	result := p.db.Where("item_id = ?", itemID).Find(&purchases)
+	if result.Error != nil {
+		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
+	}
+	return purchases, nil
+}
+
+func (p *purchaseResource) FindByBranchAndItem(branchID, itemID string, offset, limit int) ([]model.Purchase, *error_wrapper.ErrorWrapper) {
+	var purchases []model.Purchase
+	result := p.db.Where("branch_id = ? AND item_id = ?", branchID, itemID).Order("created_at DESC").Offset(offset).Limit(limit).Find(&purchases)
+	if result.Error != nil {
+		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
+	}
+	return purchases, nil
+}
