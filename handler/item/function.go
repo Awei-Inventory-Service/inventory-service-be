@@ -86,7 +86,7 @@ func (i *itemController) UpdateItem(c *gin.Context) {
 		return
 	}
 
-	errW = i.itemUsecase.Update(id, updateItemRequest.Name, updateItemRequest.Category, updateItemRequest.Unit, &updateItemRequest.SupplierID, updateItemRequest.Price)
+	errW = i.itemUsecase.Update(c, updateItemRequest, id)
 	if errW != nil {
 		return
 	}

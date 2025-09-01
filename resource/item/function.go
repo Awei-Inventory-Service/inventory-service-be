@@ -1,6 +1,8 @@
 package item
 
 import (
+	"context"
+
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 )
@@ -35,14 +37,17 @@ func (i *itemResource) FindByID(id string) (*model.Item, *error_wrapper.ErrorWra
 	return &item, nil
 }
 
-func (i *itemResource) Update(id string, item model.Item) *error_wrapper.ErrorWrapper {
-
-	result := i.db.Where("uuid = ?", id).Updates(&item)
-	if result.Error != nil {
-		return error_wrapper.New(model.RErrPostgresUpdateDocument, result.Error.Error())
+func (i *itemResource) Update(ctx context.Context, item model.Item) (*model.Item, *error_wrapper.ErrorWrapper) {
+	if item.SupplierID != nil && *item.SupplierID == "" {
+		item.SupplierID = nil
 	}
 
-	return nil
+	result := i.db.WithContext(ctx).Where("uuid = ?", item.UUID).Updates(&item)
+	if result.Error != nil {
+		return nil, error_wrapper.New(model.RErrPostgresUpdateDocument, result.Error.Error())
+	}
+
+	return &item, nil
 }
 
 func (i *itemResource) Delete(id string) *error_wrapper.ErrorWrapper {

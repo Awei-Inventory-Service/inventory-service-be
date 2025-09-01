@@ -108,7 +108,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	// Initialize usecase
 	userDomain := user_domain.NewUserDomain(userResource)
 	supplierDomain := supplier_domain.NewSupplierDomain(supplierResource)
-	itemDomain := item_domain.NewItemDomain(itemResource)
+	itemDomain := item_domain.NewItemDomain(itemResource, itemCompositionResource)
 	branchDomain := branch_domain.NewBranchDomain(branchResource)
 	purchaseDomain := purchase_domain.NewPurchaseDomain(purchaseResource, stockBalanceResource, stockTransactionResource)
 	inventoryStockCountDomain := inventory_stock_count_domain.NewInventoryStockCountDomain(inventoryStockCountResource)

@@ -68,15 +68,9 @@ func (i *itemUsecase) FindByID(id string) (*model.Item, *error_wrapper.ErrorWrap
 	return item, nil
 }
 
-func (i *itemUsecase) Update(id, name, category, unit string, supplierID *string, price float64) (errW *error_wrapper.ErrorWrapper) {
+func (i *itemUsecase) Update(ctx context.Context, payload dto.UpdateItemRequest, itemID string) (errW *error_wrapper.ErrorWrapper) {
 
-	itemCategory, errW := utils.ParseItemCategory(category)
-
-	if errW != nil {
-		return
-	}
-
-	errW = i.itemDomain.Update(id, name, unit, supplierID, itemCategory, price)
+	errW = i.itemDomain.Update(ctx, payload, itemID)
 	if errW != nil {
 		return errW
 	}
