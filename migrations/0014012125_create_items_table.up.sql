@@ -1,7 +1,7 @@
 CREATE TABLE items (
     uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
-    category item_category NOT NULL,
+    category VARCHAR(255) NOT NULL,
     price DECIMAL(10,2),  -- Note: No NOT NULL to match GORM tag exactly
     unit VARCHAR(255) NOT NULL,
     portion_size DECIMAL(10,4) DEFAULT 1,

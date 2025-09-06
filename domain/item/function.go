@@ -19,7 +19,7 @@ func (i *itemDomain) FindAll() ([]model.Item, *error_wrapper.ErrorWrapper) {
 	return i.itemResource.FindAll()
 }
 
-func (i *itemDomain) FindByID(ctx context.Context, id string) (*model.Item, *error_wrapper.ErrorWrapper) {
+func (i *itemDomain) FindByID(ctx context.Context, id string) (*dto.GetItemsResponse, *error_wrapper.ErrorWrapper) {
 	// itemPrice, errW := i.calculatePrice(ctx, id)
 	// fmt.Println("INI ITEMPRICE", itemPrice)
 	// if errW != nil {
@@ -32,7 +32,7 @@ func (i *itemDomain) FindByID(ctx context.Context, id string) (*model.Item, *err
 		return nil, errW
 	}
 
-	return item, nil
+	return i.mapItemModelToDto(*item), nil
 }
 
 func (i *itemDomain) Update(ctx context.Context, payload dto.UpdateItemRequest, itemID string) *error_wrapper.ErrorWrapper {
@@ -90,7 +90,7 @@ func (i *itemDomain) calculatePrice(ctx context.Context, itemID string) (float64
 	limit := 10
 	offset := 0
 
-	stockBalance, errW := i.stockBalanceResource.FindByBranchAndItem(fmt.Sprint(branchId), itemID)
+	stockBalance, errW := i.itemBranchResource.FindByBranchAndItem(fmt.Sprint(branchId), itemID)
 	if errW != nil {
 		return 0.0, errW
 	}
@@ -130,4 +130,26 @@ func (i *itemDomain) calculatePrice(ctx context.Context, itemID string) (float64
 	avgPrice := totalPrice / totalItem
 
 	return avgPrice, nil
+}
+
+func (i *itemDomain) mapItemModelToDto(item model.Item) *dto.GetItemsResponse {
+	var itemCompositions []dto.GetItemCompositionResponse
+
+	for _, ic := range item.ChildCompositions {
+		itemCompositions = append(itemCompositions, dto.GetItemCompositionResponse{
+			UUID:        ic.UUID,
+			ChildItemID: ic.ChildItemID,
+			Ratio:       ic.Ratio,
+			Notes:       ic.Notes,
+		})
+	}
+
+	return &dto.GetItemsResponse{
+		UUID:              item.UUID,
+		Name:              item.Name,
+		Category:          item.Category,
+		Unit:              item.Unit,
+		PortionSize:       item.PortionSize,
+		ChildCompositions: itemCompositions,
+	}
 }

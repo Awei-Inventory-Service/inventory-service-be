@@ -1,18 +1,18 @@
-package stockbalance
+package item_branch
 
 import (
 	"github.com/inventory-service/resource/item"
-	stockbalance "github.com/inventory-service/resource/stock_balance"
+	itemBranch "github.com/inventory-service/resource/item_branch"
 	stocktransaction "github.com/inventory-service/resource/stock_transaction"
 )
 
-func NewStockBalanceDomain(
-	stockBalanceResource stockbalance.StockBalanceResource,
+func NewItemBranchDomain(
+	itemBranchResource itemBranch.ItemBranchResource,
 	stockTransactionResource stocktransaction.StockTransactionResource,
 	itemResource item.ItemResource,
-) StockBalanceDomain {
-	return &stockBalanceDomain{
-		stockBalanceResource:     stockBalanceResource,
+) ItemBranchDomain {
+	return &itemBranchDomain{
+		itemBranchResource:       itemBranchResource,
 		stockTransactionResource: stockTransactionResource,
 		itemResource:             itemResource,
 	}

@@ -8,15 +8,15 @@ import (
 	"github.com/inventory-service/model"
 )
 
-func (s *stockBalanceHandler) FindByBranchIdAndItemId(c *gin.Context) {
+func (s *itemBranchHandler) FindByBranchIdAndItemId(c *gin.Context) {
 	var (
 		errW                  *error_wrapper.ErrorWrapper
-		stockBalance          *model.StockBalance
+		itemBranch            *model.ItemBranch
 		getStockBalanceReqest dto.GetStockBalanceRequest
 	)
 
 	defer func() {
-		response_wrapper.New(&c.Writer, c, errW == nil, stockBalance, errW)
+		response_wrapper.New(&c.Writer, c, errW == nil, itemBranch, errW)
 	}()
 
 	if err := c.ShouldBindJSON(&getStockBalanceReqest); err != nil {
@@ -24,28 +24,26 @@ func (s *stockBalanceHandler) FindByBranchIdAndItemId(c *gin.Context) {
 		return
 	}
 
-	stockBalance, errW = s.stockBalanceUsecase.FindByBranchIdAndItemId(getStockBalanceReqest)
+	itemBranch, errW = s.itemBranchUsecase.FindByBranchIdAndItemId(getStockBalanceReqest)
 
 	if errW != nil {
 		return
 	}
-	return
 }
 
-func (s *stockBalanceHandler) FindAllStockBalance(c *gin.Context) {
+func (s *itemBranchHandler) FindAllStockBalance(c *gin.Context) {
 	var (
-		errW          *error_wrapper.ErrorWrapper
-		stockBalances []model.StockBalance
+		errW         *error_wrapper.ErrorWrapper
+		itemBranches []model.ItemBranch
 	)
 
 	defer func() {
-		response_wrapper.New(&c.Writer, c, errW == nil, stockBalances, errW)
+		response_wrapper.New(&c.Writer, c, errW == nil, itemBranches, errW)
 	}()
-	stockBalances, errW = s.stockBalanceUsecase.FindAll()
+	itemBranches, errW = s.itemBranchUsecase.FindAll()
 
 	if errW != nil {
 		return
 	}
 
-	return
 }

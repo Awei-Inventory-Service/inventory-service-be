@@ -1,16 +1,15 @@
-package stockbalance
+package item_branch
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 	"gorm.io/gorm"
 )
 
-func (s *stockBalanceResource) Create(stockBalance model.StockBalance) *error_wrapper.ErrorWrapper {
-	result := s.db.Create(&stockBalance)
+func (s *itemBranchResource) Create(itemBranch model.ItemBranch) *error_wrapper.ErrorWrapper {
+	result := s.db.Create(&itemBranch)
 	if result.Error != nil {
 		return error_wrapper.New(model.RErrPostgresCreateDocument, result.Error.Error())
 	}
@@ -18,8 +17,8 @@ func (s *stockBalanceResource) Create(stockBalance model.StockBalance) *error_wr
 	return nil
 }
 
-func (s *stockBalanceResource) FindAll() ([]model.StockBalance, *error_wrapper.ErrorWrapper) {
-	var balances []model.StockBalance
+func (s *itemBranchResource) FindAll() ([]model.ItemBranch, *error_wrapper.ErrorWrapper) {
+	var balances []model.ItemBranch
 	result := s.db.Preload("Branch").Preload("Item").Find(&balances)
 	if result.Error != nil {
 		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
@@ -28,8 +27,8 @@ func (s *stockBalanceResource) FindAll() ([]model.StockBalance, *error_wrapper.E
 	return balances, nil
 }
 
-func (s *stockBalanceResource) FindByBranch(branchID string) ([]model.StockBalance, *error_wrapper.ErrorWrapper) {
-	var balances []model.StockBalance
+func (s *itemBranchResource) FindByBranch(branchID string) ([]model.ItemBranch, *error_wrapper.ErrorWrapper) {
+	var balances []model.ItemBranch
 	result := s.db.Where("branch_id = ?", branchID).Find(&balances)
 	if result.Error != nil {
 		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
@@ -38,8 +37,8 @@ func (s *stockBalanceResource) FindByBranch(branchID string) ([]model.StockBalan
 	return balances, nil
 }
 
-func (s *stockBalanceResource) FindByItem(itemID string) ([]model.StockBalance, *error_wrapper.ErrorWrapper) {
-	var balances []model.StockBalance
+func (s *itemBranchResource) FindByItem(itemID string) ([]model.ItemBranch, *error_wrapper.ErrorWrapper) {
+	var balances []model.ItemBranch
 	result := s.db.Where("item_id = ?", itemID).Find(&balances)
 	if result.Error != nil {
 		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
@@ -48,9 +47,9 @@ func (s *stockBalanceResource) FindByItem(itemID string) ([]model.StockBalance, 
 	return balances, nil
 }
 
-func (s *stockBalanceResource) FindByBranchAndItem(branchID, itemID string) (*model.StockBalance, *error_wrapper.ErrorWrapper) {
-	var balance model.StockBalance
-	fmt.Println("INI BRANCH ID DAN ITEM ID", branchID, itemID)
+func (s *itemBranchResource) FindByBranchAndItem(branchID, itemID string) (*model.ItemBranch, *error_wrapper.ErrorWrapper) {
+	var balance model.ItemBranch
+
 	result := s.db.Where("branch_id = ? AND item_id = ?", branchID, itemID).First(&balance)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -62,8 +61,8 @@ func (s *stockBalanceResource) FindByBranchAndItem(branchID, itemID string) (*mo
 	return &balance, nil
 }
 
-func (s *stockBalanceResource) Update(branchID, itemID string, currentStock float64) *error_wrapper.ErrorWrapper {
-	result := s.db.Model(&model.StockBalance{}).
+func (s *itemBranchResource) Update(branchID, itemID string, currentStock float64) *error_wrapper.ErrorWrapper {
+	result := s.db.Model(&model.ItemBranch{}).
 		Where("branch_id = ? AND item_id = ?", branchID, itemID).
 		Update("current_stock", currentStock)
 	if result.Error != nil {
@@ -73,8 +72,8 @@ func (s *stockBalanceResource) Update(branchID, itemID string, currentStock floa
 	return nil
 }
 
-func (s *stockBalanceResource) Delete(branchID, itemID string) *error_wrapper.ErrorWrapper {
-	result := s.db.Where("branch_id = ? AND item_id = ?", branchID, itemID).Delete(&model.StockBalance{})
+func (s *itemBranchResource) Delete(branchID, itemID string) *error_wrapper.ErrorWrapper {
+	result := s.db.Where("branch_id = ? AND item_id = ?", branchID, itemID).Delete(&model.ItemBranch{})
 	if result.Error != nil {
 		return error_wrapper.New(model.RErrPostgresDeleteDocument, result.Error.Error())
 	}

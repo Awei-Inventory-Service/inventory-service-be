@@ -27,7 +27,7 @@ func (i *itemController) GetItems(c *gin.Context) {
 
 func (i *itemController) GetItem(c *gin.Context) {
 	var (
-		item *model.Item
+		item *dto.GetItemsResponse
 		errW *error_wrapper.ErrorWrapper
 	)
 

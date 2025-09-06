@@ -16,12 +16,12 @@ func (p *purchaseDomain) Create(payload dto.CreatePurchaseRequest, userID string
 		Unit:         payload.Unit,
 	}
 
-	_, errW := p.stockBalanceResource.FindByBranchAndItem(payload.BranchID, payload.ItemID)
+	_, errW := p.itemBranchResource.FindByBranchAndItem(payload.BranchID, payload.ItemID)
 
 	if errW != nil {
 		if errW.Is(model.RErrDataNotFound) {
 			// If there is no stock balance, create one
-			errW = p.stockBalanceResource.Create(model.StockBalance{
+			errW = p.itemBranchResource.Create(model.ItemBranch{
 				BranchID:     payload.BranchID,
 				ItemID:       payload.ItemID,
 				CurrentStock: payload.Quantity,
