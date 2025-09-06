@@ -11,7 +11,7 @@ import (
 func (s *itemBranchHandler) FindByBranchIdAndItemId(c *gin.Context) {
 	var (
 		errW                  *error_wrapper.ErrorWrapper
-		itemBranch            *model.ItemBranch
+		itemBranch            *model.BranchItem
 		getStockBalanceReqest dto.GetStockBalanceRequest
 	)
 
@@ -24,7 +24,7 @@ func (s *itemBranchHandler) FindByBranchIdAndItemId(c *gin.Context) {
 		return
 	}
 
-	itemBranch, errW = s.itemBranchUsecase.FindByBranchIdAndItemId(getStockBalanceReqest)
+	itemBranch, errW = s.branchItemUsecase.FindByBranchIdAndItemId(getStockBalanceReqest)
 
 	if errW != nil {
 		return
@@ -34,13 +34,13 @@ func (s *itemBranchHandler) FindByBranchIdAndItemId(c *gin.Context) {
 func (s *itemBranchHandler) FindAllStockBalance(c *gin.Context) {
 	var (
 		errW         *error_wrapper.ErrorWrapper
-		itemBranches []model.ItemBranch
+		itemBranches []model.BranchItem
 	)
 
 	defer func() {
 		response_wrapper.New(&c.Writer, c, errW == nil, itemBranches, errW)
 	}()
-	itemBranches, errW = s.itemBranchUsecase.FindAll()
+	itemBranches, errW = s.branchItemUsecase.FindAll()
 
 	if errW != nil {
 		return

@@ -1,6 +1,6 @@
 package model
 
-type ItemBranch struct {
+type BranchItem struct {
 	UUID         string  `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
 	BranchID     string  `gorm:"type:uuid;not null"`
 	Branch       Branch  `gorm:"foreignKey:BranchID;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL"`
@@ -10,6 +10,6 @@ type ItemBranch struct {
 	Price        float64 `gorm:"type:decimal(10,2)"`
 }
 
-func (ItemBranch) TableName() string {
-	return "item_branch"
+func (BranchItem) TableName() string {
+	return "branch_item"
 }

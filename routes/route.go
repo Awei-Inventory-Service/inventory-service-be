@@ -8,10 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 	auth_controller "github.com/inventory-service/handler/auth"
 	branch_controller "github.com/inventory-service/handler/branch"
+	branch_item_controller "github.com/inventory-service/handler/branch_item"
 	inventory_stock_count_controller "github.com/inventory-service/handler/inventory_stock_count"
 	invoice_controller "github.com/inventory-service/handler/invoice"
 	item_controller "github.com/inventory-service/handler/item"
-	item_branch_controller "github.com/inventory-service/handler/item_branch"
 	product_controller "github.com/inventory-service/handler/product"
 	purchase_controller "github.com/inventory-service/handler/purchase"
 
@@ -31,7 +31,7 @@ import (
 	product_resource "github.com/inventory-service/resource/product"
 	product_composition_resource "github.com/inventory-service/resource/product_composition"
 
-	item_branch_resource "github.com/inventory-service/resource/item_branch"
+	branch_item_resource "github.com/inventory-service/resource/branch_item"
 	purchase_resource "github.com/inventory-service/resource/purchase"
 	sales_resource "github.com/inventory-service/resource/sales"
 	stock_transaction_resource "github.com/inventory-service/resource/stock_transaction"
@@ -47,7 +47,7 @@ import (
 	product_domain "github.com/inventory-service/domain/product"
 	product_composition_domain "github.com/inventory-service/domain/product_composition"
 
-	item_branch_domain "github.com/inventory-service/domain/item_branch"
+	branch_item_domain "github.com/inventory-service/domain/branch_item"
 	purchase_domain "github.com/inventory-service/domain/purchase"
 	sales_domain "github.com/inventory-service/domain/sales"
 	stock_transaction_domain "github.com/inventory-service/domain/stock_transaction"
@@ -56,10 +56,10 @@ import (
 
 	auth_service "github.com/inventory-service/usecase/auth"
 	branch_service "github.com/inventory-service/usecase/branch"
+	branch_item_usecase "github.com/inventory-service/usecase/branch_item"
 	inventory_stock_count_service "github.com/inventory-service/usecase/inventory_stock_count"
 	invoice_service "github.com/inventory-service/usecase/invoice"
 	item_service "github.com/inventory-service/usecase/item"
-	item_branch_usecase "github.com/inventory-service/usecase/item_branch"
 	item_purchase_chain_service "github.com/inventory-service/usecase/item_purchase_chain"
 	product_service "github.com/inventory-service/usecase/product"
 	purchase_service "github.com/inventory-service/usecase/purchase"
@@ -89,7 +89,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	itemResource := item_resource.NewItemResource(pgDB)
 	branchResource := branch_resource.NewBranchResource(pgDB)
 	purchaseResource := purchase_resource.NewPurchaseResource(pgDB)
-	itemBalanceResource := item_branch_resource.NewItemBranchResource(pgDB)
+	itemBalanceResource := branch_item_resource.NewItemBranchResource(pgDB)
 	mongodbResource, err := mongodb.InitMongoDB()
 
 	if err != nil {
@@ -117,7 +117,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	stockDomain := stock_transaction_domain.NewStockTransactionDomain(stockTransactionResource)
 	itemPurchaseChainDomain := item_purchase_chain_domain.NewItemPurchaseChainDomain(itemPurchaseChainResource)
 	salesDomain := sales_domain.NewSalesDomain(salesResource)
-	itemBranchDomain := item_branch_domain.NewItemBranchDomain(itemBalanceResource, stockTransactionResource, itemResource)
+	itemBranchDomain := branch_item_domain.NewItemBranchDomain(itemBalanceResource, stockTransactionResource, itemResource)
 	productCompositionDomain := product_composition_domain.NewProductCompositionDomain(productCompositionResource)
 	itemCompositionDomain := item_composition_domain.NewItemCompositionDomain(itemCompositionResource)
 
@@ -134,7 +134,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	itemPurchaseChainService := item_purchase_chain_service.NewItemPurchaseChainService(itemPurchaseChainDomain, purchaseDomain, itemDomain, branchDomain)
 	salesService := sales_service.NewSalesService(salesDomain, productDomain, itemPurchaseChainDomain, itemPurchaseChainService)
 	uploadService := upload_service.NewUploadService(salesResource, productResource, salesService)
-	itemBranchUsecase := item_branch_usecase.NewStockBalanceUsecase(itemBranchDomain)
+	itemBranchUsecase := branch_item_usecase.NewBranchItemUsecase(itemBranchDomain)
 
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)
@@ -145,7 +145,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	productController := product_controller.NewProductController(productService)
 	invoiceController := invoice_controller.NewInvoiceController(invoiceService)
 	salesController := sales_controller.NewSalesController(salesService)
-	stockBalanceController := item_branch_controller.NewStockBalanceHandler(itemBranchUsecase)
+	stockBalanceController := branch_item_controller.NewBranchItemHandler(itemBranchUsecase)
 
 	inventoryStockCountController := inventory_stock_count_controller.NewInventoryStockCountController(inventoryStockCountService)
 	stockController := stock_controller.NewStockController(stockService)

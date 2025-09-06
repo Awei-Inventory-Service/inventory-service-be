@@ -1,19 +1,19 @@
 package purchase
 
 import (
-	itemBranch "github.com/inventory-service/resource/item_branch"
+	branchItem "github.com/inventory-service/resource/branch_item"
 	"github.com/inventory-service/resource/purchase"
 	stocktransaction "github.com/inventory-service/resource/stock_transaction"
 )
 
 func NewPurchaseDomain(
 	purchaseResource purchase.PurchaseResource,
-	itemBranchResource itemBranch.ItemBranchResource,
+	branchItemResource branchItem.BranchItemResource,
 	stockTransactionResource stocktransaction.StockTransactionResource,
 ) PurchaseDomain {
 	return &purchaseDomain{
 		purchaseResource:         purchaseResource,
-		itemBranchResource:       itemBranchResource,
+		branchItemResource:       branchItemResource,
 		stockTransactionResource: stockTransactionResource,
 	}
 }

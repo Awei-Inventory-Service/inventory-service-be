@@ -2,14 +2,14 @@ package stockbalance
 
 import (
 	"github.com/gin-gonic/gin"
-	itembranch "github.com/inventory-service/usecase/item_branch"
+	branchitem "github.com/inventory-service/usecase/branch_item"
 )
 
-type ItemBranchHandler interface {
+type BranchItemHandler interface {
 	FindByBranchIdAndItemId(c *gin.Context)
 	FindAllStockBalance(c *gin.Context)
 }
 
 type itemBranchHandler struct {
-	itemBranchUsecase itembranch.ItemBranchUsecase
+	branchItemUsecase branchitem.BranchItemUsecase
 }

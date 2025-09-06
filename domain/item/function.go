@@ -90,7 +90,7 @@ func (i *itemDomain) calculatePrice(ctx context.Context, itemID string) (float64
 	limit := 10
 	offset := 0
 
-	stockBalance, errW := i.itemBranchResource.FindByBranchAndItem(fmt.Sprint(branchId), itemID)
+	stockBalance, errW := i.branchItemResource.FindByBranchAndItem(fmt.Sprint(branchId), itemID)
 	if errW != nil {
 		return 0.0, errW
 	}

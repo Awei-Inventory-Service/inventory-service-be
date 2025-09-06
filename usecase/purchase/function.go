@@ -70,7 +70,7 @@ func (p *purchaseService) Create(c *gin.Context, payload dto.CreatePurchaseReque
 		return errW
 	}
 
-	errW = p.stockBalanceDomain.SyncCurrentBalance(payload.BranchID, payload.ItemID)
+	errW = p.branchItemDomain.SyncCurrentBalance(payload.BranchID, payload.ItemID)
 
 	if errW != nil {
 		fmt.Println("Fail sync stock balance domain")
