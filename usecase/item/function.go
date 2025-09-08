@@ -2,6 +2,7 @@ package item
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -15,7 +16,7 @@ func (i *itemUsecase) Create(ctx context.Context, payload dto.CreateItemRequest)
 	if errW != nil {
 		return
 	}
-
+	fmt.Println("INI PAYLOAD PRICE", payload.Price)
 	item, errW := i.itemDomain.Create(model.Item{
 		Name:        payload.Name,
 		Category:    itemCategory,
@@ -50,7 +51,7 @@ func (i *itemUsecase) Create(ctx context.Context, payload dto.CreateItemRequest)
 	return nil
 }
 
-func (i *itemUsecase) FindAll() ([]model.Item, *error_wrapper.ErrorWrapper) {
+func (i *itemUsecase) FindAll() ([]dto.GetItemsResponse, *error_wrapper.ErrorWrapper) {
 	items, err := i.itemDomain.FindAll()
 	if err != nil {
 		return nil, err

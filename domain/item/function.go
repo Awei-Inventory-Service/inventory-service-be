@@ -15,8 +15,19 @@ func (i *itemDomain) Create(item model.Item) (*model.Item, *error_wrapper.ErrorW
 	return i.itemResource.Create(item)
 }
 
-func (i *itemDomain) FindAll() ([]model.Item, *error_wrapper.ErrorWrapper) {
-	return i.itemResource.FindAll()
+func (i *itemDomain) FindAll() ([]dto.GetItemsResponse, *error_wrapper.ErrorWrapper) {
+	rawItems, errW := i.itemResource.FindAll()
+
+	if errW != nil {
+		return nil, errW
+	}
+
+	var items []dto.GetItemsResponse
+
+	for _, it := range rawItems {
+		items = append(items, *i.mapItemModelToDto(it))
+	}
+	return items, nil
 }
 
 func (i *itemDomain) FindByID(ctx context.Context, id string) (*dto.GetItemsResponse, *error_wrapper.ErrorWrapper) {
@@ -43,12 +54,13 @@ func (i *itemDomain) Update(ctx context.Context, payload dto.UpdateItemRequest, 
 	}
 
 	item := model.Item{
-		UUID:       itemID,
-		Name:       payload.Name,
-		Category:   itemCategory,
-		Price:      payload.Price,
-		Unit:       payload.Unit,
-		SupplierID: &payload.SupplierID,
+		UUID:        itemID,
+		Name:        payload.Name,
+		Category:    itemCategory,
+		Price:       payload.Price,
+		PortionSize: payload.PortionSize,
+		Unit:        payload.Unit,
+		SupplierID:  &payload.SupplierID,
 	}
 
 	updatedItem, errW := i.itemResource.Update(ctx, item)
@@ -137,10 +149,13 @@ func (i *itemDomain) mapItemModelToDto(item model.Item) *dto.GetItemsResponse {
 
 	for _, ic := range item.ChildCompositions {
 		itemCompositions = append(itemCompositions, dto.GetItemCompositionResponse{
-			UUID:        ic.UUID,
-			ChildItemID: ic.ChildItemID,
-			Ratio:       ic.Ratio,
-			Notes:       ic.Notes,
+			UUID:          ic.UUID,
+			ChildItemID:   ic.ChildItemID,
+			Ratio:         ic.Ratio,
+			Notes:         ic.Notes,
+			PortionSize:   ic.ChildItem.PortionSize,
+			Unit:          ic.ChildItem.Unit,
+			ChildItemName: ic.ChildItem.Name,
 		})
 	}
 

@@ -19,7 +19,10 @@ func (i *itemResource) Create(item model.Item) (*model.Item, *error_wrapper.Erro
 
 func (i *itemResource) FindAll() ([]model.Item, *error_wrapper.ErrorWrapper) {
 	var items []model.Item
-	result := i.db.Preload("Supplier").Find(&items)
+	result := i.db.
+		Preload("ChildCompositions").
+		Preload("ChildCompositions.ChildItem").
+		Find(&items)
 	if result.Error != nil {
 		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
 	}
@@ -29,7 +32,10 @@ func (i *itemResource) FindAll() ([]model.Item, *error_wrapper.ErrorWrapper) {
 
 func (i *itemResource) FindByID(id string) (*model.Item, *error_wrapper.ErrorWrapper) {
 	var item model.Item
-	result := i.db.Where("uuid = ?", id).First(&item)
+	result := i.db.Where("uuid = ?", id).
+		Preload("ChildCompositions").
+		Preload("ChildCompositions.ChildItem").
+		First(&item)
 	if result.Error != nil {
 		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
 	}

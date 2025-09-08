@@ -29,6 +29,7 @@ func (s *branchItemDomain) FindByItem(itemID string) ([]model.BranchItem, *error
 }
 
 func (s *branchItemDomain) FindByBranchAndItem(branchID, itemID string) (*model.BranchItem, *error_wrapper.ErrorWrapper) {
+	
 	return s.branchItemResource.FindByBranchAndItem(branchID, itemID)
 }
 

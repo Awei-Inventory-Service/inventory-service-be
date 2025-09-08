@@ -22,8 +22,8 @@ func (p *productResource) FindAll(ctx context.Context) ([]model.Product, *error_
 	var products []model.Product
 
 	result := p.db.WithContext(ctx).
-		Preload("ProdcutCompositions").
-		Preload("ProductCompositions.Item").
+		Preload("ProductComposition").
+		Preload("ProductComposition.Item").
 		Find(&products)
 
 	if result.Error != nil {

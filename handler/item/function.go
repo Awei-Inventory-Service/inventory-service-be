@@ -10,7 +10,7 @@ import (
 
 func (i *itemController) GetItems(c *gin.Context) {
 	var (
-		items []model.Item
+		items []dto.GetItemsResponse
 		errW  *error_wrapper.ErrorWrapper
 	)
 

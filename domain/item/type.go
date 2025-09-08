@@ -14,7 +14,7 @@ import (
 
 type ItemDomain interface {
 	Create(item model.Item) (*model.Item, *error_wrapper.ErrorWrapper)
-	FindAll() ([]model.Item, *error_wrapper.ErrorWrapper)
+	FindAll() ([]dto.GetItemsResponse, *error_wrapper.ErrorWrapper)
 	FindByID(ctx context.Context, id string) (*dto.GetItemsResponse, *error_wrapper.ErrorWrapper)
 	Update(ctx context.Context, payload dto.UpdateItemRequest, itemID string) *error_wrapper.ErrorWrapper
 	Delete(id string) *error_wrapper.ErrorWrapper

@@ -16,7 +16,7 @@ type Item struct {
 	UUID        string       `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"uuid"`
 	Name        string       `gorm:"type:varchar(255);not null" json:"name" validate:"required"`
 	Category    ItemCategory `gorm:"type:varchar(255);not null" json:"category" validate:"required"`
-	Price       float64      `gorm:"type:decimal(10,2)" json:"price" validate:"required,gt=0"`
+	Price       *float64     `gorm:"type:decimal(10,2)" json:"price"`
 	Unit        string       `gorm:"type:varchar(255);not null" json:"unit" validate:"required"`       // e.g., "gram", "ml"
 	PortionSize float64      `gorm:"type:decimal(10,4);default:1" json:"portion_size" validate:"gt=0"` // default is 1
 	CreatedAt   time.Time    `json:"created_at"`
