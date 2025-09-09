@@ -7,9 +7,10 @@ import (
 
 type BranchItemHandler interface {
 	FindByBranchIdAndItemId(c *gin.Context)
-	FindAllStockBalance(c *gin.Context)
+	FindAllBranchItem(c *gin.Context)
+	SyncBalance(c *gin.Context)
 }
 
-type itemBranchHandler struct {
+type branchItemHandler struct {
 	branchItemUsecase branchitem.BranchItemUsecase
 }

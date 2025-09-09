@@ -1,6 +1,9 @@
 package branch_item
 
 import (
+	"context"
+
+	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 	"github.com/inventory-service/utils"
@@ -16,8 +19,28 @@ func (s *branchItemDomain) Create(branchID, itemID string, currentStock int) *er
 	return s.branchItemResource.Create(branchItem)
 }
 
-func (s *branchItemDomain) FindAll() ([]model.BranchItem, *error_wrapper.ErrorWrapper) {
-	return s.branchItemResource.FindAll()
+func (s *branchItemDomain) FindAll() (results []dto.GetBranchItemResponse, errW *error_wrapper.ErrorWrapper) {
+	branchItems, errW := s.branchItemResource.FindAll()
+
+	if errW != nil {
+		return
+	}
+
+	for _, branchItem := range branchItems {
+		results = append(results, dto.GetBranchItemResponse{
+			UUID:         branchItem.UUID,
+			BranchID:     branchItem.BranchID,
+			ItemID:       branchItem.ItemID,
+			ItemName:     branchItem.Item.Name,
+			ItemCategory: branchItem.Item.Category,
+			CurrentStock: branchItem.CurrentStock,
+			Price:        branchItem.Price,
+			ItemUnit:     branchItem.Item.Unit,
+		})
+
+	}
+
+	return
 }
 
 func (s *branchItemDomain) FindByBranch(branchID string) ([]model.BranchItem, *error_wrapper.ErrorWrapper) {
@@ -29,28 +52,33 @@ func (s *branchItemDomain) FindByItem(itemID string) ([]model.BranchItem, *error
 }
 
 func (s *branchItemDomain) FindByBranchAndItem(branchID, itemID string) (*model.BranchItem, *error_wrapper.ErrorWrapper) {
-	
+
 	return s.branchItemResource.FindByBranchAndItem(branchID, itemID)
 }
 
-func (s *branchItemDomain) Update(branchID, itemID string, currentStock float64) *error_wrapper.ErrorWrapper {
-	return s.branchItemResource.Update(branchID, itemID, currentStock)
+func (s *branchItemDomain) Update(ctx context.Context, branchID, itemID string, currentStock float64) (*model.BranchItem, *error_wrapper.ErrorWrapper) {
+	payload := model.BranchItem{
+		BranchID:     branchID,
+		ItemID:       itemID,
+		CurrentStock: currentStock,
+	}
+	return s.branchItemResource.Update(ctx, payload)
 }
 
 func (s *branchItemDomain) Delete(branchID, itemID string) *error_wrapper.ErrorWrapper {
 	return s.branchItemResource.Delete(branchID, itemID)
 }
 
-func (s *branchItemDomain) SyncCurrentBalance(branchID, itemID string) *error_wrapper.ErrorWrapper {
+func (s *branchItemDomain) SyncCurrentBalance(ctx context.Context, branchID, itemID string) (float64, *error_wrapper.ErrorWrapper) {
 	allTransactions, err := s.stockTransactionResource.FindAll()
 	if err != nil {
-		return err
+		return 0.0, err
 	}
 
 	item, errW := s.itemResource.FindByID(itemID)
 
 	if errW != nil {
-		return errW
+		return 0.0, errW
 	}
 
 	var totalBalance float64
@@ -58,7 +86,6 @@ func (s *branchItemDomain) SyncCurrentBalance(branchID, itemID string) *error_wr
 		if transaction.ItemID != itemID {
 			continue
 		}
-
 		balance := utils.StandarizeMeasurement(float64(transaction.Quantity), transaction.Unit, item.Unit)
 
 		if transaction.Type == "IN" && transaction.BranchDestinationID == branchID {
@@ -68,5 +95,60 @@ func (s *branchItemDomain) SyncCurrentBalance(branchID, itemID string) *error_wr
 		}
 	}
 
-	return s.branchItemResource.Update(branchID, itemID, totalBalance)
+	_, errW = s.branchItemResource.Update(ctx, model.BranchItem{
+		BranchID:     branchID,
+		ItemID:       itemID,
+		CurrentStock: totalBalance,
+	})
+
+	if errW != nil {
+		return 0.0, errW
+	}
+
+	return totalBalance, nil
+}
+
+func (s *branchItemDomain) CalculatePrice(ctx context.Context, branchID, itemID string, currentBalance float64) (float64, *error_wrapper.ErrorWrapper) {
+	limit := 10
+	offset := 0
+
+	purchaseStock := 0.0
+	var (
+		allPurchases []model.Purchase
+		item         model.Item
+	)
+
+	for purchaseStock < currentBalance {
+		purchases, errW := s.purchaseResource.FindByBranchAndItem(branchID, itemID, offset, limit)
+		if errW != nil {
+			return 0.0, errW
+		}
+
+		if len(purchases) == 0 {
+			break
+		}
+
+		for _, purchase := range purchases {
+			allPurchases = append(allPurchases, purchase)
+			purchaseStock += purchase.Quantity
+			if purchaseStock >= currentBalance {
+				break
+			}
+		}
+
+		offset += limit
+	}
+	totalPrice := 0.0
+	totalItem := 0.0
+
+	for _, purchase := range allPurchases {
+		balance := utils.StandarizeMeasurement(float64(purchase.Quantity), purchase.Unit, purchase.Item.Unit)
+		totalItem += balance
+		totalPrice += purchase.PurchaseCost
+		item = purchase.Item
+	}
+
+	avgPrice := totalPrice / totalItem * item.PortionSize
+
+	return avgPrice, nil
 }

@@ -1,6 +1,9 @@
 package branch_item
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
@@ -14,6 +17,22 @@ func (s *branchItemUsecase) FindByBranchId(branchId string) ([]model.BranchItem,
 	return s.branchItemDomain.FindByBranch(branchId)
 }
 
-func (s *branchItemUsecase) FindAll() ([]model.BranchItem, *error_wrapper.ErrorWrapper) {
+func (s *branchItemUsecase) FindAll() ([]dto.GetBranchItemResponse, *error_wrapper.ErrorWrapper) {
 	return s.branchItemDomain.FindAll()
+}
+
+func (b *branchItemUsecase) SyncBalance(ctx context.Context, payload dto.SyncBalanceRequest) (errW *error_wrapper.ErrorWrapper) {
+	currentBalance, errW := b.branchItemDomain.SyncCurrentBalance(ctx, payload.BranchID, payload.ItemID)
+
+	if errW != nil {
+		return
+	}
+
+	price, errW := b.branchItemDomain.CalculatePrice(ctx, payload.BranchID, payload.ItemID, currentBalance)
+	fmt.Println("INi current price", price)
+	if errW != nil {
+		return
+	}
+
+	return
 }

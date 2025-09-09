@@ -11,5 +11,5 @@ type BranchItem struct {
 }
 
 func (BranchItem) TableName() string {
-	return "branch_item"
+	return "branch_items"
 }

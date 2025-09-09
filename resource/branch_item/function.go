@@ -1,7 +1,9 @@
 package branch_item
 
 import (
+	"context"
 	"errors"
+	"fmt"
 
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
@@ -61,15 +63,23 @@ func (s *branchItemResource) FindByBranchAndItem(branchID, itemID string) (*mode
 	return &branchItem, nil
 }
 
-func (s *branchItemResource) Update(branchID, itemID string, currentStock float64) *error_wrapper.ErrorWrapper {
-	result := s.db.Model(&model.BranchItem{}).
-		Where("branch_id = ? AND item_id = ?", branchID, itemID).
-		Update("current_stock", currentStock)
-	if result.Error != nil {
-		return error_wrapper.New(model.RErrPostgresUpdateDocument, result.Error.Error())
+func (s *branchItemResource) Update(ctx context.Context, payload model.BranchItem) (*model.BranchItem, *error_wrapper.ErrorWrapper) {
+	var result *gorm.DB
+
+	if payload.UUID != "" {
+		fmt.Println("Updating branch item based on UUID")
+		result = s.db.WithContext(ctx).Where("uuid = ?", payload.UUID).Select("current_stock", "price").Updates(&payload)
+	} else {
+		fmt.Println("Updating branch item based on branch id and item id")
+		fmt.Println("PAYLOAD", payload)
+		result = s.db.WithContext(ctx).Where("branch_id = ? AND item_id = ?", payload.BranchID, payload.ItemID).Select("current_stock", "price").Updates(&payload)
 	}
 
-	return nil
+	if result.Error != nil {
+		return nil, error_wrapper.New(model.RErrPostgresUpdateDocument, result.Error.Error())
+	}
+
+	return &payload, nil
 }
 
 func (s *branchItemResource) Delete(branchID, itemID string) *error_wrapper.ErrorWrapper {

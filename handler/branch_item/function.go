@@ -8,7 +8,7 @@ import (
 	"github.com/inventory-service/model"
 )
 
-func (s *itemBranchHandler) FindByBranchIdAndItemId(c *gin.Context) {
+func (s *branchItemHandler) FindByBranchIdAndItemId(c *gin.Context) {
 	var (
 		errW                  *error_wrapper.ErrorWrapper
 		itemBranch            *model.BranchItem
@@ -31,10 +31,10 @@ func (s *itemBranchHandler) FindByBranchIdAndItemId(c *gin.Context) {
 	}
 }
 
-func (s *itemBranchHandler) FindAllStockBalance(c *gin.Context) {
+func (s *branchItemHandler) FindAllBranchItem(c *gin.Context) {
 	var (
 		errW         *error_wrapper.ErrorWrapper
-		itemBranches []model.BranchItem
+		itemBranches []dto.GetBranchItemResponse
 	)
 
 	defer func() {
@@ -46,4 +46,25 @@ func (s *itemBranchHandler) FindAllStockBalance(c *gin.Context) {
 		return
 	}
 
+}
+
+func (b *branchItemHandler) SyncBalance(c *gin.Context) {
+	var (
+		errW    *error_wrapper.ErrorWrapper
+		payload dto.SyncBalanceRequest
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+		return
+	}
+
+	errW = b.branchItemUsecase.SyncBalance(c, payload)
+	if errW != nil {
+		return
+	}
 }

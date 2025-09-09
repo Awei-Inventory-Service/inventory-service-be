@@ -70,12 +70,14 @@ func (p *purchaseService) Create(c *gin.Context, payload dto.CreatePurchaseReque
 		return errW
 	}
 
-	errW = p.branchItemDomain.SyncCurrentBalance(payload.BranchID, payload.ItemID)
+	currentBalance, errW := p.branchItemDomain.SyncCurrentBalance(c, payload.BranchID, payload.ItemID)
 
 	if errW != nil {
 		fmt.Println("Fail sync stock balance domain")
 	}
 
+	currentPrice, errW := p.branchItemDomain.CalculatePrice(c, payload.BranchID, payload.ItemID, currentBalance)
+	fmt.Println("iNI CURRENT PRICE", currentPrice)
 	// errW = p.itemPurchaseChainDomain.Create(c, itemId, branchId, *newPurchase)
 	// if errW != nil {
 	// 	fmt.Println("Error : ", errW.StackTrace(), errW.ActualError())
