@@ -49,6 +49,8 @@ var (
 
 	// Usecase
 	UErrInvalidItemCategory = errW.NewDefinition(300000, "Error Invalid Item Category", true, CategoryBadRequest)
+	UErrInvalidProductType  = errW.NewDefinition(400000, "Error Invalid Product Type", true, CategoryBadRequest)
+
 	//	Service
 	SErrDataExist       = errW.NewDefinition(200000, "Error Data Already Exist", false, CategoryBadRequest)
 	SErrUnableToProceed = errW.NewDefinition(200001, "Error Unable To Proceed", false, CategoryBadRequest)

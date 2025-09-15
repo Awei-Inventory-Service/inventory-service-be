@@ -10,10 +10,17 @@ import (
 
 func (p *productService) Create(ctx context.Context, payload dto.CreateProductRequest) *error_wrapper.ErrorWrapper {
 
+	productType := payload.MapProductCategory()
+
+	if productType == "" {
+		return error_wrapper.New(model.UErrInvalidProductType, "Invalid product type")
+	}
+
 	product, errW := p.productDomain.Create(ctx, model.Product{
 		Name:         payload.Name,
 		Code:         payload.Code,
 		Category:     payload.Category,
+		Type:         productType,
 		Unit:         payload.Unit,
 		SellingPrice: payload.SellingPrice,
 	})

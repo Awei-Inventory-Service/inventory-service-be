@@ -10,7 +10,7 @@ type PurchaseController interface {
 	GetPurchase(c *gin.Context)
 	Create(c *gin.Context)
 	UpdatePurchase(c *gin.Context)
-	DeletePurchase(c *gin.Context)
+	Delete(c *gin.Context)
 }
 
 type purchaseController struct {

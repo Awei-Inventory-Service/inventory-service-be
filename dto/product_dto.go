@@ -1,9 +1,12 @@
 package dto
 
+import "github.com/inventory-service/model"
+
 type CreateProductRequest struct {
 	Name                string                     `json:"name" binding:"required"`
 	Code                string                     `json:"code" binding:"required"`
 	Category            string                     `json:"category" binding:"required"`
+	ProductType         string                     `json:"product_type" binding:"required"`
 	Unit                string                     `json:"unit" binding:"required"`
 	SellingPrice        float64                    `json:"selling_price" binding:"required"`
 	ProductCompositions []CreateProductComposition `json:"product_compositions" binding:"required"`
@@ -46,4 +49,14 @@ type GetProductResponse struct {
 	Id          string          `json:"id"`
 	Name        string          `json:"name"`
 	Ingredients []GetIngredient `json:"ingredients"`
+}
+
+func (c CreateProductRequest) MapProductCategory() model.ProductType {
+	switch c.ProductType {
+	case "consignment":
+		return model.ProductTypeConsignment
+	case "produced":
+		return model.ProductTypeProduced
+	}
+	return ""
 }

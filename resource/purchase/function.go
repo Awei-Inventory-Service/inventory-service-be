@@ -43,13 +43,22 @@ func (p *purchaseResource) Update(id string, purchase model.Purchase) *error_wra
 	return nil
 }
 
-func (p *purchaseResource) Delete(id string) *error_wrapper.ErrorWrapper {
-	result := p.db.Where("uuid = ?", id).Delete(&model.Purchase{})
+func (p *purchaseResource) Delete(id string) (*model.Purchase, *error_wrapper.ErrorWrapper) {
+	var purchase model.Purchase
+	
+	// First, get the purchase data before deleting
+	result := p.db.Where("uuid = ?", id).First(&purchase)
 	if result.Error != nil {
-		return error_wrapper.New(model.RErrPostgresDeleteDocument, result.Error.Error())
+		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
 	}
 
-	return nil
+	// Then delete it
+	result = p.db.Where("uuid = ?", id).Delete(&model.Purchase{})
+	if result.Error != nil {
+		return nil, error_wrapper.New(model.RErrPostgresDeleteDocument, result.Error.Error())
+	}
+
+	return &purchase, nil
 }
 
 func (p *purchaseResource) FindByItemID(itemID string) ([]model.Purchase, *error_wrapper.ErrorWrapper) {

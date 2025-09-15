@@ -13,7 +13,7 @@ type PurchaseResource interface {
 	FindByItemID(itemID string) ([]model.Purchase, *error_wrapper.ErrorWrapper)
 	FindByBranchAndItem(branchID, itemID string, offset, limit int) ([]model.Purchase, *error_wrapper.ErrorWrapper)
 	Update(id string, purchase model.Purchase) *error_wrapper.ErrorWrapper
-	Delete(id string) *error_wrapper.ErrorWrapper
+	Delete(id string) (*model.Purchase, *error_wrapper.ErrorWrapper)
 }
 
 type purchaseResource struct {

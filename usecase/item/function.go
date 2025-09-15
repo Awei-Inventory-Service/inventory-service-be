@@ -2,7 +2,6 @@ package item
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -16,7 +15,7 @@ func (i *itemUsecase) Create(ctx context.Context, payload dto.CreateItemRequest)
 	if errW != nil {
 		return
 	}
-	fmt.Println("INI PAYLOAD PRICE", payload.Price)
+
 	item, errW := i.itemDomain.Create(model.Item{
 		Name:        payload.Name,
 		Category:    itemCategory,

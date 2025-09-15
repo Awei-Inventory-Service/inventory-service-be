@@ -5,8 +5,9 @@ import "github.com/inventory-service/model"
 type GetBranchItemResponse struct {
 	UUID         string             `json:"uuid"`
 	BranchID     string             `json:"branch_id"`
+	BranchName   string             `json:"branch_name"`
 	ItemID       string             `json:"item_id"`
-	ItemName     string             `json:"item"`
+	ItemName     string             `json:"item_name"`
 	ItemCategory model.ItemCategory `json:"item_category"`
 	ItemUnit     string             `json:"item_unit"`
 	CurrentStock float64            `json:"current_stock"`

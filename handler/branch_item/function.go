@@ -1,6 +1,8 @@
 package stockbalance
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -41,8 +43,9 @@ func (s *branchItemHandler) FindAllBranchItem(c *gin.Context) {
 		response_wrapper.New(&c.Writer, c, errW == nil, itemBranches, errW)
 	}()
 	itemBranches, errW = s.branchItemUsecase.FindAll()
-
+	fmt.Println("INi item branches", itemBranches)
 	if errW != nil {
+		fmt.Println("Errw", errW.ActualError())
 		return
 	}
 
@@ -63,7 +66,7 @@ func (b *branchItemHandler) SyncBalance(c *gin.Context) {
 		return
 	}
 
-	errW = b.branchItemUsecase.SyncBalance(c, payload)
+	errW = b.branchItemUsecase.SyncBranchItem(c, payload)
 	if errW != nil {
 		return
 	}

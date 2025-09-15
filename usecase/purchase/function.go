@@ -2,7 +2,6 @@ package purchase
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -64,27 +63,9 @@ func (p *purchaseService) Create(c *gin.Context, payload dto.CreatePurchaseReque
 	}
 
 	userId := c.GetHeader("user_id")
-	// All checks completed, proceed to create purchase
+	// All validation completed, domain handles all inventory logic
 	_, errW := p.purchaseDomain.Create(payload, userId)
-	if errW != nil {
-		return errW
-	}
-
-	currentBalance, errW := p.branchItemDomain.SyncCurrentBalance(c, payload.BranchID, payload.ItemID)
-
-	if errW != nil {
-		fmt.Println("Fail sync stock balance domain")
-	}
-
-	currentPrice, errW := p.branchItemDomain.CalculatePrice(c, payload.BranchID, payload.ItemID, currentBalance)
-	fmt.Println("iNI CURRENT PRICE", currentPrice)
-	// errW = p.itemPurchaseChainDomain.Create(c, itemId, branchId, *newPurchase)
-	// if errW != nil {
-	// 	fmt.Println("Error : ", errW.StackTrace(), errW.ActualError())
-	// 	return errW
-	// }
-
-	return nil
+	return errW
 }
 
 func (p *purchaseService) FindAll() ([]model.Purchase, *error_wrapper.ErrorWrapper) {
@@ -152,11 +133,8 @@ func (p *purchaseService) Update(ctx context.Context, id, supplierId, branchId, 
 	return nil
 }
 
-func (p *purchaseService) Delete(id string) *error_wrapper.ErrorWrapper {
-	err := p.purchaseDomain.Delete(id)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (p *purchaseService) Delete(ctx context.Context, id string) *error_wrapper.ErrorWrapper {
+	// Domain handles all inventory logic including sync
+	_, err := p.purchaseDomain.Delete(ctx, id)
+	return err
 }

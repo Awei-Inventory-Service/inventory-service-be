@@ -25,11 +25,11 @@ func (s *branchItemDomain) FindAll() (results []dto.GetBranchItemResponse, errW 
 	if errW != nil {
 		return
 	}
-
 	for _, branchItem := range branchItems {
 		results = append(results, dto.GetBranchItemResponse{
 			UUID:         branchItem.UUID,
 			BranchID:     branchItem.BranchID,
+			BranchName:   branchItem.Branch.Name,
 			ItemID:       branchItem.ItemID,
 			ItemName:     branchItem.Item.Name,
 			ItemCategory: branchItem.Item.Category,
@@ -39,7 +39,6 @@ func (s *branchItemDomain) FindAll() (results []dto.GetBranchItemResponse, errW 
 		})
 
 	}
-
 	return
 }
 
@@ -56,12 +55,7 @@ func (s *branchItemDomain) FindByBranchAndItem(branchID, itemID string) (*model.
 	return s.branchItemResource.FindByBranchAndItem(branchID, itemID)
 }
 
-func (s *branchItemDomain) Update(ctx context.Context, branchID, itemID string, currentStock float64) (*model.BranchItem, *error_wrapper.ErrorWrapper) {
-	payload := model.BranchItem{
-		BranchID:     branchID,
-		ItemID:       itemID,
-		CurrentStock: currentStock,
-	}
+func (s *branchItemDomain) Update(ctx context.Context, payload model.BranchItem) (*model.BranchItem, *error_wrapper.ErrorWrapper) {
 	return s.branchItemResource.Update(ctx, payload)
 }
 
@@ -93,16 +87,6 @@ func (s *branchItemDomain) SyncCurrentBalance(ctx context.Context, branchID, ite
 		} else if transaction.Type == "OUT" && transaction.BranchOriginID == branchID {
 			totalBalance -= balance
 		}
-	}
-
-	_, errW = s.branchItemResource.Update(ctx, model.BranchItem{
-		BranchID:     branchID,
-		ItemID:       itemID,
-		CurrentStock: totalBalance,
-	})
-
-	if errW != nil {
-		return 0.0, errW
 	}
 
 	return totalBalance, nil

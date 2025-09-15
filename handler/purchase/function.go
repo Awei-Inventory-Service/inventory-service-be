@@ -96,7 +96,7 @@ func (p *purchaseController) UpdatePurchase(c *gin.Context) {
 
 }
 
-func (p *purchaseController) DeletePurchase(c *gin.Context) {
+func (p *purchaseController) Delete(c *gin.Context) {
 	var (
 		errW *error_wrapper.ErrorWrapper
 	)
@@ -106,7 +106,7 @@ func (p *purchaseController) DeletePurchase(c *gin.Context) {
 	}()
 
 	id := c.Param("id")
-	errW = p.purchaseService.Delete(id)
+	errW = p.purchaseService.Delete(c, id)
 	if errW != nil {
 		return
 	}

@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/domain/branch"
-	"github.com/inventory-service/domain/item"
 	branchitem "github.com/inventory-service/domain/branch_item"
+	"github.com/inventory-service/domain/item"
 	itempurchasechain "github.com/inventory-service/domain/item_purchase_chain"
 	"github.com/inventory-service/domain/purchase"
 	"github.com/inventory-service/domain/supplier"
@@ -22,7 +22,7 @@ type PurchaseService interface {
 	FindAll() ([]model.Purchase, *error_wrapper.ErrorWrapper)
 	FindByID(id string) (*model.Purchase, *error_wrapper.ErrorWrapper)
 	Update(ctx context.Context, id, supplierId, branchId, itemId string, quantity float64, purchaseCost float64) *error_wrapper.ErrorWrapper
-	Delete(id string) *error_wrapper.ErrorWrapper
+	Delete(ctx context.Context, id string) *error_wrapper.ErrorWrapper
 }
 
 type purchaseService struct {

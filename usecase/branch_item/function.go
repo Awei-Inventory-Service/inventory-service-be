@@ -21,15 +21,29 @@ func (s *branchItemUsecase) FindAll() ([]dto.GetBranchItemResponse, *error_wrapp
 	return s.branchItemDomain.FindAll()
 }
 
-func (b *branchItemUsecase) SyncBalance(ctx context.Context, payload dto.SyncBalanceRequest) (errW *error_wrapper.ErrorWrapper) {
+func (b *branchItemUsecase) SyncBranchItem(ctx context.Context, payload dto.SyncBalanceRequest) (errW *error_wrapper.ErrorWrapper) {
 	currentBalance, errW := b.branchItemDomain.SyncCurrentBalance(ctx, payload.BranchID, payload.ItemID)
 
 	if errW != nil {
 		return
 	}
 
-	price, errW := b.branchItemDomain.CalculatePrice(ctx, payload.BranchID, payload.ItemID, currentBalance)
-	fmt.Println("INi current price", price)
+	currentPrice, errW := b.branchItemDomain.CalculatePrice(ctx, payload.BranchID, payload.ItemID, currentBalance)
+
+	fmt.Println("INi current price", currentPrice)
+	if errW != nil {
+		return
+	}
+
+	newBranchItem := model.BranchItem{
+		BranchID:     payload.BranchID,
+		ItemID:       payload.ItemID,
+		CurrentStock: currentBalance,
+		Price:        currentPrice,
+	}
+
+	_, errW = b.branchItemDomain.Update(ctx, newBranchItem)
+
 	if errW != nil {
 		return
 	}

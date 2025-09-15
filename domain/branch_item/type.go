@@ -18,7 +18,7 @@ type BranchItemDomain interface {
 	FindByBranch(branchID string) ([]model.BranchItem, *error_wrapper.ErrorWrapper)
 	FindByItem(itemID string) ([]model.BranchItem, *error_wrapper.ErrorWrapper)
 	FindByBranchAndItem(branchID, itemID string) (*model.BranchItem, *error_wrapper.ErrorWrapper)
-	Update(ctx context.Context, branchID, itemID string, currentStock float64) (*model.BranchItem, *error_wrapper.ErrorWrapper)
+	Update(ctx context.Context, payload model.BranchItem) (*model.BranchItem, *error_wrapper.ErrorWrapper)
 	Delete(branchID, itemID string) *error_wrapper.ErrorWrapper
 	SyncCurrentBalance(ctx context.Context, branchID, itemID string) (float64, *error_wrapper.ErrorWrapper)
 	CalculatePrice(ctx context.Context, branchID, itemID string, currentBalance float64) (float64, *error_wrapper.ErrorWrapper)
