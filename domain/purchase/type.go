@@ -14,10 +14,10 @@ import (
 
 type PurchaseDomain interface {
 	Create(payload dto.CreatePurchaseRequest, userId string) (*model.Purchase, *error_wrapper.ErrorWrapper)
-	FindAll() ([]model.Purchase, *error_wrapper.ErrorWrapper)
+	FindAll() ([]dto.GetPurchaseResponse, *error_wrapper.ErrorWrapper)
 	FindByID(id string) (*model.Purchase, *error_wrapper.ErrorWrapper)
 	Update(id, supplierId, branchId, itemId string, quantity float64, purchaseCost float64) *error_wrapper.ErrorWrapper
-	Delete(ctx context.Context, id string) (*model.Purchase, *error_wrapper.ErrorWrapper)
+	Delete(ctx context.Context, id, userID string) (*model.Purchase, *error_wrapper.ErrorWrapper)
 }
 
 type purchaseDomain struct {

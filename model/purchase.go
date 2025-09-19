@@ -14,6 +14,7 @@ type Purchase struct {
 	Quantity     float64   `gorm:"type:decimal(10,2);not null" json:"quantity"`
 	Unit         string    `gorm:"unit;not null" json:"unit"`
 	PurchaseCost float64   `gorm:"type:decimal;not null" json:"purchase_cost"`
+	PurchaseDate time.Time `json:"purchase_date"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }

@@ -13,7 +13,7 @@ import (
 )
 
 type BranchItemDomain interface {
-	Create(branchID, itemID string, currentStock int) *error_wrapper.ErrorWrapper
+	Create(branchID, itemID string, currentStock int) (*model.BranchItem, *error_wrapper.ErrorWrapper)
 	FindAll() (results []dto.GetBranchItemResponse, errW *error_wrapper.ErrorWrapper)
 	FindByBranch(branchID string) ([]model.BranchItem, *error_wrapper.ErrorWrapper)
 	FindByItem(itemID string) ([]model.BranchItem, *error_wrapper.ErrorWrapper)

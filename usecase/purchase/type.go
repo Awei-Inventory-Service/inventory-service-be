@@ -19,10 +19,10 @@ import (
 // TODO: Change error with error_wrapper.ErrorWrapper
 type PurchaseService interface {
 	Create(c *gin.Context, payload dto.CreatePurchaseRequest) *error_wrapper.ErrorWrapper
-	FindAll() ([]model.Purchase, *error_wrapper.ErrorWrapper)
+	FindAll() ([]dto.GetPurchaseResponse, *error_wrapper.ErrorWrapper)
 	FindByID(id string) (*model.Purchase, *error_wrapper.ErrorWrapper)
 	Update(ctx context.Context, id, supplierId, branchId, itemId string, quantity float64, purchaseCost float64) *error_wrapper.ErrorWrapper
-	Delete(ctx context.Context, id string) *error_wrapper.ErrorWrapper
+	Delete(ctx context.Context, id, userID string) *error_wrapper.ErrorWrapper
 }
 
 type purchaseService struct {

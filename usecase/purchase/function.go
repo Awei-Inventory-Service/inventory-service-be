@@ -68,7 +68,7 @@ func (p *purchaseService) Create(c *gin.Context, payload dto.CreatePurchaseReque
 	return errW
 }
 
-func (p *purchaseService) FindAll() ([]model.Purchase, *error_wrapper.ErrorWrapper) {
+func (p *purchaseService) FindAll() ([]dto.GetPurchaseResponse, *error_wrapper.ErrorWrapper) {
 	purchases, err := p.purchaseDomain.FindAll()
 	if err != nil {
 		return nil, err
@@ -133,8 +133,8 @@ func (p *purchaseService) Update(ctx context.Context, id, supplierId, branchId, 
 	return nil
 }
 
-func (p *purchaseService) Delete(ctx context.Context, id string) *error_wrapper.ErrorWrapper {
+func (p *purchaseService) Delete(ctx context.Context, id, userID string) *error_wrapper.ErrorWrapper {
 	// Domain handles all inventory logic including sync
-	_, err := p.purchaseDomain.Delete(ctx, id)
+	_, err := p.purchaseDomain.Delete(ctx, id, userID)
 	return err
 }

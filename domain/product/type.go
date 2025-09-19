@@ -6,6 +6,7 @@ import (
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
+	"github.com/inventory-service/resource/branch_item"
 	"github.com/inventory-service/resource/item"
 	"github.com/inventory-service/resource/product"
 	productcomposition "github.com/inventory-service/resource/product_composition"
@@ -23,4 +24,5 @@ type productDomain struct {
 	productResource            product.ProductResource
 	itemResource               item.ItemResource
 	productCompositionResource productcomposition.ProductCompositionResource
+	branchItemResource         branch_item.BranchItemResource
 }

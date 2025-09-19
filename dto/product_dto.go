@@ -46,9 +46,13 @@ type GetIngredient struct {
 }
 
 type GetProductResponse struct {
-	Id          string          `json:"id"`
-	Name        string          `json:"name"`
-	Ingredients []GetIngredient `json:"ingredients"`
+	Id           string          `json:"id"`
+	Name         string          `json:"name"`
+	Code         string          `json:"code"`
+	Category     string          `json:"category"`
+	Unit         string          `json:"unit"`
+	SellingPrice float64         `json:"selling_price"`
+	Ingredients  []GetIngredient `json:"ingredients"`
 }
 
 func (c CreateProductRequest) MapProductCategory() model.ProductType {

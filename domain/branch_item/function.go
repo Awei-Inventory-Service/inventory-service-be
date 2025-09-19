@@ -9,7 +9,7 @@ import (
 	"github.com/inventory-service/utils"
 )
 
-func (s *branchItemDomain) Create(branchID, itemID string, currentStock int) *error_wrapper.ErrorWrapper {
+func (s *branchItemDomain) Create(branchID, itemID string, currentStock int) (*model.BranchItem, *error_wrapper.ErrorWrapper) {
 	branchItem := model.BranchItem{
 		BranchID:     branchID,
 		ItemID:       itemID,

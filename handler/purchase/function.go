@@ -10,7 +10,7 @@ import (
 
 func (p *purchaseController) GetPurchases(c *gin.Context) {
 	var (
-		purchases []model.Purchase
+		purchases []dto.GetPurchaseResponse
 		errW      *error_wrapper.ErrorWrapper
 	)
 
@@ -106,7 +106,13 @@ func (p *purchaseController) Delete(c *gin.Context) {
 	}()
 
 	id := c.Param("id")
-	errW = p.purchaseService.Delete(c, id)
+
+	userId := c.GetHeader("user_id")
+
+	if userId == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "User id is missing on the header")
+	}
+	errW = p.purchaseService.Delete(c, id, userId)
 	if errW != nil {
 		return
 	}

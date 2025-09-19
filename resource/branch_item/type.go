@@ -9,7 +9,7 @@ import (
 )
 
 type BranchItemResource interface {
-	Create(stockBalance model.BranchItem) *error_wrapper.ErrorWrapper
+	Create(stockBalance model.BranchItem) (*model.BranchItem, *error_wrapper.ErrorWrapper)
 	FindAll() ([]model.BranchItem, *error_wrapper.ErrorWrapper)
 	FindByBranch(branchID string) ([]model.BranchItem, *error_wrapper.ErrorWrapper)
 	FindByItem(itemID string) ([]model.BranchItem, *error_wrapper.ErrorWrapper)

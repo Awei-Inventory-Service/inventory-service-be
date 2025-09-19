@@ -1,17 +1,22 @@
 package dto
 
-import "github.com/inventory-service/model"
+import (
+	"time"
+
+	"github.com/inventory-service/model"
+)
 
 type GetPurchaseResponse struct {
-	UUID       string         `json:"uuid"`
-	Supplier   model.Supplier `json:"supplier"`
-	BranchID   string         `json:"branch_id"`
-	BranchName string         `json:"branch_name"`
-	ItemID     string         `json:"item_id"`
-	ItemName   string         `json:"item_name"`
-	Quantity   float64        `json:"quantity"`
-	Unit       string         `json:"unit"`
-	Cost       float64        `json:"cost"`
+	UUID         string         `json:"uuid"`
+	Supplier     model.Supplier `json:"supplier"`
+	BranchID     string         `json:"branch_id"`
+	BranchName   string         `json:"branch_name"`
+	ItemID       string         `json:"item_id"`
+	ItemName     string         `json:"item_name"`
+	Quantity     float64        `json:"quantity"`
+	Unit         string         `json:"unit"`
+	Cost         float64        `json:"cost"`
+	PurchaseDate time.Time      ` json:"purchase_date"`
 }
 
 type CreatePurchaseRequest struct {

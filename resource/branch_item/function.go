@@ -10,13 +10,13 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *branchItemResource) Create(branchItem model.BranchItem) *error_wrapper.ErrorWrapper {
+func (s *branchItemResource) Create(branchItem model.BranchItem) (*model.BranchItem, *error_wrapper.ErrorWrapper) {
 	result := s.db.Create(&branchItem)
 	if result.Error != nil {
-		return error_wrapper.New(model.RErrPostgresCreateDocument, result.Error.Error())
+		return nil, error_wrapper.New(model.RErrPostgresCreateDocument, result.Error.Error())
 	}
 
-	return nil
+	return &branchItem, nil
 }
 
 func (s *branchItemResource) FindAll() ([]model.BranchItem, *error_wrapper.ErrorWrapper) {

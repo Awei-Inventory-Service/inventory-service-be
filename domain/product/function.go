@@ -26,6 +26,10 @@ func (p *productDomain) FindAll(ctx context.Context) ([]dto.GetProductResponse, 
 		var product dto.GetProductResponse
 		product.Id = rawProduct.UUID
 		product.Name = rawProduct.Name
+		product.Unit = rawProduct.Unit
+		product.Category = rawProduct.Category
+		product.SellingPrice = rawProduct.SellingPrice
+
 		for _, ingredient := range rawProduct.ProductComposition {
 			item, errW := p.itemResource.FindByID(ingredient.ItemID)
 
@@ -94,4 +98,22 @@ func (p *productDomain) Update(ctx context.Context, payload dto.UpdateProductReq
 
 func (p *productDomain) Delete(ctx context.Context, productID string) *error_wrapper.ErrorWrapper {
 	return p.productResource.Delete(ctx, productID)
+}
+
+func (p *productDomain) CalculateProductPrice(ctx context.Context, productCompositions []model.ProductComposition, branchID string) (float64, *error_wrapper.ErrorWrapper) {
+	var (
+		price float64
+	)
+
+	for _, productComposition := range productCompositions {
+		branchItem, errW := p.branchItemResource.FindByBranchAndItem(branchID, productComposition.ItemID)
+
+		if errW != nil {
+			return price, errW
+		}
+
+		price += branchItem.Price * productComposition.Ratio
+	}
+
+	return price, nil
 }

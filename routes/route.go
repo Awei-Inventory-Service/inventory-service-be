@@ -89,7 +89,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	itemResource := item_resource.NewItemResource(pgDB)
 	branchResource := branch_resource.NewBranchResource(pgDB)
 	purchaseResource := purchase_resource.NewPurchaseResource(pgDB)
-	itemBalanceResource := branch_item_resource.NewItemBranchResource(pgDB)
+	branchItemResource := branch_item_resource.NewItemBranchResource(pgDB)
 	mongodbResource, err := mongodb.InitMongoDB()
 
 	if err != nil {
@@ -108,16 +108,16 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	// Initialize usecase
 	userDomain := user_domain.NewUserDomain(userResource)
 	supplierDomain := supplier_domain.NewSupplierDomain(supplierResource)
-	itemDomain := item_domain.NewItemDomain(itemResource, itemCompositionResource, purchaseResource, itemBalanceResource)
+	itemDomain := item_domain.NewItemDomain(itemResource, itemCompositionResource, purchaseResource, branchItemResource)
 	branchDomain := branch_domain.NewBranchDomain(branchResource)
-	purchaseDomain := purchase_domain.NewPurchaseDomain(purchaseResource, itemBalanceResource, stockTransactionResource, itemResource)
+	purchaseDomain := purchase_domain.NewPurchaseDomain(purchaseResource, branchItemResource, stockTransactionResource, itemResource)
 	inventoryStockCountDomain := inventory_stock_count_domain.NewInventoryStockCountDomain(inventoryStockCountResource)
-	productDomain := product_domain.NewProductDomain(productResource, itemResource, productCompositionResource)
+	productDomain := product_domain.NewProductDomain(productResource, itemResource, productCompositionResource, branchItemResource)
 	invoiceDomain := invoice_domain.NewInvoiceDomain(invoiceResource)
 	stockDomain := stock_transaction_domain.NewStockTransactionDomain(stockTransactionResource)
 	itemPurchaseChainDomain := item_purchase_chain_domain.NewItemPurchaseChainDomain(itemPurchaseChainResource)
 	salesDomain := sales_domain.NewSalesDomain(salesResource)
-	itemBranchDomain := branch_item_domain.NewItemBranchDomain(itemBalanceResource, stockTransactionResource, itemResource, purchaseResource)
+	itemBranchDomain := branch_item_domain.NewItemBranchDomain(branchItemResource, stockTransactionResource, itemResource, purchaseResource)
 	productCompositionDomain := product_composition_domain.NewProductCompositionDomain(productCompositionResource)
 	itemCompositionDomain := item_composition_domain.NewItemCompositionDomain(itemCompositionResource)
 
