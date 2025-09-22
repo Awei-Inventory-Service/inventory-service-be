@@ -45,6 +45,7 @@ var (
 	CErrHeaderIncomplete  = errW.NewDefinition(100002, "Error Header Incomplete", true, CategoryUnAuthorized)
 	CErrJsonBind          = errW.NewDefinition(100003, "Error JSON Bind", true, CategoryInternalServerError)
 	CErrFileUpload        = errW.NewDefinition(100004, "Error uploading file", true, CategoryInternalServerError)
+	CErrInternalServer    = errW.NewDefinition(100005, "Error recovered from panic", true, CategoryInternalServerError)
 	//	- Handler -
 
 	// Usecase

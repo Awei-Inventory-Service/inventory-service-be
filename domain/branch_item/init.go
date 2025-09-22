@@ -7,7 +7,7 @@ import (
 	stocktransaction "github.com/inventory-service/resource/stock_transaction"
 )
 
-func NewItemBranchDomain(
+func NewBranchItemDomain(
 	branchItemResource branchItem.BranchItemResource,
 	stockTransactionResource stocktransaction.StockTransactionResource,
 	itemResource item.ItemResource,

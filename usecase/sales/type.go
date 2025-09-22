@@ -3,22 +3,22 @@ package sales
 import (
 	"context"
 
-	itempurchasechain_repository "github.com/inventory-service/domain/item_purchase_chain"
+	"github.com/inventory-service/domain/branch_product"
 	"github.com/inventory-service/domain/product"
 	"github.com/inventory-service/domain/sales"
+	stocktransaction "github.com/inventory-service/domain/stock_transaction"
 	"github.com/inventory-service/dto"
 
 	"github.com/inventory-service/lib/error_wrapper"
-	itempurchasechain "github.com/inventory-service/usecase/item_purchase_chain"
 )
 
 type SalesService interface {
-	Create(ctx context.Context, payload dto.CreateSalesRequest) *error_wrapper.ErrorWrapper
+	Create(ctx context.Context, payload dto.CreateSalesRequest, userID string) *error_wrapper.ErrorWrapper
 }
 
 type salesService struct {
-	salesDomain              sales.SalesDomain
-	productDomain            product.ProductDomain
-	itemPurchaseChainDomain  itempurchasechain_repository.ItemPurchaseChainDomain
-	itemPurchaseChainService itempurchasechain.ItemPurchaseChainService
+	salesDomain            sales.SalesDomain
+	productDomain          product.ProductDomain
+	branchProductDomain    branch_product.BranchProductDomain
+	stockTransactionDomain stocktransaction.StockTransactionDomain
 }

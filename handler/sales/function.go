@@ -15,8 +15,10 @@ func (s *salesController) Create(c *gin.Context) {
 	)
 
 	defer func() {
+		if r := recover(); r != nil {
+			errW = error_wrapper.New(model.CErrInternalServer, "Internal server error")
+		}
 		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
-		return
 	}()
 
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -24,11 +26,16 @@ func (s *salesController) Create(c *gin.Context) {
 		return
 	}
 
-	errW = s.salesService.Create(c, payload)
+	userID := c.GetHeader("user_id")
+
+	if userID == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "User id is required in header")
+		return
+	}
+
+	errW = s.salesService.Create(c, payload, userID)
 
 	if errW != nil {
 		return
 	}
-
-	return
 }

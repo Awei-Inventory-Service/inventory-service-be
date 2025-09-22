@@ -70,7 +70,6 @@ func (s *branchItemDomain) SyncCurrentBalance(ctx context.Context, branchID, ite
 	}
 
 	item, errW := s.itemResource.FindByID(itemID)
-
 	if errW != nil {
 		return 0.0, errW
 	}
@@ -122,6 +121,11 @@ func (s *branchItemDomain) CalculatePrice(ctx context.Context, branchID, itemID 
 
 		offset += limit
 	}
+
+	if len(allPurchases) == 0 {
+		return 0.0, nil
+	}
+
 	totalPrice := 0.0
 	totalItem := 0.0
 
@@ -130,6 +134,11 @@ func (s *branchItemDomain) CalculatePrice(ctx context.Context, branchID, itemID 
 		totalItem += balance
 		totalPrice += purchase.PurchaseCost
 		item = purchase.Item
+	}
+
+	// Prevent division by zero which causes NaN
+	if totalItem == 0 {
+		return 0.0, nil
 	}
 
 	avgPrice := totalPrice / totalItem * item.PortionSize

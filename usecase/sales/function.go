@@ -2,70 +2,87 @@ package sales
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 )
 
-func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesRequest) *error_wrapper.ErrorWrapper {
+func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesRequest, userID string) *error_wrapper.ErrorWrapper {
 	var (
-		sales model.Sales
+		sales         model.Sales
+		branchProduct *model.BranchProduct
 	)
-	_, errW := s.productDomain.FindByID(ctx, payload.ProductID)
+
+	product, errW := s.productDomain.FindByID(ctx, payload.ProductID)
 
 	if errW != nil {
-		fmt.Println(errW.StackTrace(), errW.ActualError())
 		return errW
 	}
-	var (
-		updatedItemPurchaseChainDocuments []model.ItemPurchaseChainGet
-		itemPurchaseWithSales             []model.ItemPurchaseChainGet
-		totalCost                         float64
-	)
-	// for _, ingredient := range product.Ingredients {
-	// 	cost, itemPurchaseChainDocuments, errW := s.itemPurchaseChainService.CalculateCost(
-	// 		ctx,
-	// 		ingredient.ItemID,
-	// 		payload.BranchID,
-	// 		// ingredient.Quantity*payload.Quantity,
-	// 		0,
-	// 	)
 
-	// 	if errW != nil {
-	// 		fmt.Println(errW.StackTrace(), errW.ActualError())
-	// 		return errW
-	// 	}
+	productCost, errW := s.productDomain.CalculateProductCost(ctx, product.ProductComposition, payload.BranchID)
 
-	// 	updatedItemPurchaseChainDocuments = append(updatedItemPurchaseChainDocuments, itemPurchaseChainDocuments...)
-	// 	totalCost += cost
-	// }
+	if errW != nil {
+		return errW
+	}
 
-	sales.Cost = totalCost
-	sales.BranchID = payload.BranchID
-	sales.ProductID = payload.ProductID
+	sales.Cost = productCost
+
+	branchProduct, errW = s.branchProductDomain.GetByBranchIdAndProductId(ctx, payload.BranchID, payload.ProductID)
+
+	if errW != nil {
+		if errW.Is(model.RErrDataNotFound) {
+			// If not found, create 1
+			errW = nil
+
+			branchProduct, errW = s.branchProductDomain.Create(ctx, dto.CreateBranchProductRequest{
+				BranchID:     payload.BranchID,
+				ProductID:    payload.ProductID,
+				SellingPrice: product.SellingPrice,
+			})
+
+			if errW != nil {
+				return errW
+			}
+		} else {
+			return errW
+		}
+
+	}
+
+	sales.BranchProductID = branchProduct.UUID
 	sales.Quantity = payload.Quantity
 	sales.Type = payload.Type
+	if branchProduct.SellingPrice != nil {
+		sales.Price = *branchProduct.SellingPrice
+	} else {
+		sales.Price = 0.0
+	}
 
-	newSales, errW := s.salesDomain.Create(sales)
+	_, errW = s.salesDomain.Create(ctx, sales)
 
 	if errW != nil {
-		fmt.Println(errW.StackTrace(), errW.ActualError())
 		return errW
 	}
 
-	for _, doc := range updatedItemPurchaseChainDocuments {
-		doc.Sales = append(doc.Sales, newSales.UUID)
+	for _, itemComposition := range product.ProductComposition {
+		total := itemComposition.Item.PortionSize * itemComposition.Ratio * payload.Quantity
+		errW = s.stockTransactionDomain.Create(model.StockTransaction{
+			BranchOriginID:      payload.BranchID,
+			BranchDestinationID: payload.BranchID,
+			ItemID:              itemComposition.ItemID,
+			Type:                "OUT",
+			IssuerID:            userID,
+			Quantity:            total,
+			// To-do: recheck this cost
+			Cost: sales.Cost,
+			Unit: itemComposition.Item.Unit,
+		})
+		
+		if errW != nil {
+			return errW
+		}
+
 	}
-
-	// TO DO : Retry mechanism maybe
-	errW = s.itemPurchaseChainDomain.BulkUpdate(ctx, itemPurchaseWithSales)
-
-	if errW != nil {
-		fmt.Println(errW.StackTrace(), errW.ActualError())
-		return errW
-	}
-
 	return nil
 }

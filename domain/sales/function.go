@@ -1,12 +1,14 @@
 package sales
 
 import (
+	"context"
+
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 )
 
-func (s *salesDomain) Create(sale model.Sales) (*model.Sales, *error_wrapper.ErrorWrapper) {
-	return s.salesResource.Create(sale)
+func (s *salesDomain) Create(ctx context.Context, payload model.Sales) (*model.Sales, *error_wrapper.ErrorWrapper) {
+	return s.salesResource.Create(payload)
 }
 
 func (s *salesDomain) FindAll() ([]model.Sales, *error_wrapper.ErrorWrapper) {

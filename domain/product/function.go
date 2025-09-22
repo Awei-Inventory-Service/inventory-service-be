@@ -2,6 +2,7 @@ package product
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/inventory-service/dto"
@@ -100,18 +101,18 @@ func (p *productDomain) Delete(ctx context.Context, productID string) *error_wra
 	return p.productResource.Delete(ctx, productID)
 }
 
-func (p *productDomain) CalculateProductPrice(ctx context.Context, productCompositions []model.ProductComposition, branchID string) (float64, *error_wrapper.ErrorWrapper) {
+func (p *productDomain) CalculateProductCost(ctx context.Context, productCompositions []model.ProductComposition, branchID string) (float64, *error_wrapper.ErrorWrapper) {
 	var (
 		price float64
 	)
 
 	for _, productComposition := range productCompositions {
 		branchItem, errW := p.branchItemResource.FindByBranchAndItem(branchID, productComposition.ItemID)
-
+		fmt.Println("iNI BRANCH ITEM", branchItem)
 		if errW != nil {
 			return price, errW
 		}
-
+		fmt.Println("INI RPODUCT COMPOSITION", productComposition)
 		price += branchItem.Price * productComposition.Ratio
 	}
 

@@ -18,6 +18,7 @@ type ProductDomain interface {
 	FindByID(ctx context.Context, productID string) (*model.Product, *error_wrapper.ErrorWrapper)
 	Update(ctx context.Context, product dto.UpdateProductRequest, productID string) *error_wrapper.ErrorWrapper
 	Delete(ctx context.Context, productID string) *error_wrapper.ErrorWrapper
+	CalculateProductCost(ctx context.Context, productCompositions []model.ProductComposition, branchID string) (float64, *error_wrapper.ErrorWrapper)
 }
 
 type productDomain struct {

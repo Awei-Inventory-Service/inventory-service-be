@@ -61,10 +61,10 @@ func (u *uploadService) ParseTransactionExcel(ctx context.Context, fileName stri
 
 		// TO DO Validasi tipe produk yg di input
 
-		createSales.Quantity = number
+		createSales.Quantity = float64(number)
 		createSales.Type = productType
 
-		errW = u.salesService.Create(ctx, createSales)
+		errW = u.salesService.Create(ctx, createSales, "")
 
 		if errW != nil {
 			return errW

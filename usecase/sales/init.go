@@ -1,22 +1,22 @@
 package sales
 
 import (
-	itempurchasechain_repository "github.com/inventory-service/domain/item_purchase_chain"
+	"github.com/inventory-service/domain/branch_product"
 	"github.com/inventory-service/domain/product"
 	"github.com/inventory-service/domain/sales"
-	itempurchasechain "github.com/inventory-service/usecase/item_purchase_chain"
+	stocktransaction "github.com/inventory-service/domain/stock_transaction"
 )
 
-func NewSalesService(
+func NewSalesUsecase(
 	salesDomain sales.SalesDomain,
 	productDomain product.ProductDomain,
-	itemPurchaseChainDomain itempurchasechain_repository.ItemPurchaseChainDomain,
-	itemPurchaseChainService itempurchasechain.ItemPurchaseChainService,
+	branchProductDomain branch_product.BranchProductDomain,
+	stockTransactionDomain stocktransaction.StockTransactionDomain,
 ) SalesService {
 	return &salesService{
-		salesDomain:              salesDomain,
-		productDomain:            productDomain,
-		itemPurchaseChainDomain:  itemPurchaseChainDomain,
-		itemPurchaseChainService: itemPurchaseChainService,
+		salesDomain:            salesDomain,
+		productDomain:          productDomain,
+		branchProductDomain:    branchProductDomain,
+		stockTransactionDomain: stockTransactionDomain,
 	}
 }
