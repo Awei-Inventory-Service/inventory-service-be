@@ -3,7 +3,6 @@ package item
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -31,11 +30,6 @@ func (i *itemDomain) FindAll() ([]dto.GetItemsResponse, *error_wrapper.ErrorWrap
 }
 
 func (i *itemDomain) FindByID(ctx context.Context, id string) (*dto.GetItemsResponse, *error_wrapper.ErrorWrapper) {
-	// itemPrice, errW := i.calculatePrice(ctx, id)
-	// fmt.Println("INI ITEMPRICE", itemPrice)
-	// if errW != nil {
-	// 	return nil, errW
-	// }
 
 	item, errW := i.itemResource.FindByID(id)
 
@@ -54,42 +48,18 @@ func (i *itemDomain) Update(ctx context.Context, payload dto.UpdateItemRequest, 
 	}
 
 	item := model.Item{
-		UUID:        itemID,
-		Name:        payload.Name,
-		Category:    itemCategory,
-		Price:       payload.Price,
-		PortionSize: payload.PortionSize,
-		Unit:        payload.Unit,
-		SupplierID:  &payload.SupplierID,
+		UUID:       itemID,
+		Name:       payload.Name,
+		Category:   itemCategory,
+		SupplierID: &payload.SupplierID,
 	}
 
-	updatedItem, errW := i.itemResource.Update(ctx, item)
+	_, errW = i.itemResource.Update(ctx, item)
 
 	if errW != nil {
 		return errW
 	}
 
-	errW = i.itemCompositionResource.DeleteByItemID(ctx, updatedItem.UUID)
-
-	if errW != nil {
-		return errW
-	}
-
-	for _, itemComposition := range payload.ItemCompositions {
-		errW = i.itemCompositionResource.Create(ctx, model.ItemComposition{
-			ParentItemID: updatedItem.UUID,
-			ChildItemID:  itemComposition.ItemID,
-			Ratio:        itemComposition.Ratio,
-			Notes:        itemComposition.Notes,
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
-		})
-
-		if errW != nil {
-			fmt.Println("Error creating item composition", errW.ActualError())
-			return errW
-		}
-	}
 	return nil
 }
 
@@ -147,16 +117,14 @@ func (i *itemDomain) calculatePrice(ctx context.Context, itemID string) (float64
 func (i *itemDomain) mapItemModelToDto(item model.Item) *dto.GetItemsResponse {
 	var itemCompositions []dto.GetItemCompositionResponse
 
-	for _, ic := range item.ChildCompositions {
-		itemCompositions = append(itemCompositions, dto.GetItemCompositionResponse{
-			UUID:          ic.UUID,
-			ChildItemID:   ic.ChildItemID,
-			Ratio:         ic.Ratio,
-			Notes:         ic.Notes,
-			PortionSize:   ic.ChildItem.PortionSize,
-			Unit:          ic.ChildItem.Unit,
-			ChildItemName: ic.ChildItem.Name,
-		})
+	if len(item.Compositions.Compositions) > 0 {
+		for _, comp := range item.Compositions.Compositions {
+			itemCompositions = append(itemCompositions, dto.GetItemCompositionResponse{
+				ChildItemID:   comp.ItemID,
+				Unit:          comp.Unit,
+				ChildItemName: comp.ItemName,
+			})
+		}
 	}
 
 	return &dto.GetItemsResponse{
@@ -164,7 +132,6 @@ func (i *itemDomain) mapItemModelToDto(item model.Item) *dto.GetItemsResponse {
 		Name:              item.Name,
 		Category:          item.Category,
 		Unit:              item.Unit,
-		PortionSize:       item.PortionSize,
 		ChildCompositions: itemCompositions,
 	}
 }

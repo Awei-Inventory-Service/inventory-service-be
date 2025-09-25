@@ -39,11 +39,10 @@ func (p *productDomain) FindAll(ctx context.Context) ([]dto.GetProductResponse, 
 			}
 
 			product.Ingredients = append(product.Ingredients, dto.GetIngredient{
-				ItemID:      ingredient.ItemID,
-				ItemName:    item.Name,
-				ItemPortion: item.PortionSize,
-				Ratio:       ingredient.Ratio,
-				ItemUnit:    item.Unit,
+				ItemID:   ingredient.ItemID,
+				ItemName: item.Name,
+				Ratio:    ingredient.Ratio,
+				ItemUnit: item.Unit,
 			})
 
 		}

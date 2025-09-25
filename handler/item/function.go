@@ -59,11 +59,6 @@ func (i *itemController) CreateItem(c *gin.Context) {
 		return
 	}
 
-	// Apply default value if not set (i.e., 0 means omitted)
-	if createItemRequest.PortionSize == 0 {
-		createItemRequest.PortionSize = 1.0
-	}
-
 	errW = i.itemUsecase.Create(
 		c,
 		createItemRequest,

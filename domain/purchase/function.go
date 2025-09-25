@@ -177,7 +177,7 @@ func (p *purchaseDomain) calculateCurrentBalance(ctx context.Context, branchID, 
 		if transaction.ItemID != itemID {
 			continue
 		}
-		
+
 		balance := utils.StandarizeMeasurement(float64(transaction.Quantity), transaction.Unit, item.Unit)
 
 		if transaction.Type == "IN" && transaction.BranchDestinationID == branchID {
@@ -198,7 +198,6 @@ func (p *purchaseDomain) calculatePrice(ctx context.Context, branchID, itemID st
 	purchaseStock := 0.0
 	var (
 		allPurchases []model.Purchase
-		item         model.Item
 	)
 
 	for purchaseStock < currentBalance {
@@ -233,7 +232,6 @@ func (p *purchaseDomain) calculatePrice(ctx context.Context, branchID, itemID st
 		balance := utils.StandarizeMeasurement(float64(purchase.Quantity), purchase.Unit, purchase.Item.Unit)
 		totalItem += balance
 		totalPrice += purchase.PurchaseCost
-		item = purchase.Item
 	}
 
 	// Prevent division by zero which causes NaN
@@ -241,7 +239,7 @@ func (p *purchaseDomain) calculatePrice(ctx context.Context, branchID, itemID st
 		return 0.0, nil
 	}
 
-	avgPrice := totalPrice / totalItem * item.PortionSize
+	avgPrice := totalPrice / totalItem
 
 	return avgPrice, nil
 }

@@ -21,14 +21,14 @@ func (s *branchItemUsecase) Create(ctx context.Context, payload dto.CreateBranch
 
 	for _, itemComposition := range item.ChildCompositions {
 		fmt.Println("iNI ITEM COMPOSIITON ITEM ID", itemComposition.ChildItemID)
-		total := itemComposition.Ratio * payload.Quantity * itemComposition.PortionSize
+		// total := itemComposition.Ratio * payload.Quantity * itemComposition.PortionSize
 		errW := s.stockTransactionDomain.Create(model.StockTransaction{
 			BranchOriginID:      payload.BranchID,
 			BranchDestinationID: payload.BranchID,
 			ItemID:              itemComposition.ChildItemID,
 			Type:                "OUT",
 			IssuerID:            payload.UserID,
-			Quantity:            total,
+			Quantity:            0,
 			Cost:                0.0,
 			Unit:                itemComposition.Unit,
 			Reference:           "",
@@ -54,7 +54,7 @@ func (s *branchItemUsecase) Create(ctx context.Context, payload dto.CreateBranch
 		ItemID:              payload.ItemID,
 		Type:                "IN",
 		IssuerID:            payload.UserID,
-		Quantity:            payload.Quantity * item.PortionSize,
+		Quantity:            payload.Quantity,
 		Unit:                item.Unit,
 		Reference:           "",
 		ReferenceType:       &referenceType,

@@ -16,12 +16,28 @@ func (i *itemUsecase) Create(ctx context.Context, payload dto.CreateItemRequest)
 		return
 	}
 
-	item, errW := i.itemDomain.Create(model.Item{
-		Name:        payload.Name,
-		Category:    itemCategory,
-		Price:       payload.Price,
-		Unit:        payload.Unit,
-		PortionSize: payload.PortionSize,
+	compositions := model.ItemCompositions{
+		Compositions: make([]model.CompositionItem, len(payload.ItemCompositions)),
+	}
+
+	for idx, comp := range payload.ItemCompositions {
+		compItem, errW := i.itemDomain.FindByID(ctx, comp.ItemID)
+		if errW != nil {
+			return errW
+		}
+
+		compositions.Compositions[idx] = model.CompositionItem{
+			ItemID:   comp.ItemID,
+			ItemName: compItem.Name,
+			Unit:     compItem.Unit,
+		}
+	}
+
+	_, errW = i.itemDomain.Create(model.Item{
+		Name:         payload.Name,
+		Category:     itemCategory,
+		Compositions: compositions,
+		Unit:         payload.Unit,
 		SupplierID: func() *string {
 			if payload.SupplierID == "" {
 				return nil
@@ -32,19 +48,6 @@ func (i *itemUsecase) Create(ctx context.Context, payload dto.CreateItemRequest)
 
 	if errW != nil {
 		return errW
-	}
-
-	for _, childItem := range payload.ItemCompositions {
-		errW = i.itemCompositionDomain.Create(ctx, model.ItemComposition{
-			ParentItemID: item.UUID,
-			ChildItemID:  childItem.ItemID,
-			Ratio:        childItem.Ratio,
-			Notes:        childItem.Notes,
-		})
-
-		if errW != nil {
-			return errW
-		}
 	}
 
 	return nil

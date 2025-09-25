@@ -8,42 +8,30 @@ type CreateItemRequest struct {
 	Name             string                         `json:"name" binding:"required"`
 	SupplierID       string                         `json:"supplier_id"`
 	Category         string                         `json:"category" binding:"required"`
-	Price            *float64                       `json:"price"`
 	Unit             string                         `json:"unit" binding:"required"`
-	PortionSize      float64                        `json:"portion_size"`
 	ItemCompositions []CreateItemCompositionRequest `json:"item_compositions"`
 }
 
 type CreateItemCompositionRequest struct {
-	ItemID string  `json:"item_id" binding:"required"`
-	Ratio  float64 `json:"ratio" binding:"required"`
-	Notes  string  `json:"notes"`
+	ItemID string `json:"item_id" binding:"required"`
 }
 
 type UpdateItemCompositionRequest struct {
-	ItemID string  `json:"item_id" binding:"required"`
-	Ratio  float64 `json:"ratio" binding:"required"`
-	Notes  string  `json:"notes"`
+	ItemID string `json:"item_id" binding:"required"`
 }
 
 type UpdateItemRequest struct {
 	Name             string                         `json:"name" binding:"required"`
 	SupplierID       string                         `json:"supplier_id"`
 	Category         string                         `json:"category" binding:"required"`
-	Price            *float64                       `json:"price"`
 	Unit             string                         `json:"unit" binding:"required"`
-	PortionSize      float64                        `json:"portion_size"`
 	ItemCompositions []UpdateItemCompositionRequest `json:"item_compositions"`
 }
 
 type GetItemCompositionResponse struct {
-	UUID          string  `json:"uuid"`
-	ChildItemID   string  `json:"child_item_id"`
-	Ratio         float64 `json:"ratio"`
-	PortionSize   float64 `json:"portion_size"`
-	ChildItemName string  `json:"child_item_name"`
-	Unit          string  `json:"unit"`
-	Notes         string  `json:"notes"`
+	ChildItemID   string `json:"child_item_id"`
+	ChildItemName string `json:"child_item_name"`
+	Unit          string `json:"unit"`
 }
 
 type GetItemsResponse struct {
@@ -51,6 +39,5 @@ type GetItemsResponse struct {
 	Name              string                       `json:"name"`
 	Category          model.ItemCategory           `json:"category"`
 	Unit              string                       `json:"unit"`
-	PortionSize       float64                      `json:"portion_size"`
 	ChildCompositions []GetItemCompositionResponse `json:"child_compositions"`
 }

@@ -1,6 +1,11 @@
 package model
 
-import "time"
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"time"
+)
 
 type ItemCategory string
 
@@ -12,22 +17,50 @@ const (
 	ItemCategoryOther         ItemCategory = "other"
 )
 
+// CompositionItem represents a single composition item
+type CompositionItem struct {
+	ItemID   string `json:"item_id"`
+	ItemName string `json:"item_name"`
+	Unit     string `json:"unit"`
+}
+
+// ItemCompositions represents the JSON structure for item compositions
+type ItemCompositions struct {
+	Compositions []CompositionItem `json:"compositions"`
+}
+
+// Value implements the driver.Valuer interface for database storage
+func (ic ItemCompositions) Value() (driver.Value, error) {
+	return json.Marshal(ic)
+}
+
+// Scan implements the sql.Scanner interface for database retrieval
+func (ic *ItemCompositions) Scan(value interface{}) error {
+	if value == nil {
+		*ic = ItemCompositions{Compositions: []CompositionItem{}}
+		return nil
+	}
+
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+
+	return json.Unmarshal(bytes, ic)
+}
+
 type Item struct {
-	UUID        string       `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"uuid"`
-	Name        string       `gorm:"type:varchar(255);not null" json:"name" validate:"required"`
-	Category    ItemCategory `gorm:"type:varchar(255);not null" json:"category" validate:"required"`
-	Price       *float64     `gorm:"type:decimal(10,2)" json:"price"`
-	Unit        string       `gorm:"type:varchar(255);not null" json:"unit" validate:"required"`       // e.g., "gram", "ml"
-	PortionSize float64      `gorm:"type:decimal(10,4);default:1" json:"portion_size" validate:"gt=0"` // default is 1
-	CreatedAt   time.Time    `json:"created_at"`
-	UpdatedAt   time.Time    `json:"updated_at"`
+	UUID         string           `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"uuid"`
+	Name         string           `gorm:"type:varchar(255);not null" json:"name" validate:"required"`
+	Category     ItemCategory     `gorm:"type:varchar(255);not null" json:"category" validate:"required"`
+	Unit         string           `gorm:"type:varchar(255);not null" json:"unit" validate:"required"` // e.g., "gram", "ml"
+	Compositions ItemCompositions `gorm:"type:jsonb;default:'{\"compositions\": []}'" json:"compositions"`
+	CreatedAt    time.Time        `json:"created_at"`
+	UpdatedAt    time.Time        `json:"updated_at"`
 
 	SupplierID *string  `gorm:"type:uuid" json:"supplier_id"`
 	Supplier   Supplier `gorm:"foreignKey:SupplierID;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL" json:"supplier"`
 
-	// Relationships
-	ParentCompositions  []ItemComposition    `gorm:"foreignKey:ChildItemID" json:"-"`
-	ChildCompositions   []ItemComposition    `gorm:"foreignKey:ParentItemID" json:"compositions,omitempty"`
 	ProductCompositions []ProductComposition `gorm:"foreignKey:ItemID" json:"-"`
 }
 

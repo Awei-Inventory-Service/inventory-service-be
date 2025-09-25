@@ -36,7 +36,6 @@ func (s *branchItemDomain) FindAll() (results []dto.GetBranchItemResponse, errW 
 			ItemCategory: branchItem.Item.Category,
 			CurrentStock: branchItem.CurrentStock,
 			Price:        branchItem.Price,
-			ItemUnit:     branchItem.Item.Unit,
 		})
 
 	}
@@ -99,7 +98,6 @@ func (s *branchItemDomain) CalculatePrice(ctx context.Context, branchID, itemID 
 	purchaseStock := 0.0
 	var (
 		allPurchases []model.Purchase
-		item         model.Item
 	)
 
 	for purchaseStock < currentBalance {
@@ -134,7 +132,6 @@ func (s *branchItemDomain) CalculatePrice(ctx context.Context, branchID, itemID 
 		balance := utils.StandarizeMeasurement(float64(purchase.Quantity), purchase.Unit, purchase.Item.Unit)
 		totalItem += balance
 		totalPrice += purchase.PurchaseCost
-		item = purchase.Item
 	}
 
 	// Prevent division by zero which causes NaN
@@ -142,8 +139,7 @@ func (s *branchItemDomain) CalculatePrice(ctx context.Context, branchID, itemID 
 		return 0.0, nil
 	}
 
-	avgPrice := totalPrice / totalItem * item.PortionSize
-
+	avgPrice := totalPrice / totalItem
 	return avgPrice, nil
 }
 
@@ -225,7 +221,6 @@ func (b *branchItemDomain) calculatePrice(ctx context.Context, branchID, itemID 
 	purchaseStock := 0.0
 	var (
 		allPurchases []model.Purchase
-		item         model.Item
 	)
 
 	for purchaseStock < currentBalance {
@@ -260,7 +255,6 @@ func (b *branchItemDomain) calculatePrice(ctx context.Context, branchID, itemID 
 		balance := utils.StandarizeMeasurement(float64(purchase.Quantity), purchase.Unit, purchase.Item.Unit)
 		totalItem += balance
 		totalPrice += purchase.PurchaseCost
-		item = purchase.Item
 	}
 
 	// Prevent division by zero which causes NaN
@@ -268,7 +262,7 @@ func (b *branchItemDomain) calculatePrice(ctx context.Context, branchID, itemID 
 		return 0.0, nil
 	}
 
-	avgPrice := totalPrice / totalItem * item.PortionSize
+	avgPrice := totalPrice / totalItem
 
 	return avgPrice, nil
 }
