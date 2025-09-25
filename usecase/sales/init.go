@@ -1,6 +1,7 @@
 package sales
 
 import (
+	"github.com/inventory-service/domain/branch_item"
 	"github.com/inventory-service/domain/branch_product"
 	"github.com/inventory-service/domain/product"
 	"github.com/inventory-service/domain/sales"
@@ -12,11 +13,13 @@ func NewSalesUsecase(
 	productDomain product.ProductDomain,
 	branchProductDomain branch_product.BranchProductDomain,
 	stockTransactionDomain stocktransaction.StockTransactionDomain,
+	branchItemDomain branch_item.BranchItemDomain,
 ) SalesService {
 	return &salesService{
 		salesDomain:            salesDomain,
 		productDomain:          productDomain,
 		branchProductDomain:    branchProductDomain,
 		stockTransactionDomain: stockTransactionDomain,
+		branchItemDomain:       branchItemDomain,
 	}
 }

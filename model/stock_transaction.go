@@ -18,6 +18,7 @@ type StockTransaction struct {
 	Quantity            float64 `gorm:"type:decimal;not null"`
 	Cost                float64 `gorm:"type:decimal;not null"`
 	Reference           string  `gorm:"type:varchar(255);not null"`
+	ReferenceType       *string `gorm:"type:varchar(100)"`
 	Unit                string  `gorm:"type:varchar(255);not null"`
 	Remarks             string  `gorm:"type:text"`
 	CreatedAt           time.Time

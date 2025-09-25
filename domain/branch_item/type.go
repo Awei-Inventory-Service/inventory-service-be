@@ -22,6 +22,7 @@ type BranchItemDomain interface {
 	Delete(branchID, itemID string) *error_wrapper.ErrorWrapper
 	SyncCurrentBalance(ctx context.Context, branchID, itemID string) (float64, *error_wrapper.ErrorWrapper)
 	CalculatePrice(ctx context.Context, branchID, itemID string, currentBalance float64) (float64, *error_wrapper.ErrorWrapper)
+	SyncBranchItem(ctx context.Context, branchID, itemID string) *error_wrapper.ErrorWrapper
 }
 
 type branchItemDomain struct {

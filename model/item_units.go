@@ -4,7 +4,7 @@ const (
 	Kilogram  = "kilogram"
 	Gram      = "gram"
 	Liter     = "liter"
-	Mililiter = "ml"
+	Mililiter = "mililiter"
 )
 
 var UnitAbbreviations = map[string]string{

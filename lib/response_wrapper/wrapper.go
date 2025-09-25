@@ -83,5 +83,6 @@ func BuildErrors(requestId string, errW *error_wrapper.ErrorWrapper) (int, *erro
 }
 
 func writeHeader(w http.ResponseWriter, statusCode int) {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 }

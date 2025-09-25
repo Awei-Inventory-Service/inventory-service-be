@@ -15,7 +15,9 @@ type SalesDomain interface {
 	FindAll() ([]model.Sales, *error_wrapper.ErrorWrapper)
 	FindByID(id string) (*model.Sales, *error_wrapper.ErrorWrapper)
 	Update(id string, sale model.Sales) *error_wrapper.ErrorWrapper
-	Delete(id string) *error_wrapper.ErrorWrapper
+	Delete(ctx context.Context, id string) (*model.Sales, *error_wrapper.ErrorWrapper)
+	FindGroupedByDate(ctx context.Context) ([]model.Sales, *error_wrapper.ErrorWrapper)
+	FindGroupedByDateAndBranch(ctx context.Context) ([]model.Sales, *error_wrapper.ErrorWrapper)
 }
 
 type salesDomain struct {

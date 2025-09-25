@@ -9,6 +9,7 @@ type BranchItemHandler interface {
 	FindByBranchIdAndItemId(c *gin.Context)
 	FindAllBranchItem(c *gin.Context)
 	SyncBalance(c *gin.Context)
+	Create(c *gin.Context)
 }
 
 type branchItemHandler struct {

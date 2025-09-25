@@ -23,6 +23,14 @@ func (s *salesDomain) Update(id string, sale model.Sales) *error_wrapper.ErrorWr
 	return s.salesResource.Update(id, sale)
 }
 
-func (s *salesDomain) Delete(id string) *error_wrapper.ErrorWrapper {
-	return s.salesResource.Delete(id)
+func (s *salesDomain) Delete(ctx context.Context, id string) (*model.Sales, *error_wrapper.ErrorWrapper) {
+	return s.salesResource.Delete(ctx, id)
+}
+
+func (s *salesDomain) FindGroupedByDate(ctx context.Context) ([]model.Sales, *error_wrapper.ErrorWrapper) {
+	return s.salesResource.FindGroupedByDate(ctx)
+}
+
+func (s *salesDomain) FindGroupedByDateAndBranch(ctx context.Context) ([]model.Sales, *error_wrapper.ErrorWrapper) {
+	return s.salesResource.FindGroupedByDateAndBranch(ctx)
 }

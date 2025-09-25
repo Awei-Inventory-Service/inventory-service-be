@@ -114,9 +114,9 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	inventoryStockCountDomain := inventory_stock_count_domain.NewInventoryStockCountDomain(inventoryStockCountResource)
 	productDomain := product_domain.NewProductDomain(productResource, itemResource, productCompositionResource, branchItemResource)
 	invoiceDomain := invoice_domain.NewInvoiceDomain(invoiceResource)
-	stockDomain := stock_transaction_domain.NewStockTransactionDomain(stockTransactionResource)
+	stockTransactionDomain := stock_transaction_domain.NewStockTransactionDomain(stockTransactionResource)
 	salesDomain := sales_domain.NewSalesDomain(salesResource, productResource, branchProductResource)
-	itemBranchDomain := branch_item_domain.NewBranchItemDomain(branchItemResource, stockTransactionResource, itemResource, purchaseResource)
+	branchItemDomain := branch_item_domain.NewBranchItemDomain(branchItemResource, stockTransactionResource, itemResource, purchaseResource)
 	productCompositionDomain := product_composition_domain.NewProductCompositionDomain(productCompositionResource)
 	itemCompositionDomain := item_composition_domain.NewItemCompositionDomain(itemCompositionResource)
 	branchProductDomain := branch_product_domain.NewBranchProductDomain(branchProductResource)
@@ -126,14 +126,14 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	supplierService := supplier_service.NewSupplierService(supplierDomain)
 	itemService := item_service.NewItemService(itemDomain, itemCompositionDomain)
 	branchService := branch_service.NewBranchService(branchDomain, userDomain)
-	purchaseService := purchase_service.NewPurchaseService(purchaseDomain, supplierDomain, branchDomain, itemDomain, itemBranchDomain)
+	purchaseService := purchase_service.NewPurchaseService(purchaseDomain, supplierDomain, branchDomain, itemDomain, branchItemDomain)
 	inventoryStockCountService := inventory_stock_count_service.NewInventoryStockCountService(inventoryStockCountDomain, branchDomain, itemDomain)
 	productService := product_service.NewProductservice(productDomain, itemDomain, productCompositionDomain)
 	invoiceService := invoice_service.NewInvoiceService(invoiceDomain)
-	stockService := stock_service.NewStockService(stockDomain)
-	salesService := sales_service.NewSalesUsecase(salesDomain, productDomain, branchProductDomain, stockDomain)
-	uploadService := upload_service.NewUploadService(salesResource, productResource, salesService)
-	itemBranchUsecase := branch_item_usecase.NewBranchItemUsecase(itemBranchDomain)
+	stockService := stock_service.NewStockService(stockTransactionDomain)
+	salesUsecase := sales_service.NewSalesUsecase(salesDomain, productDomain, branchProductDomain, stockTransactionDomain, branchItemDomain)
+	uploadService := upload_service.NewUploadService(salesResource, productResource, salesUsecase)
+	itemBranchUsecase := branch_item_usecase.NewBranchItemUsecase(branchItemDomain, itemDomain, stockTransactionDomain)
 
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)
@@ -143,7 +143,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	purchaseController := purchase_controller.NewPurchaseController(purchaseService)
 	productController := product_controller.NewProductController(productService)
 	invoiceController := invoice_controller.NewInvoiceController(invoiceService)
-	salesController := sales_controller.NewSalesController(salesService)
+	salesController := sales_controller.NewSalesController(salesUsecase)
 	branchItemController := branch_item_controller.NewBranchItemHandler(itemBranchUsecase)
 
 	inventoryStockCountController := inventory_stock_count_controller.NewInventoryStockCountController(inventoryStockCountService)
@@ -249,6 +249,9 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		salesRoutes := apiV1.Group("/sales")
 		{
 			salesRoutes.POST("/", salesController.Create)
+			salesRoutes.GET("/", salesController.FindAll)
+			salesRoutes.GET("/grouped-by-date", salesController.FindGroupedByDate)
+			salesRoutes.GET("/grouped-by-date-and-branch", salesController.FindGroupedByDateAndBranch)
 		}
 
 		uploadRoutes := apiV1.Group("/upload")
@@ -260,6 +263,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		{
 			branchItemRoutes.GET("/", branchItemController.FindAllBranchItem)
 			branchItemRoutes.POST("/sync", branchItemController.SyncBalance)
+			branchItemRoutes.POST("/", branchItemController.Create)
 		}
 	}
 

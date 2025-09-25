@@ -10,6 +10,37 @@ import (
 	"github.com/inventory-service/model"
 )
 
+func (s *branchItemHandler) Create(c *gin.Context) {
+	var (
+		errW                    *error_wrapper.ErrorWrapper
+		createBranchItemRequest dto.CreateBranchItemRequest
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
+
+	if err := c.ShouldBindJSON(&createBranchItemRequest); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+		return
+	}
+
+	userId := c.GetHeader("user_id")
+
+	if userId == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "User id is missing on the header")
+		return
+	}
+
+	createBranchItemRequest.UserID = userId
+
+	errW = s.branchItemUsecase.Create(c, createBranchItemRequest)
+
+	if errW != nil {
+		return
+	}
+}
+
 func (s *branchItemHandler) FindByBranchIdAndItemId(c *gin.Context) {
 	var (
 		errW                  *error_wrapper.ErrorWrapper

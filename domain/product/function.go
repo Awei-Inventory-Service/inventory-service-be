@@ -46,8 +46,9 @@ func (p *productDomain) FindAll(ctx context.Context) ([]dto.GetProductResponse, 
 				ItemUnit:    item.Unit,
 			})
 
-			productsResponse = append(productsResponse, product)
 		}
+		productsResponse = append(productsResponse, product)
+
 	}
 	return productsResponse, nil
 }
@@ -108,8 +109,8 @@ func (p *productDomain) CalculateProductCost(ctx context.Context, productComposi
 
 	for _, productComposition := range productCompositions {
 		branchItem, errW := p.branchItemResource.FindByBranchAndItem(branchID, productComposition.ItemID)
-		fmt.Println("iNI BRANCH ITEM", branchItem)
 		if errW != nil {
+			fmt.Printf("Error finding branch item with branch_idx: %s and item_id: %s ", branchID, productComposition.ItemID)
 			return price, errW
 		}
 		fmt.Println("INI RPODUCT COMPOSITION", productComposition)

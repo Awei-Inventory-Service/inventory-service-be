@@ -123,9 +123,11 @@ func (p *purchaseDomain) syncBranchItemInventory(ctx context.Context, branchID, 
 	var (
 		branchItem *model.BranchItem
 	)
+	fmt.Println("BRANCH ID AND ITEM ID", branchID, itemID)
 	branchItem, errW := p.branchItemResource.FindByBranchAndItem(branchID, itemID)
 
 	if errW != nil && errW.Is(model.RErrDataNotFound) {
+		errW = nil
 		branchItem, errW = p.branchItemResource.Create(model.BranchItem{
 			BranchID:     branchID,
 			ItemID:       itemID,
@@ -175,6 +177,7 @@ func (p *purchaseDomain) calculateCurrentBalance(ctx context.Context, branchID, 
 		if transaction.ItemID != itemID {
 			continue
 		}
+		
 		balance := utils.StandarizeMeasurement(float64(transaction.Quantity), transaction.Unit, item.Unit)
 
 		if transaction.Type == "IN" && transaction.BranchDestinationID == branchID {
