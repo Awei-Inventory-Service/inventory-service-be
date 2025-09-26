@@ -6,10 +6,10 @@ import (
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
-	"github.com/inventory-service/resource/branch_item"
+	inventory "github.com/inventory-service/resource/inventory"
 	"github.com/inventory-service/resource/item"
 	"github.com/inventory-service/resource/product"
-	productcomposition "github.com/inventory-service/resource/product_composition"
+	productrecipe "github.com/inventory-service/resource/product_recipe"
 )
 
 type ProductDomain interface {
@@ -18,12 +18,12 @@ type ProductDomain interface {
 	FindByID(ctx context.Context, productID string) (*model.Product, *error_wrapper.ErrorWrapper)
 	Update(ctx context.Context, product dto.UpdateProductRequest, productID string) *error_wrapper.ErrorWrapper
 	Delete(ctx context.Context, productID string) *error_wrapper.ErrorWrapper
-	CalculateProductCost(ctx context.Context, productCompositions []model.ProductComposition, branchID string) (float64, *error_wrapper.ErrorWrapper)
+	CalculateProductCost(ctx context.Context, productCompositions []model.ProductRecipe, branchID string) (float64, *error_wrapper.ErrorWrapper)
 }
 
 type productDomain struct {
-	productResource            product.ProductResource
-	itemResource               item.ItemResource
-	productCompositionResource productcomposition.ProductCompositionResource
-	branchItemResource         branch_item.BranchItemResource
+	productResource       product.ProductResource
+	itemResource          item.ItemResource
+	productRecipeResource productrecipe.ProductRecipeResource
+	inventoryResource     inventory.InventoryResource
 }

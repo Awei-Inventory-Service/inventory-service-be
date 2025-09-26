@@ -3,9 +3,10 @@ package product
 import (
 	"context"
 
+	"github.com/inventory-service/domain/branch_product"
 	"github.com/inventory-service/domain/item"
 	"github.com/inventory-service/domain/product"
-	productcomposition "github.com/inventory-service/domain/product_composition"
+	productrecipe "github.com/inventory-service/domain/product_recipe"
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
@@ -20,7 +21,8 @@ type ProductService interface {
 }
 
 type productService struct {
-	productDomain            product.ProductDomain
-	itemDomain               item.ItemDomain
-	productCompositionDomain productcomposition.ProductCompositionDomain
+	productDomain       product.ProductDomain
+	itemDomain          item.ItemDomain
+	productRecipeDomain productrecipe.ProductRecipeDomain
+	branchProductDomain branch_product.BranchProductDomain
 }

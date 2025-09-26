@@ -20,15 +20,16 @@ type Product struct {
 	CreatedAt    time.Time   `json:"created_at"`
 	UpdatedAt    time.Time   `json:"updated_at"`
 
-	ProductComposition []ProductComposition `gorm:"foreignKey:ProductID" json:"product_composition,omitempty"`
+	ProductComposition []ProductRecipe `gorm:"foreignKey:ProductID" json:"product_recipe,omitempty"`
 }
 
-type ProductComposition struct {
+type ProductRecipe struct {
 	UUID      string    `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"uuid"`
 	ProductID string    `gorm:"type:uuid;not null;index" json:"product_id" validate:"required"` // Fixed: string not uint
 	ItemID    string    `gorm:"type:uuid;not null;index" json:"item_id" validate:"required"`    // Fixed: string not uint
-	Ratio     float64   `gorm:"type:decimal(10,4);not null" json:"ratio" validate:"required,gt=0"`
+	Amount    float64   `gorm:"type:decimal(10,4);not null" json:"amount" validate:"required,gt=0"`
 	Notes     string    `gorm:"type:text" json:"notes"`
+	Unit      string    `gorm:"type:text" json:"unit"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
@@ -40,6 +41,6 @@ func (Product) TableName() string {
 	return "products"
 }
 
-func (ProductComposition) TableName() string {
-	return "product_compositions"
+func (ProductRecipe) TableName() string {
+	return "product_recipes"
 }

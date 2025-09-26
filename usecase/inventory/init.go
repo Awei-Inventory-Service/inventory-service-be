@@ -1,18 +1,18 @@
-package branch_item
+package inventory
 
 import (
-	branchitem "github.com/inventory-service/domain/branch_item"
+	inventory "github.com/inventory-service/domain/inventory"
 	"github.com/inventory-service/domain/item"
 	stocktransaction "github.com/inventory-service/domain/stock_transaction"
 )
 
-func NewBranchItemUsecase(
-	branchItemDomain branchitem.BranchItemDomain,
+func NewInventoryUsecase(
+	inventoryDomain inventory.InventoryDomain,
 	itemDomain item.ItemDomain,
 	stockTransactionDomain stocktransaction.StockTransactionDomain,
-) BranchItemUsecase {
-	return &branchItemUsecase{
-		branchItemDomain:       branchItemDomain,
+) InventoryUsecase {
+	return &inventoryUsecase{
+		inventoryDomain:        inventoryDomain,
 		itemDomain:             itemDomain,
 		stockTransactionDomain: stockTransactionDomain,
 	}

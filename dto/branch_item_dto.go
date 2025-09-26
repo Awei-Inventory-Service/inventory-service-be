@@ -19,7 +19,7 @@ type SyncBalanceRequest struct {
 	BranchID string `json:"branch_id"`
 }
 
-type CreateBranchItemRequest struct {
+type CreateInventoryRequest struct {
 	BranchID string  `json:"branch_id"`
 	ItemID   string  `json:"item_id"`
 	UserID   string  `json:"user_id"`

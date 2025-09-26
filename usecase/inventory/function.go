@@ -1,4 +1,4 @@
-package branch_item
+package inventory
 
 import (
 	"context"
@@ -9,10 +9,10 @@ import (
 	"github.com/inventory-service/model"
 )
 
-func (s *branchItemUsecase) Create(ctx context.Context, payload dto.CreateBranchItemRequest) *error_wrapper.ErrorWrapper {
+func (i *inventoryUsecase) Create(ctx context.Context, payload dto.CreateInventoryRequest) *error_wrapper.ErrorWrapper {
 
 	// 1. Create out transaction for the item compositions
-	item, errW := s.itemDomain.FindByID(ctx, payload.ItemID)
+	item, errW := i.itemDomain.FindByID(ctx, payload.ItemID)
 
 	if errW != nil {
 		return errW
@@ -22,7 +22,7 @@ func (s *branchItemUsecase) Create(ctx context.Context, payload dto.CreateBranch
 	for _, itemComposition := range item.ChildCompositions {
 		fmt.Println("iNI ITEM COMPOSIITON ITEM ID", itemComposition.ChildItemID)
 		// total := itemComposition.Ratio * payload.Quantity * itemComposition.PortionSize
-		errW := s.stockTransactionDomain.Create(model.StockTransaction{
+		errW := i.stockTransactionDomain.Create(model.StockTransaction{
 			BranchOriginID:      payload.BranchID,
 			BranchDestinationID: payload.BranchID,
 			ItemID:              itemComposition.ChildItemID,
@@ -39,7 +39,7 @@ func (s *branchItemUsecase) Create(ctx context.Context, payload dto.CreateBranch
 			return errW
 		}
 
-		errW = s.branchItemDomain.SyncBranchItem(ctx, payload.BranchID, itemComposition.ChildItemID)
+		errW = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, itemComposition.ChildItemID)
 
 		if errW != nil {
 			return errW
@@ -48,7 +48,7 @@ func (s *branchItemUsecase) Create(ctx context.Context, payload dto.CreateBranch
 	}
 	// 2. Create the inside transactions for the item
 
-	errW = s.stockTransactionDomain.Create(model.StockTransaction{
+	errW = i.stockTransactionDomain.Create(model.StockTransaction{
 		BranchOriginID:      payload.BranchID,
 		BranchDestinationID: payload.BranchID,
 		ItemID:              payload.ItemID,
@@ -64,7 +64,7 @@ func (s *branchItemUsecase) Create(ctx context.Context, payload dto.CreateBranch
 		return errW
 	}
 
-	errW = s.branchItemDomain.SyncBranchItem(ctx, payload.BranchID, payload.ItemID)
+	errW = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, payload.ItemID)
 
 	if errW != nil {
 		return errW
@@ -73,18 +73,18 @@ func (s *branchItemUsecase) Create(ctx context.Context, payload dto.CreateBranch
 	return nil
 }
 
-func (s *branchItemUsecase) FindByBranchIdAndItemId(payload dto.GetStockBalanceRequest) (*model.BranchItem, *error_wrapper.ErrorWrapper) {
-	return s.branchItemDomain.FindByBranchAndItem(payload.BranchId, payload.ItemId)
+func (i *inventoryUsecase) FindByBranchIdAndItemId(payload dto.GetStockBalanceRequest) (*model.Inventory, *error_wrapper.ErrorWrapper) {
+	return i.inventoryDomain.FindByBranchAndItem(payload.BranchId, payload.ItemId)
 }
 
-func (s *branchItemUsecase) FindByBranchId(branchId string) ([]model.BranchItem, *error_wrapper.ErrorWrapper) {
-	return s.branchItemDomain.FindByBranch(branchId)
+func (i *inventoryUsecase) FindByBranchId(branchId string) ([]model.Inventory, *error_wrapper.ErrorWrapper) {
+	return i.inventoryDomain.FindByBranch(branchId)
 }
 
-func (s *branchItemUsecase) FindAll() ([]dto.GetBranchItemResponse, *error_wrapper.ErrorWrapper) {
-	return s.branchItemDomain.FindAll()
+func (i *inventoryUsecase) FindAll() ([]dto.GetBranchItemResponse, *error_wrapper.ErrorWrapper) {
+	return i.inventoryDomain.FindAll()
 }
 
-func (b *branchItemUsecase) SyncBranchItem(ctx context.Context, payload dto.SyncBalanceRequest) (errW *error_wrapper.ErrorWrapper) {
-	return b.branchItemDomain.SyncBranchItem(ctx, payload.BranchID, payload.ItemID)
+func (i *inventoryUsecase) SyncBranchItem(ctx context.Context, payload dto.SyncBalanceRequest) (errW *error_wrapper.ErrorWrapper) {
+	return i.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, payload.ItemID)
 }

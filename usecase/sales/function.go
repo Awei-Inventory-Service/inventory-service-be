@@ -78,7 +78,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 	}
 
 	for _, itemComposition := range product.ProductComposition {
-		total := itemComposition.Ratio * payload.Quantity
+		total := itemComposition.Amount * payload.Quantity
 		referenceType := "SALES_CREATION"
 		errW = s.stockTransactionDomain.Create(model.StockTransaction{
 			BranchOriginID:      payload.BranchID,
@@ -126,7 +126,7 @@ func (s *salesService) Delete(ctx context.Context, salesID string, userID string
 	}
 
 	for _, itemComposition := range product.ProductComposition {
-		total := itemComposition.Ratio * salesData.Quantity
+		total := itemComposition.Amount * salesData.Quantity
 		referenceType := "SALES_DELETION"
 		errW = s.stockTransactionDomain.Create(model.StockTransaction{
 			BranchOriginID:      salesData.BranchProduct.BranchID,

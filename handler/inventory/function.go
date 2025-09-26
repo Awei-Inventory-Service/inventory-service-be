@@ -1,4 +1,4 @@
-package stockbalance
+package inventory
 
 import (
 	"fmt"
@@ -10,17 +10,17 @@ import (
 	"github.com/inventory-service/model"
 )
 
-func (s *branchItemHandler) Create(c *gin.Context) {
+func (s *inventoryHandler) Create(c *gin.Context) {
 	var (
-		errW                    *error_wrapper.ErrorWrapper
-		createBranchItemRequest dto.CreateBranchItemRequest
+		errW                   *error_wrapper.ErrorWrapper
+		createInventoryRequest dto.CreateInventoryRequest
 	)
 
 	defer func() {
 		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
 	}()
 
-	if err := c.ShouldBindJSON(&createBranchItemRequest); err != nil {
+	if err := c.ShouldBindJSON(&createInventoryRequest); err != nil {
 		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
@@ -32,19 +32,19 @@ func (s *branchItemHandler) Create(c *gin.Context) {
 		return
 	}
 
-	createBranchItemRequest.UserID = userId
+	createInventoryRequest.UserID = userId
 
-	errW = s.branchItemUsecase.Create(c, createBranchItemRequest)
+	errW = s.inventoryUsecase.Create(c, createInventoryRequest)
 
 	if errW != nil {
 		return
 	}
 }
 
-func (s *branchItemHandler) FindByBranchIdAndItemId(c *gin.Context) {
+func (s *inventoryHandler) FindByBranchIdAndItemId(c *gin.Context) {
 	var (
 		errW                  *error_wrapper.ErrorWrapper
-		itemBranch            *model.BranchItem
+		itemBranch            *model.Inventory
 		getStockBalanceReqest dto.GetStockBalanceRequest
 	)
 
@@ -57,14 +57,14 @@ func (s *branchItemHandler) FindByBranchIdAndItemId(c *gin.Context) {
 		return
 	}
 
-	itemBranch, errW = s.branchItemUsecase.FindByBranchIdAndItemId(getStockBalanceReqest)
+	itemBranch, errW = s.inventoryUsecase.FindByBranchIdAndItemId(getStockBalanceReqest)
 
 	if errW != nil {
 		return
 	}
 }
 
-func (s *branchItemHandler) FindAllBranchItem(c *gin.Context) {
+func (s *inventoryHandler) FindAllBranchItem(c *gin.Context) {
 	var (
 		errW         *error_wrapper.ErrorWrapper
 		itemBranches []dto.GetBranchItemResponse
@@ -73,7 +73,7 @@ func (s *branchItemHandler) FindAllBranchItem(c *gin.Context) {
 	defer func() {
 		response_wrapper.New(&c.Writer, c, errW == nil, itemBranches, errW)
 	}()
-	itemBranches, errW = s.branchItemUsecase.FindAll()
+	itemBranches, errW = s.inventoryUsecase.FindAll()
 	fmt.Println("INi item branches", itemBranches)
 	if errW != nil {
 		fmt.Println("Errw", errW.ActualError())
@@ -82,7 +82,7 @@ func (s *branchItemHandler) FindAllBranchItem(c *gin.Context) {
 
 }
 
-func (b *branchItemHandler) SyncBalance(c *gin.Context) {
+func (b *inventoryHandler) SyncBalance(c *gin.Context) {
 	var (
 		errW    *error_wrapper.ErrorWrapper
 		payload dto.SyncBalanceRequest
@@ -97,7 +97,7 @@ func (b *branchItemHandler) SyncBalance(c *gin.Context) {
 		return
 	}
 
-	errW = b.branchItemUsecase.SyncBranchItem(c, payload)
+	errW = b.inventoryUsecase.SyncBranchItem(c, payload)
 	if errW != nil {
 		return
 	}

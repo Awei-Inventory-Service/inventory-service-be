@@ -72,7 +72,7 @@ func (i *itemDomain) calculatePrice(ctx context.Context, itemID string) (float64
 	limit := 10
 	offset := 0
 
-	stockBalance, errW := i.branchItemResource.FindByBranchAndItem(fmt.Sprint(branchId), itemID)
+	stockBalance, errW := i.inventoryResource.FindByBranchAndItem(fmt.Sprint(branchId), itemID)
 	if errW != nil {
 		return 0.0, errW
 	}
@@ -80,7 +80,7 @@ func (i *itemDomain) calculatePrice(ctx context.Context, itemID string) (float64
 	purchaseStock := 0.0
 	var allPurchases []model.Purchase
 
-	for purchaseStock < stockBalance.CurrentStock {
+	for purchaseStock < stockBalance.Stock {
 		purchases, errW := i.purchaseResource.FindByBranchAndItem(fmt.Sprint(branchId), itemID, offset, limit)
 		if errW != nil {
 			return 0.0, errW
@@ -93,7 +93,7 @@ func (i *itemDomain) calculatePrice(ctx context.Context, itemID string) (float64
 		for _, purchase := range purchases {
 			allPurchases = append(allPurchases, purchase)
 			purchaseStock += purchase.Quantity
-			if purchaseStock >= stockBalance.CurrentStock {
+			if purchaseStock >= stockBalance.Stock {
 				break
 			}
 		}

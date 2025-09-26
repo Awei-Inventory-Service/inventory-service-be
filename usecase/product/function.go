@@ -29,12 +29,25 @@ func (p *productService) Create(ctx context.Context, payload dto.CreateProductRe
 		return errW
 	}
 
-	for _, composition := range payload.ProductCompositions {
-		errW = p.productCompositionDomain.Create(ctx, model.ProductComposition{
+	for _, composition := range payload.ProductRecipes {
+		errW = p.productRecipeDomain.Create(ctx, model.ProductRecipe{
 			ProductID: product.UUID,
 			ItemID:    composition.ItemID,
-			Ratio:     composition.Ratio,
+			Amount:    composition.Amount,
+			Unit:      composition.Unit,
 			Notes:     composition.Notes,
+		})
+
+		if errW != nil {
+			return errW
+		}
+	}
+
+	for _, branchId := range payload.BranchIDs {
+		_, errW = p.branchProductDomain.Create(ctx, dto.CreateBranchProductRequest{
+			BranchID:     branchId,
+			ProductID:    product.UUID,
+			SellingPrice: payload.SellingPrice,
 		})
 
 		if errW != nil {

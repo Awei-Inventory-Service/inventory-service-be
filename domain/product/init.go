@@ -1,22 +1,22 @@
 package product
 
 import (
-	"github.com/inventory-service/resource/branch_item"
+	inventory "github.com/inventory-service/resource/inventory"
 	"github.com/inventory-service/resource/item"
 	"github.com/inventory-service/resource/product"
-	productcomposition "github.com/inventory-service/resource/product_composition"
+	productrecipe "github.com/inventory-service/resource/product_recipe"
 )
 
 func NewProductDomain(
 	productResource product.ProductResource,
 	itemResource item.ItemResource,
-	productCompositionResource productcomposition.ProductCompositionResource,
-	branchItemResource branch_item.BranchItemResource,
+	productRecipeResource productrecipe.ProductRecipeResource,
+	inventoryResource inventory.InventoryResource,
 ) ProductDomain {
 	return &productDomain{
-		productResource:            productResource,
-		itemResource:               itemResource,
-		productCompositionResource: productCompositionResource,
-		branchItemResource:         branchItemResource,
+		productResource:       productResource,
+		itemResource:          itemResource,
+		productRecipeResource: productRecipeResource,
+		inventoryResource:     inventoryResource,
 	}
 }

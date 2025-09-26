@@ -3,13 +3,14 @@ package dto
 import "github.com/inventory-service/model"
 
 type CreateProductRequest struct {
-	Name                string                     `json:"name" binding:"required"`
-	Code                string                     `json:"code" binding:"required"`
-	Category            string                     `json:"category" binding:"required"`
-	ProductType         string                     `json:"product_type" binding:"required"`
-	Unit                string                     `json:"unit" binding:"required"`
-	SellingPrice        float64                    `json:"selling_price" binding:"required"`
-	ProductCompositions []CreateProductComposition `json:"product_compositions" binding:"required"`
+	Name           string                `json:"name" binding:"required"`
+	Code           string                `json:"code" binding:"required"`
+	Category       string                `json:"category" binding:"required"`
+	ProductType    string                `json:"product_type" binding:"required"`
+	Unit           string                `json:"unit" binding:"required"`
+	SellingPrice   float64               `json:"selling_price" binding:"required"`
+	ProductRecipes []CreateProductRecipe `json:"product_recipes" binding:"required"`
+	BranchIDs      []string              `json:"branch_ids" binding:"required"`
 }
 
 type UpdateProductRequest struct {
@@ -21,15 +22,17 @@ type UpdateProductRequest struct {
 	ProductCompositions []UpdateProductComposition `json:"product_compositions" binding:"required"`
 }
 
-type CreateProductComposition struct {
+type CreateProductRecipe struct {
 	ItemID string  `json:"item_id" binding:"required"`
-	Ratio  float64 `json:"ratio" binding:"required"`
+	Amount float64 `json:"amount" binding:"required"`
+	Unit   string  `json:"unit" binding:"required"`
 	Notes  string  `json:"notes"`
 }
 
 type UpdateProductComposition struct {
 	ItemID string  `json:"item_id" binding:"required"`
-	Ratio  float64 `json:"ratio" binding:"required"`
+	Amount float64 `json:"amount" binding:"required"`
+	Unit   string  `json:"unit" binding:"required"`
 	Notes  string  `json:"notes"`
 }
 type Ingredient struct {
@@ -42,7 +45,6 @@ type GetIngredient struct {
 	ItemPortion float64 `json:"item_portion"`
 	ItemName    string  `json:"item_name"`
 	ItemUnit    string  `json:"item_unit"`
-	Ratio       float64 `json:"ratio"`
 }
 
 type GetProductResponse struct {

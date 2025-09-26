@@ -1,20 +1,20 @@
-package branch_item
+package inventory
 
 import (
-	branchItem "github.com/inventory-service/resource/branch_item"
+	inventory "github.com/inventory-service/resource/inventory"
 	"github.com/inventory-service/resource/item"
 	"github.com/inventory-service/resource/purchase"
 	stocktransaction "github.com/inventory-service/resource/stock_transaction"
 )
 
 func NewBranchItemDomain(
-	branchItemResource branchItem.BranchItemResource,
+	inventoryResource inventory.InventoryResource,
 	stockTransactionResource stocktransaction.StockTransactionResource,
 	itemResource item.ItemResource,
 	purchaseResource purchase.PurchaseResource,
-) BranchItemDomain {
-	return &branchItemDomain{
-		branchItemResource:       branchItemResource,
+) InventoryDomain {
+	return &inventoryDomain{
+		inventoryResource:        inventoryResource,
 		stockTransactionResource: stockTransactionResource,
 		itemResource:             itemResource,
 		purchaseResource:         purchaseResource,

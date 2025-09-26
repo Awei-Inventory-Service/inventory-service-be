@@ -6,7 +6,7 @@ import (
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
-	branchitem "github.com/inventory-service/resource/branch_item"
+	"github.com/inventory-service/resource/inventory"
 	"github.com/inventory-service/resource/item"
 	"github.com/inventory-service/resource/purchase"
 	stocktransaction "github.com/inventory-service/resource/stock_transaction"
@@ -22,7 +22,7 @@ type PurchaseDomain interface {
 
 type purchaseDomain struct {
 	purchaseResource         purchase.PurchaseResource
-	branchItemResource       branchitem.BranchItemResource
+	inventoryResource        inventory.InventoryResource
 	stockTransactionResource stocktransaction.StockTransactionResource
 	itemResource             item.ItemResource
 }

@@ -61,7 +61,7 @@ type Item struct {
 	SupplierID *string  `gorm:"type:uuid" json:"supplier_id"`
 	Supplier   Supplier `gorm:"foreignKey:SupplierID;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL" json:"supplier"`
 
-	ProductCompositions []ProductComposition `gorm:"foreignKey:ItemID" json:"-"`
+	ProductCompositions []ProductRecipe `gorm:"foreignKey:ItemID" json:"-"`
 }
 
 // Fixed typo and data types

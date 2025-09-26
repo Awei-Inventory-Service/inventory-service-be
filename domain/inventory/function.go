@@ -1,4 +1,4 @@
-package branch_item
+package inventory
 
 import (
 	"context"
@@ -10,18 +10,17 @@ import (
 	"github.com/inventory-service/utils"
 )
 
-func (s *branchItemDomain) Create(branchID, itemID string, currentStock int) (*model.BranchItem, *error_wrapper.ErrorWrapper) {
-	branchItem := model.BranchItem{
-		BranchID:     branchID,
-		ItemID:       itemID,
-		CurrentStock: 0.0,
+func (i *inventoryDomain) Create(branchID, itemID string, currentStock int) (*model.Inventory, *error_wrapper.ErrorWrapper) {
+	branchItem := model.Inventory{
+		BranchID: branchID,
+		ItemID:   itemID,
 	}
 
-	return s.branchItemResource.Create(branchItem)
+	return i.inventoryResource.Create(branchItem)
 }
 
-func (s *branchItemDomain) FindAll() (results []dto.GetBranchItemResponse, errW *error_wrapper.ErrorWrapper) {
-	branchItems, errW := s.branchItemResource.FindAll()
+func (i *inventoryDomain) FindAll() (results []dto.GetBranchItemResponse, errW *error_wrapper.ErrorWrapper) {
+	branchItems, errW := i.inventoryResource.FindAll()
 
 	if errW != nil {
 		return
@@ -34,42 +33,40 @@ func (s *branchItemDomain) FindAll() (results []dto.GetBranchItemResponse, errW 
 			ItemID:       branchItem.ItemID,
 			ItemName:     branchItem.Item.Name,
 			ItemCategory: branchItem.Item.Category,
-			CurrentStock: branchItem.CurrentStock,
-			Price:        branchItem.Price,
 		})
 
 	}
 	return
 }
 
-func (s *branchItemDomain) FindByBranch(branchID string) ([]model.BranchItem, *error_wrapper.ErrorWrapper) {
-	return s.branchItemResource.FindByBranch(branchID)
+func (i *inventoryDomain) FindByBranch(branchID string) ([]model.Inventory, *error_wrapper.ErrorWrapper) {
+	return i.inventoryResource.FindByBranch(branchID)
 }
 
-func (s *branchItemDomain) FindByItem(itemID string) ([]model.BranchItem, *error_wrapper.ErrorWrapper) {
-	return s.branchItemResource.FindByItem(itemID)
+func (i *inventoryDomain) FindByItem(itemID string) ([]model.Inventory, *error_wrapper.ErrorWrapper) {
+	return i.inventoryResource.FindByItem(itemID)
 }
 
-func (s *branchItemDomain) FindByBranchAndItem(branchID, itemID string) (*model.BranchItem, *error_wrapper.ErrorWrapper) {
+func (i *inventoryDomain) FindByBranchAndItem(branchID, itemID string) (*model.Inventory, *error_wrapper.ErrorWrapper) {
 
-	return s.branchItemResource.FindByBranchAndItem(branchID, itemID)
+	return i.inventoryResource.FindByBranchAndItem(branchID, itemID)
 }
 
-func (s *branchItemDomain) Update(ctx context.Context, payload model.BranchItem) (*model.BranchItem, *error_wrapper.ErrorWrapper) {
-	return s.branchItemResource.Update(ctx, payload)
+func (i *inventoryDomain) Update(ctx context.Context, payload model.Inventory) (*model.Inventory, *error_wrapper.ErrorWrapper) {
+	return i.inventoryResource.Update(ctx, payload)
 }
 
-func (s *branchItemDomain) Delete(branchID, itemID string) *error_wrapper.ErrorWrapper {
-	return s.branchItemResource.Delete(branchID, itemID)
+func (i *inventoryDomain) Delete(branchID, itemID string) *error_wrapper.ErrorWrapper {
+	return i.inventoryResource.Delete(branchID, itemID)
 }
 
-func (s *branchItemDomain) SyncCurrentBalance(ctx context.Context, branchID, itemID string) (float64, *error_wrapper.ErrorWrapper) {
-	allTransactions, err := s.stockTransactionResource.FindAll()
+func (i *inventoryDomain) SyncCurrentBalance(ctx context.Context, branchID, itemID string) (float64, *error_wrapper.ErrorWrapper) {
+	allTransactions, err := i.stockTransactionResource.FindAll()
 	if err != nil {
 		return 0.0, err
 	}
 
-	item, errW := s.itemResource.FindByID(itemID)
+	item, errW := i.itemResource.FindByID(itemID)
 	if errW != nil {
 		return 0.0, errW
 	}
@@ -91,7 +88,7 @@ func (s *branchItemDomain) SyncCurrentBalance(ctx context.Context, branchID, ite
 	return totalBalance, nil
 }
 
-func (s *branchItemDomain) CalculatePrice(ctx context.Context, branchID, itemID string, currentBalance float64) (float64, *error_wrapper.ErrorWrapper) {
+func (i *inventoryDomain) CalculatePrice(ctx context.Context, branchID, itemID string, currentBalance float64) (float64, *error_wrapper.ErrorWrapper) {
 	limit := 10
 	offset := 0
 
@@ -101,7 +98,7 @@ func (s *branchItemDomain) CalculatePrice(ctx context.Context, branchID, itemID 
 	)
 
 	for purchaseStock < currentBalance {
-		purchases, errW := s.purchaseResource.FindByBranchAndItem(branchID, itemID, offset, limit)
+		purchases, errW := i.purchaseResource.FindByBranchAndItem(branchID, itemID, offset, limit)
 		if errW != nil {
 			return 0.0, errW
 		}
@@ -143,19 +140,18 @@ func (s *branchItemDomain) CalculatePrice(ctx context.Context, branchID, itemID 
 	return avgPrice, nil
 }
 
-func (s *branchItemDomain) SyncBranchItem(ctx context.Context, branchID, itemID string) *error_wrapper.ErrorWrapper {
+func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID string) *error_wrapper.ErrorWrapper {
 	var (
-		branchItem *model.BranchItem
+		branchItem *model.Inventory
 	)
 	fmt.Println("BRANCH ID AND ITEM ID", branchID, itemID)
-	branchItem, errW := s.branchItemResource.FindByBranchAndItem(branchID, itemID)
+	branchItem, errW := i.inventoryResource.FindByBranchAndItem(branchID, itemID)
 
 	if errW != nil && errW.Is(model.RErrDataNotFound) {
 		errW = nil
-		branchItem, errW = s.branchItemResource.Create(model.BranchItem{
-			BranchID:     branchID,
-			ItemID:       itemID,
-			CurrentStock: 0,
+		branchItem, errW = i.inventoryResource.Create(model.Inventory{
+			BranchID: branchID,
+			ItemID:   itemID,
 		})
 		fmt.Println("Done creating new branch item", branchItem)
 		if errW != nil {
@@ -163,28 +159,26 @@ func (s *branchItemDomain) SyncBranchItem(ctx context.Context, branchID, itemID 
 		}
 	}
 	// Update existing branch item
-	currentBalance, errW := s.calculateCurrentBalance(ctx, branchID, itemID)
+	currentBalance, errW := i.calculateCurrentBalance(ctx, branchID, itemID)
 	if errW != nil {
 		return errW
 	}
 	fmt.Println("Current balance", currentBalance)
-	currentPrice, errW := s.calculatePrice(ctx, branchID, itemID, currentBalance)
+	currentPrice, errW := i.calculatePrice(ctx, branchID, itemID, currentBalance)
 	if errW != nil {
 		return errW
 	}
 	fmt.Println("Current price", currentPrice)
-	_, errW = s.branchItemResource.Update(ctx, model.BranchItem{
-		UUID:         branchItem.UUID,
-		BranchID:     branchID,
-		ItemID:       itemID,
-		CurrentStock: currentBalance,
-		Price:        currentPrice,
+	_, errW = i.inventoryResource.Update(ctx, model.Inventory{
+		UUID:     branchItem.UUID,
+		BranchID: branchID,
+		ItemID:   itemID,
 	})
 
 	return errW
 }
 
-func (b *branchItemDomain) calculateCurrentBalance(ctx context.Context, branchID, itemID string) (float64, *error_wrapper.ErrorWrapper) {
+func (b *inventoryDomain) calculateCurrentBalance(ctx context.Context, branchID, itemID string) (float64, *error_wrapper.ErrorWrapper) {
 	allTransactions, err := b.stockTransactionResource.FindAll()
 	if err != nil {
 		return 0.0, err
@@ -200,7 +194,7 @@ func (b *branchItemDomain) calculateCurrentBalance(ctx context.Context, branchID
 		if transaction.ItemID != itemID {
 			continue
 		}
-		fmt.Println("INI transaction", transaction)
+
 		balance := utils.StandarizeMeasurement(float64(transaction.Quantity), transaction.Unit, item.Unit)
 
 		if transaction.Type == "IN" && transaction.BranchDestinationID == branchID {
@@ -214,7 +208,7 @@ func (b *branchItemDomain) calculateCurrentBalance(ctx context.Context, branchID
 }
 
 // calculatePrice calculates average price based on recent purchases using FIFO
-func (b *branchItemDomain) calculatePrice(ctx context.Context, branchID, itemID string, currentBalance float64) (float64, *error_wrapper.ErrorWrapper) {
+func (b *inventoryDomain) calculatePrice(ctx context.Context, branchID, itemID string, currentBalance float64) (float64, *error_wrapper.ErrorWrapper) {
 	limit := 10
 	offset := 0
 

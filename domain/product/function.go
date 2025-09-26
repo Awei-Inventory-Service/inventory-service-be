@@ -41,7 +41,6 @@ func (p *productDomain) FindAll(ctx context.Context) ([]dto.GetProductResponse, 
 			product.Ingredients = append(product.Ingredients, dto.GetIngredient{
 				ItemID:   ingredient.ItemID,
 				ItemName: item.Name,
-				Ratio:    ingredient.Ratio,
 				ItemUnit: item.Unit,
 			})
 
@@ -73,16 +72,17 @@ func (p *productDomain) Update(ctx context.Context, payload dto.UpdateProductReq
 		return errW
 	}
 
-	errW = p.productCompositionResource.DeleteByProductID(ctx, updatedProduct.UUID)
+	errW = p.productRecipeResource.DeleteByProductID(ctx, updatedProduct.UUID)
 
 	if errW != nil {
 		return errW
 	}
 
 	for _, productComposition := range payload.ProductCompositions {
-		errW = p.productCompositionResource.Create(ctx, model.ProductComposition{
+		errW = p.productRecipeResource.Create(ctx, model.ProductRecipe{
 			ProductID: updatedProduct.UUID,
-			Ratio:     productComposition.Ratio,
+			Amount:    productComposition.Amount,
+			Unit:      productComposition.Unit,
 			Notes:     productComposition.Notes,
 			ItemID:    productComposition.ItemID,
 			CreatedAt: time.Now(),
@@ -101,19 +101,19 @@ func (p *productDomain) Delete(ctx context.Context, productID string) *error_wra
 	return p.productResource.Delete(ctx, productID)
 }
 
-func (p *productDomain) CalculateProductCost(ctx context.Context, productCompositions []model.ProductComposition, branchID string) (float64, *error_wrapper.ErrorWrapper) {
+func (p *productDomain) CalculateProductCost(ctx context.Context, productCompositions []model.ProductRecipe, branchID string) (float64, *error_wrapper.ErrorWrapper) {
 	var (
 		price float64
 	)
 
 	for _, productComposition := range productCompositions {
-		branchItem, errW := p.branchItemResource.FindByBranchAndItem(branchID, productComposition.ItemID)
+		_, errW := p.inventoryResource.FindByBranchAndItem(branchID, productComposition.ItemID)
 		if errW != nil {
 			fmt.Printf("Error finding branch item with branch_idx: %s and item_id: %s ", branchID, productComposition.ItemID)
 			return price, errW
 		}
 		fmt.Println("INI RPODUCT COMPOSITION", productComposition)
-		price += branchItem.Price * productComposition.Ratio
+		// price += branchItem.Price * productComposition.Ratio
 	}
 
 	return price, nil

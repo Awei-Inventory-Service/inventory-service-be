@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/domain/branch"
-	branchitem "github.com/inventory-service/domain/branch_item"
+	"github.com/inventory-service/domain/inventory"
 	"github.com/inventory-service/domain/item"
 	itempurchasechain "github.com/inventory-service/domain/item_purchase_chain"
 	"github.com/inventory-service/domain/purchase"
@@ -31,5 +31,5 @@ type purchaseService struct {
 	branchDomain            branch.BranchDomain
 	itemDomain              item.ItemDomain
 	itemPurchaseChainDomain itempurchasechain.ItemPurchaseChainDomain
-	branchItemDomain        branchitem.BranchItemDomain
+	inventoryDomain         inventory.InventoryDomain
 }

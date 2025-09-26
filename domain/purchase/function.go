@@ -121,17 +121,17 @@ func (p *purchaseDomain) Delete(ctx context.Context, id, userID string) (*model.
 
 func (p *purchaseDomain) syncBranchItemInventory(ctx context.Context, branchID, itemID string) *error_wrapper.ErrorWrapper {
 	var (
-		branchItem *model.BranchItem
+		branchItem *model.Inventory
 	)
 	fmt.Println("BRANCH ID AND ITEM ID", branchID, itemID)
-	branchItem, errW := p.branchItemResource.FindByBranchAndItem(branchID, itemID)
+	branchItem, errW := p.inventoryResource.FindByBranchAndItem(branchID, itemID)
 
 	if errW != nil && errW.Is(model.RErrDataNotFound) {
 		errW = nil
-		branchItem, errW = p.branchItemResource.Create(model.BranchItem{
-			BranchID:     branchID,
-			ItemID:       itemID,
-			CurrentStock: 0,
+		branchItem, errW = p.inventoryResource.Create(model.Inventory{
+			BranchID: branchID,
+			ItemID:   itemID,
+			Stock:    0,
 		})
 		fmt.Println("Done creating new branch item", branchItem)
 		if errW != nil {
@@ -149,12 +149,11 @@ func (p *purchaseDomain) syncBranchItemInventory(ctx context.Context, branchID, 
 		return errW
 	}
 	fmt.Println("Current price", currentPrice)
-	_, errW = p.branchItemResource.Update(ctx, model.BranchItem{
-		UUID:         branchItem.UUID,
-		BranchID:     branchID,
-		ItemID:       itemID,
-		CurrentStock: currentBalance,
-		Price:        currentPrice,
+	_, errW = p.inventoryResource.Update(ctx, model.Inventory{
+		UUID:     branchItem.UUID,
+		BranchID: branchID,
+		ItemID:   itemID,
+		Stock:    currentBalance,
 	})
 
 	return errW
