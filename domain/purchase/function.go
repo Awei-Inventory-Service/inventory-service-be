@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/inventory-service/constant"
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
@@ -25,7 +26,7 @@ func (p *purchaseDomain) Create(payload dto.CreatePurchaseRequest, userID string
 	if errW != nil {
 		return nil, errW
 	}
-
+	referenceType := string(constant.Purchasing)
 	// 2. Create stock transaction
 	errW = p.stockTransactionResource.Create(model.StockTransaction{
 		BranchOriginID:      payload.BranchID,
@@ -36,6 +37,8 @@ func (p *purchaseDomain) Create(payload dto.CreatePurchaseRequest, userID string
 		Quantity:            payload.Quantity,
 		Cost:                payload.PurchaseCost,
 		Unit:                payload.Unit,
+		Reference:           purchase.UUID,
+		ReferenceType:       &referenceType,
 	})
 	if errW != nil {
 		return nil, errW

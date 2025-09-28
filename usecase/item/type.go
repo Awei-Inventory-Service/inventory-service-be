@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/inventory-service/domain/item"
-	itemcomposition "github.com/inventory-service/domain/item_composition"
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 )
@@ -18,6 +17,5 @@ type ItemUsecase interface {
 }
 
 type itemUsecase struct {
-	itemDomain            item.ItemDomain
-	itemCompositionDomain itemcomposition.ItemCompositionDomain
+	itemDomain item.ItemDomain
 }

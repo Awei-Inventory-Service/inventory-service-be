@@ -144,9 +144,9 @@ func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID s
 	var (
 		branchItem *model.Inventory
 	)
-	fmt.Println("BRANCH ID AND ITEM ID", branchID, itemID)
-	branchItem, errW := i.inventoryResource.FindByBranchAndItem(branchID, itemID)
 
+	branchItem, errW := i.inventoryResource.FindByBranchAndItem(branchID, itemID)
+	fmt.Println("iNI BRANCH ITEM AND ERRW", branchItem, errW)
 	if errW != nil && errW.Is(model.RErrDataNotFound) {
 		errW = nil
 		branchItem, errW = i.inventoryResource.Create(model.Inventory{
@@ -173,6 +173,8 @@ func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID s
 		UUID:     branchItem.UUID,
 		BranchID: branchID,
 		ItemID:   itemID,
+		Stock:    currentBalance,
+		Value:    currentPrice,
 	})
 
 	return errW
@@ -259,4 +261,15 @@ func (b *inventoryDomain) calculatePrice(ctx context.Context, branchID, itemID s
 	avgPrice := totalPrice / totalItem
 
 	return avgPrice, nil
+}
+
+func (i *inventoryDomain) BulkSyncBranchItems(ctx context.Context, branchID string, itemIDs []string) *error_wrapper.ErrorWrapper {
+	for _, itemId := range itemIDs {
+		errW := i.SyncBranchItem(ctx, branchID, itemId)
+
+		if errW != nil {
+			return errW
+		}
+	}
+	return nil
 }

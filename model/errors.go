@@ -36,6 +36,7 @@ var (
 	ErrSelectContext          = errW.NewDefinition(15, "Error Select Context %v", true, CategoryInternalServerError)
 	ErrStructToMap            = errW.NewDefinition(16, "Error Struct To Map not struct", true, CategoryInternalServerError)
 	ErrNewRelicNewApplication = errW.NewDefinition(17, "Error New Relic New Application", true, CategoryInternalServerError)
+	ErrInvalidTimestamp       = errW.NewDefinition(18, "Error Invalid Timestamp", false, CategoryBadRequest)
 
 	//	- Default -
 
@@ -51,6 +52,7 @@ var (
 	// Usecase
 	UErrInvalidItemCategory = errW.NewDefinition(300000, "Error Invalid Item Category", true, CategoryBadRequest)
 	UErrInvalidProductType  = errW.NewDefinition(400000, "Error Invalid Product Type", true, CategoryBadRequest)
+	UErrStockIsNotEnough    = errW.NewDefinition(300001, "Error Stock Not Enough", false, CategoryBadRequest)
 
 	//	Service
 	SErrDataExist       = errW.NewDefinition(200000, "Error Data Already Exist", false, CategoryBadRequest)

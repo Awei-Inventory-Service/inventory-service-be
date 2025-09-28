@@ -8,7 +8,6 @@ import (
 	"github.com/inventory-service/model"
 	inventory "github.com/inventory-service/resource/inventory"
 	"github.com/inventory-service/resource/item"
-	itemcomposition "github.com/inventory-service/resource/item_composition"
 	"github.com/inventory-service/resource/purchase"
 )
 
@@ -21,8 +20,7 @@ type ItemDomain interface {
 }
 
 type itemDomain struct {
-	itemResource            item.ItemResource
-	itemCompositionResource itemcomposition.ItemCompositionResourece
-	purchaseResource        purchase.PurchaseResource
-	inventoryResource       inventory.InventoryResource
+	itemResource      item.ItemResource
+	purchaseResource  purchase.PurchaseResource
+	inventoryResource inventory.InventoryResource
 }

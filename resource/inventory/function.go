@@ -68,11 +68,11 @@ func (i *inventoryResource) Update(ctx context.Context, payload model.Inventory)
 
 	if payload.UUID != "" {
 		fmt.Println("Updating branch item based on UUID")
-		result = i.db.WithContext(ctx).Where("uuid = ?", payload.UUID).Select("current_stock", "price").Updates(&payload)
+		result = i.db.WithContext(ctx).Where("uuid = ?", payload.UUID).Select("stock", "value").Updates(&payload)
 	} else {
 		fmt.Println("Updating branch item based on branch id and item id")
 		fmt.Println("PAYLOAD", payload)
-		result = i.db.WithContext(ctx).Where("branch_id = ? AND item_id = ?", payload.BranchID, payload.ItemID).Select("current_stock", "price").Updates(&payload)
+		result = i.db.WithContext(ctx).Where("branch_id = ? AND item_id = ?", payload.BranchID, payload.ItemID).Select("stock", "value").Updates(&payload)
 	}
 
 	if result.Error != nil {
