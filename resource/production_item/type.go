@@ -11,6 +11,7 @@ import (
 type ProductionItemResource interface {
 	Create(ctx context.Context, productionItem model.ProductionItem) (*model.ProductionItem, *error_wrapper.ErrorWrapper)
 	Get(ctx context.Context, filter model.ProductionItem) ([]model.ProductionItem, *error_wrapper.ErrorWrapper)
+	Delete(ctx context.Context, payload model.ProductionItem) *error_wrapper.ErrorWrapper
 }
 
 type productionItemResource struct {

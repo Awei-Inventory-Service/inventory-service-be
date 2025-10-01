@@ -15,7 +15,7 @@ type InventoryUsecase interface {
 	Create(ctx context.Context, payload dto.CreateInventoryRequest) *error_wrapper.ErrorWrapper
 	FindByBranchIdAndItemId(payload dto.GetStockBalanceRequest) (*model.Inventory, *error_wrapper.ErrorWrapper)
 	FindByBranchId(branchId string) ([]model.Inventory, *error_wrapper.ErrorWrapper)
-	FindAll() ([]dto.GetBranchItemResponse, *error_wrapper.ErrorWrapper)
+	FindAll() ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper)
 	SyncBranchItem(ctx context.Context, payload dto.SyncBalanceRequest) (errW *error_wrapper.ErrorWrapper)
 }
 

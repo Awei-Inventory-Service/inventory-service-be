@@ -81,7 +81,7 @@ func (i *inventoryUsecase) FindByBranchId(branchId string) ([]model.Inventory, *
 	return i.inventoryDomain.FindByBranch(branchId)
 }
 
-func (i *inventoryUsecase) FindAll() ([]dto.GetBranchItemResponse, *error_wrapper.ErrorWrapper) {
+func (i *inventoryUsecase) FindAll() ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper) {
 	return i.inventoryDomain.FindAll()
 }
 

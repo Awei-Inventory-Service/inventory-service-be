@@ -157,6 +157,7 @@ func (p *purchaseDomain) syncBranchItemInventory(ctx context.Context, branchID, 
 		BranchID: branchID,
 		ItemID:   itemID,
 		Stock:    currentBalance,
+		Value:    currentPrice,
 	})
 
 	return errW

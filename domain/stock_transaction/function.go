@@ -28,3 +28,26 @@ func (s *stockTransactionDomain) Delete(id string) *error_wrapper.ErrorWrapper {
 func (s *stockTransactionDomain) FindWithFilter(filters []map[string]interface{}) ([]model.StockTransaction, *error_wrapper.ErrorWrapper) {
 	return s.stockTransactionResource.FindWithFilter(filters)
 }
+
+func (s *stockTransactionDomain) CreateReversalStockTransaction(stockTransaction model.StockTransaction) model.StockTransaction {
+	var (
+		transactionType string = "IN"
+	)
+
+	if stockTransaction.Type == "IN" {
+		transactionType = "OUT"
+	}
+
+	return model.StockTransaction{
+		BranchOriginID:      stockTransaction.BranchOriginID,
+		BranchDestinationID: stockTransaction.BranchDestinationID,
+		ItemID:              stockTransaction.ItemID,
+		Type:                transactionType,
+		IssuerID:            stockTransaction.IssuerID,
+		Quantity:            stockTransaction.Quantity,
+		Cost:                stockTransaction.Cost,
+		Unit:                stockTransaction.Unit,
+		ReferenceType:       stockTransaction.ReferenceType,
+		Reference:           stockTransaction.Reference,
+	}
+}

@@ -35,11 +35,11 @@ func (p *productionHandler) Create(ctx *gin.Context) {
 
 }
 
-func (p *productionHandler) Get(ctx *gin.Context) {
+func (p *productionHandler) GetProductionList(ctx *gin.Context) {
 	var (
 		errW                *error_wrapper.ErrorWrapper
-		productionsResponse []dto.GetProduction
-		filter              model.Production
+		productionsResponse []dto.GetProductionList
+		filter              dto.GetProductionFilter
 	)
 
 	defer func() {
@@ -47,7 +47,9 @@ func (p *productionHandler) Get(ctx *gin.Context) {
 	}()
 
 	if err := ctx.ShouldBindJSON(&filter); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
+
 	}
 
 	productionsResponse, errW = p.productionUsecase.Get(ctx, filter)

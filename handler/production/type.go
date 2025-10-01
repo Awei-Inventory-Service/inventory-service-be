@@ -7,7 +7,7 @@ import (
 
 type ProductionHandler interface {
 	Create(c *gin.Context)
-	Get(c *gin.Context)
+	GetProductionList(c *gin.Context)
 }
 
 type productionHandler struct {

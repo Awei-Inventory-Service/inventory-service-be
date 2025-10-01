@@ -2,7 +2,7 @@ package dto
 
 import "github.com/inventory-service/model"
 
-type GetBranchItemResponse struct {
+type GetInventoryResponse struct {
 	UUID         string             `json:"uuid"`
 	BranchID     string             `json:"branch_id"`
 	BranchName   string             `json:"branch_name"`

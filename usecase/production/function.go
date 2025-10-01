@@ -35,9 +35,15 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 	}
 
 	// Create stock transcation in for the final
-	referenceType := string(constant.Production)
+	referenceType := constant.Production
 
 	for _, productionItem := range payload.SourceItems {
+		// inventory, errW := p.inventoryDomain.FindByBranchAndItem(payload.BranchID, productionItem.SourceItemID)
+
+		// if errW != nil {
+		// 	return nil, errW
+		// }
+
 		errW = p.stockTransactionDomain.Create(model.StockTransaction{
 			BranchOriginID:      payload.BranchID,
 			BranchDestinationID: payload.BranchID,
@@ -48,7 +54,6 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 			IssuerID:            payload.UserID,
 			Reference:           production.UUID,
 			ReferenceType:       &referenceType,
-			Cost:                0.0,
 		})
 		updatedBranchItems = append(updatedBranchItems, productionItem.SourceItemID)
 		if errW != nil {
@@ -82,6 +87,31 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 	return production, nil
 }
 
-func (p *productionUsecase) Get(ctx context.Context, filter model.Production) ([]dto.GetProduction, *error_wrapper.ErrorWrapper) {
+func (p *productionUsecase) Get(ctx context.Context, filter dto.GetProductionFilter) ([]dto.GetProductionList, *error_wrapper.ErrorWrapper) {
 	return p.productionDomain.Get(ctx, filter)
+}
+
+func (p *productionUsecase) Delete(ctx context.Context, payload dto.DeleteProductionRequest) *error_wrapper.ErrorWrapper {
+	var (
+		errW *error_wrapper.ErrorWrapper
+	)
+
+	errW = p.productionDomain.Delete(ctx, payload.ProductionID)
+
+	if errW != nil {
+		return errW
+	}
+
+	stockTransactions, errW := p.stockTransactionDomain.FindWithFilter([]map[string]interface{}{
+		{
+			"field": "reference",
+			"value": payload.ProductionID,
+		},
+	})
+
+	if errW != nil {
+		return errW
+	}
+	fmt.Println("INi stock transactions", stockTransactions)
+	return nil
 }

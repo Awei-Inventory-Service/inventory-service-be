@@ -31,9 +31,17 @@ func (p *productionDomain) Create(ctx context.Context, payload dto.CreateProduct
 	}
 
 	for _, productSourceItem := range payload.SourceItems {
-		waste := productSourceItem.InitialQuantity - payload.FinalQuantity
+		var (
+			waste           float64
+			wastePercentage float64
+		)
 
-		wastePercentage := waste / productSourceItem.InitialQuantity * 100
+		if payload.FinalUnit == productSourceItem.InitialUnit {
+			waste = productSourceItem.InitialQuantity - payload.FinalQuantity
+
+			wastePercentage = waste / productSourceItem.InitialQuantity * 100
+		}
+
 		_, errW := p.productionItemResource.Create(ctx, model.ProductionItem{
 			ProductionID:    production.UUID,
 			SourceItemID:    productSourceItem.SourceItemID,
@@ -50,9 +58,9 @@ func (p *productionDomain) Create(ctx context.Context, payload dto.CreateProduct
 	return production, nil
 }
 
-func (p *productionDomain) Get(ctx context.Context, filter model.Production) ([]dto.GetProduction, *error_wrapper.ErrorWrapper) {
+func (p *productionDomain) Get(ctx context.Context, filter dto.GetProductionFilter) ([]dto.GetProductionList, *error_wrapper.ErrorWrapper) {
 	var (
-		productionResults []dto.GetProduction
+		productionResults []dto.GetProductionList
 		errW              *error_wrapper.ErrorWrapper
 	)
 	productions, errW := p.productionResource.Get(ctx, filter)
@@ -69,13 +77,45 @@ func (p *productionDomain) Get(ctx context.Context, filter model.Production) ([]
 	return productionResults, nil
 }
 
-func (p *productionDomain) mapToGetProduction(production model.Production) dto.GetProduction {
-	return dto.GetProduction{
-		UUID:           production.UUID,
-		FinalItemID:    production.FinalItemID,
-		FinalItemName:  production.FinalItem.Name,
-		BranchID:       production.BranchID,
-		BranchName:     production.Branch.Name,
-		ProductionDate: production.ProductionDate.Format("2006-01-02"),
+func (p *productionDomain) mapToGetProduction(production model.Production) dto.GetProductionList {
+	var (
+		result dto.GetProductionList
+	)
+
+	result.BranchID = production.BranchID
+	result.BranchName = production.Branch.Name
+	result.FinalItemID = production.FinalItemID
+	result.FinalItemName = production.FinalItem.Name
+	result.FinalQuantity = production.FinalQuantity
+	result.FinalUnit = production.FinalUnit
+	result.ProductionDate = production.ProductionDate.String()
+	result.ProductionID = production.UUID
+
+	for _, productionItem := range production.SourceItems {
+		result.SourceItems = append(result.SourceItems, dto.GetProductionItem{
+			SourceItemID:    productionItem.UUID,
+			SourceItemName:  productionItem.SourceItem.Name,
+			InitialQuantity: productionItem.Quantity,
+			Waste:           productionItem.WasteQuantity,
+			WastePercentage: productionItem.WastePercentage,
+		})
 	}
+	return result
+}
+
+func (p *productionDomain) Delete(ctx context.Context, productionID string) *error_wrapper.ErrorWrapper {
+	errW := p.productionResource.Delete(ctx, productionID)
+
+	if errW != nil {
+		return errW
+	}
+
+	errW = p.productionItemResource.Delete(ctx, model.ProductionItem{
+		ProductionID: productionID,
+	})
+
+	if errW != nil {
+		return errW
+	}
+	return nil
 }

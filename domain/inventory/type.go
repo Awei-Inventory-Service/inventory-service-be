@@ -14,7 +14,7 @@ import (
 
 type InventoryDomain interface {
 	Create(branchID, itemID string, currentStock int) (*model.Inventory, *error_wrapper.ErrorWrapper)
-	FindAll() (results []dto.GetBranchItemResponse, errW *error_wrapper.ErrorWrapper)
+	FindAll() (results []dto.GetInventoryResponse, errW *error_wrapper.ErrorWrapper)
 	FindByBranch(branchID string) ([]model.Inventory, *error_wrapper.ErrorWrapper)
 	FindByItem(itemID string) ([]model.Inventory, *error_wrapper.ErrorWrapper)
 	FindByBranchAndItem(branchID, itemID string) (*model.Inventory, *error_wrapper.ErrorWrapper)

@@ -7,7 +7,7 @@ import (
 
 type InventoryHandler interface {
 	FindByBranchIdAndItemId(c *gin.Context)
-	FindAllBranchItem(c *gin.Context)
+	FindAll(c *gin.Context)
 	SyncBalance(c *gin.Context)
 	Create(c *gin.Context)
 }

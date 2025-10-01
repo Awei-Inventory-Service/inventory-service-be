@@ -19,20 +19,23 @@ func (i *inventoryDomain) Create(branchID, itemID string, currentStock int) (*mo
 	return i.inventoryResource.Create(branchItem)
 }
 
-func (i *inventoryDomain) FindAll() (results []dto.GetBranchItemResponse, errW *error_wrapper.ErrorWrapper) {
+func (i *inventoryDomain) FindAll() (results []dto.GetInventoryResponse, errW *error_wrapper.ErrorWrapper) {
 	branchItems, errW := i.inventoryResource.FindAll()
 
 	if errW != nil {
 		return
 	}
 	for _, branchItem := range branchItems {
-		results = append(results, dto.GetBranchItemResponse{
+		results = append(results, dto.GetInventoryResponse{
 			UUID:         branchItem.UUID,
 			BranchID:     branchItem.BranchID,
 			BranchName:   branchItem.Branch.Name,
 			ItemID:       branchItem.ItemID,
 			ItemName:     branchItem.Item.Name,
 			ItemCategory: branchItem.Item.Category,
+			CurrentStock: branchItem.Stock,
+			Price:        branchItem.Value,
+			ItemUnit:     branchItem.Item.Unit,
 		})
 
 	}
@@ -146,7 +149,7 @@ func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID s
 	)
 
 	branchItem, errW := i.inventoryResource.FindByBranchAndItem(branchID, itemID)
-	fmt.Println("iNI BRANCH ITEM AND ERRW", branchItem, errW)
+
 	if errW != nil && errW.Is(model.RErrDataNotFound) {
 		errW = nil
 		branchItem, errW = i.inventoryResource.Create(model.Inventory{
@@ -231,7 +234,10 @@ func (b *inventoryDomain) calculatePrice(ctx context.Context, branchID, itemID s
 
 		for _, purchase := range purchases {
 			allPurchases = append(allPurchases, purchase)
-			purchaseStock += purchase.Quantity
+			// Standarize measurement
+			purchaseQuantity := utils.StandarizeMeasurement(purchase.Quantity, purchase.Unit, purchase.Item.Unit)
+			purchaseStock += purchaseQuantity
+			fmt.Printf("Current stock: %f. Current balance: %f\n", purchaseStock, currentBalance)
 			if purchaseStock >= currentBalance {
 				break
 			}

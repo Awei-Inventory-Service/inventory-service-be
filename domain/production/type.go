@@ -12,7 +12,8 @@ import (
 
 type ProductionDomain interface {
 	Create(ctx context.Context, payload dto.CreateProductionRequest) (*model.Production, *error_wrapper.ErrorWrapper)
-	Get(ctx context.Context, filter model.Production) ([]dto.GetProduction, *error_wrapper.ErrorWrapper)
+	Get(ctx context.Context, filter dto.GetProductionFilter) ([]dto.GetProductionList, *error_wrapper.ErrorWrapper)
+	Delete(ctx context.Context, productionID string) *error_wrapper.ErrorWrapper
 }
 
 type productionDomain struct {

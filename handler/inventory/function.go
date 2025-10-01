@@ -64,10 +64,10 @@ func (s *inventoryHandler) FindByBranchIdAndItemId(c *gin.Context) {
 	}
 }
 
-func (s *inventoryHandler) FindAllBranchItem(c *gin.Context) {
+func (s *inventoryHandler) FindAll(c *gin.Context) {
 	var (
 		errW         *error_wrapper.ErrorWrapper
-		itemBranches []dto.GetBranchItemResponse
+		itemBranches []dto.GetInventoryResponse
 	)
 
 	defer func() {

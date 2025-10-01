@@ -265,9 +265,9 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 			uploadRoutes.POST("/transaction", uploadController.UploadTransaction)
 		}
 
-		branchItemRoutes := apiV1.Group("/branch-item")
+		branchItemRoutes := apiV1.Group("/inventory")
 		{
-			branchItemRoutes.GET("/", inventoryController.FindAllBranchItem)
+			branchItemRoutes.GET("/", inventoryController.FindAll)
 			branchItemRoutes.POST("/sync", inventoryController.SyncBalance)
 			branchItemRoutes.POST("/", inventoryController.Create)
 		}
@@ -275,7 +275,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		productionRoutes := apiV1.Group("/production")
 		{
 			productionRoutes.POST("/create", productionController.Create)
-			productionRoutes.POST("/", productionController.Get)
+			productionRoutes.POST("/", productionController.GetProductionList)
 		}
 	}
 

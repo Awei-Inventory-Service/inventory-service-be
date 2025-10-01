@@ -1,10 +1,16 @@
 package constant
 
-type ReferenceType string
-
 const (
-	Production        ReferenceType = "production"
-	Purchasing        ReferenceType = "purchasing"
-	InventoryTransfer ReferenceType = "inventory-transfer"
-	Sales             ReferenceType = "sales"
+	Production         = "production"
+	Purchasing         = "purchasing"
+	InventoryTransfer  = "inventory-transfer"
+	Sales              = "sales"
+	DeleteAction       = "delete-action"
+	ReversalProduction = "reversal-production"
+)
+
+var (
+	ReferenceTypeMap = map[string]string{
+		Production: ReversalProduction,
+	}
 )

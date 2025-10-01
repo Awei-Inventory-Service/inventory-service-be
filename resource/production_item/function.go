@@ -39,3 +39,22 @@ func (p *productionItemResource) Get(ctx context.Context, filter model.Productio
 
 	return productionItems, nil
 }
+
+func (p *productionItemResource) Delete(ctx context.Context, filter model.ProductionItem) *error_wrapper.ErrorWrapper {
+	query := p.db.WithContext(ctx).Model(&model.ProductionItem{})
+
+	if filter.UUID != "" {
+		query = query.Where("uuid = ?", filter.UUID)
+	}
+
+	if filter.ProductionID != "" {
+		query = query.Where("production_id = ?", filter.ProductionID)
+	}
+
+	result := query.Delete(&model.ProductionItem{})
+	if result.Error != nil {
+		return error_wrapper.New(model.RErrPostgresDeleteDocument, result.Error.Error())
+	}
+
+	return nil
+}
