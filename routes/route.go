@@ -19,7 +19,6 @@ import (
 	sales_controller "github.com/inventory-service/handler/sales"
 	stock_controller "github.com/inventory-service/handler/stock"
 	supplier_controller "github.com/inventory-service/handler/supplier"
-	upload_controller "github.com/inventory-service/handler/upload"
 	routes "github.com/inventory-service/routes/middleware"
 
 	branch_resource "github.com/inventory-service/resource/branch"
@@ -70,7 +69,6 @@ import (
 	stock_service "github.com/inventory-service/usecase/stock"
 
 	supplier_service "github.com/inventory-service/usecase/supplier"
-	upload_service "github.com/inventory-service/usecase/upload"
 	"gorm.io/gorm"
 )
 
@@ -116,11 +114,13 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	branchDomain := branch_domain.NewBranchDomain(branchResource)
 	purchaseDomain := purchase_domain.NewPurchaseDomain(purchaseResource, inventoryResource, stockTransactionResource, itemResource)
 	inventoryStockCountDomain := inventory_stock_count_domain.NewInventoryStockCountDomain(inventoryStockCountResource)
-	productDomain := product_domain.NewProductDomain(productResource, itemResource, productCompositionResource, inventoryResource)
 	invoiceDomain := invoice_domain.NewInvoiceDomain(invoiceResource)
 	stockTransactionDomain := stock_transaction_domain.NewStockTransactionDomain(stockTransactionResource)
 	salesDomain := sales_domain.NewSalesDomain(salesResource, productResource, branchProductResource)
 	inventoryDomain := inventory_domain.NewBranchItemDomain(inventoryResource, stockTransactionResource, itemResource, purchaseResource)
+	// Tech debt : domain manggil domain, gaboleh
+	productDomain := product_domain.NewProductDomain(productResource, itemResource, productCompositionResource, inventoryResource, inventoryDomain)
+
 	productCompositionDomain := product_recipe_domain.NewProductCompositionDomain(productCompositionResource)
 	branchProductDomain := branch_product_domain.NewBranchProductDomain(branchProductResource)
 	productionDomain := production_domain.NewProductionDomain(productionResource, productionItemResource)
@@ -136,7 +136,6 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	invoiceService := invoice_service.NewInvoiceService(invoiceDomain)
 	stockService := stock_service.NewStockService(stockTransactionDomain)
 	salesUsecase := sales_service.NewSalesUsecase(salesDomain, productDomain, branchProductDomain, stockTransactionDomain, inventoryDomain)
-	uploadService := upload_service.NewUploadService(salesResource, productResource, salesUsecase)
 	inventoryUsecase := inventory_usecase.NewInventoryUsecase(inventoryDomain, itemDomain, stockTransactionDomain)
 	productionUsecase := production_usecase.NewProductionUsecase(productionDomain, stockTransactionDomain, inventoryDomain)
 
@@ -153,7 +152,6 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 	inventoryStockCountController := inventory_stock_count_controller.NewInventoryStockCountController(inventoryStockCountService)
 	stockController := stock_controller.NewStockController(stockService)
-	uploadController := upload_controller.NewUploadController(uploadService)
 	productionController := production_controller.NewProductionHandler(productionUsecase)
 
 	router.GET("/healthcheck", func(c *gin.Context) {
@@ -219,6 +217,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 			productRoutes.GET("/:id", productController.FindByID)
 			productRoutes.PUT("/:id", productController.Update)
 			productRoutes.DELETE("/:id", productController.Delete)
+			productRoutes.POST("/cogs", productionController.Create)
 		}
 
 		inventoryStockCountRoutes := apiV1.Group("/inventory-stock-count")
@@ -258,11 +257,6 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 			salesRoutes.GET("/", salesController.FindAll)
 			salesRoutes.GET("/grouped-by-date", salesController.FindGroupedByDate)
 			salesRoutes.GET("/grouped-by-date-and-branch", salesController.FindGroupedByDateAndBranch)
-		}
-
-		uploadRoutes := apiV1.Group("/upload")
-		{
-			uploadRoutes.POST("/transaction", uploadController.UploadTransaction)
 		}
 
 		branchItemRoutes := apiV1.Group("/inventory")

@@ -8,6 +8,7 @@ import (
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
+	"github.com/inventory-service/utils"
 )
 
 func (p *productDomain) Create(ctx context.Context, payload model.Product) (*model.Product, *error_wrapper.ErrorWrapper) {
@@ -31,7 +32,7 @@ func (p *productDomain) FindAll(ctx context.Context) ([]dto.GetProductResponse, 
 		product.Category = rawProduct.Category
 		product.SellingPrice = rawProduct.SellingPrice
 
-		for _, ingredient := range rawProduct.ProductComposition {
+		for _, ingredient := range rawProduct.ProductRecipe {
 			item, errW := p.itemResource.FindByID(ingredient.ItemID)
 
 			if errW != nil {
@@ -39,9 +40,10 @@ func (p *productDomain) FindAll(ctx context.Context) ([]dto.GetProductResponse, 
 			}
 
 			product.Ingredients = append(product.Ingredients, dto.GetIngredient{
-				ItemID:   ingredient.ItemID,
-				ItemName: item.Name,
-				ItemUnit: item.Unit,
+				ItemID:      ingredient.ItemID,
+				ItemName:    item.Name,
+				ItemUnit:    ingredient.Unit,
+				ItemPortion: ingredient.Amount,
 			})
 
 		}
@@ -107,13 +109,22 @@ func (p *productDomain) CalculateProductCost(ctx context.Context, productComposi
 	)
 
 	for _, productComposition := range productCompositions {
-		_, errW := p.inventoryResource.FindByBranchAndItem(branchID, productComposition.ItemID)
+		errW := p.inventoryDomain.SyncBranchItem(ctx, branchID, productComposition.ItemID)
+
+		if errW != nil {
+			return 0.0, errW
+		}
+
+		inventory, errW := p.inventoryResource.FindByBranchAndItem(branchID, productComposition.ItemID)
 		if errW != nil {
 			fmt.Printf("Error finding branch item with branch_idx: %s and item_id: %s ", branchID, productComposition.ItemID)
 			return price, errW
 		}
-		fmt.Println("INI RPODUCT COMPOSITION", productComposition)
-		// price += branchItem.Price * productComposition.Ratio
+		fmt.Println("Product composition amount", productComposition.Amount, productComposition.Unit, inventory.Item.Unit)
+
+		productCompositionAmount := utils.StandarizeMeasurement(productComposition.Amount, productComposition.Unit, inventory.Item.Unit)
+		fmt.Println("Product composition amount", productCompositionAmount, inventory.Value)
+		price += (inventory.Value * productCompositionAmount)
 	}
 
 	return price, nil

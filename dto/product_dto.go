@@ -57,6 +57,11 @@ type GetProductResponse struct {
 	Ingredients  []GetIngredient `json:"ingredients"`
 }
 
+type GetProductCOGSResponse struct {
+	GetProductResponse
+	COGS float64 `json:"cogs"`
+}
+
 func (c CreateProductRequest) MapProductCategory() model.ProductType {
 	switch c.ProductType {
 	case "consignment":

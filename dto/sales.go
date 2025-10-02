@@ -1,11 +1,15 @@
 package dto
 
+type CreateSalesData struct {
+	ProductID string  `json:"product_id" binding:"required"`
+	Quantity  float64 `json:"quantity" binding:"required"`
+	Type      string  `json:"type" binding:"required"`
+}
+
 type CreateSalesRequest struct {
-	BranchID        string    `json:"branch_id" binding:"required"`
-	ProductID       string    `json:"product_id" binding:"required"`
-	Quantity        float64   `json:"quantity" binding:"required"`
-	Type            string    `json:"type" binding:"required"`
-	TransactionDate string    `json:"transaction_date"`
+	BranchID        string            `json:"branch_id" binding:"required"`
+	SalesData       []CreateSalesData `json:"sales_data" binding:"required"`
+	TransactionDate string            `json:"transaction_date"`
 }
 
 type GetSalesResponse struct {
@@ -17,11 +21,11 @@ type GetSalesResponse struct {
 }
 
 type SalesGroupedByDateResponse struct {
-	TransactionDate string                 `json:"transaction_date"`
-	TotalSales      int                    `json:"total_sales"`
-	TotalRevenue    float64                `json:"total_revenue"`
-	TotalProfit     float64                `json:"total_profit"`
-	Sales           []GetSalesResponse     `json:"sales"`
+	TransactionDate string             `json:"transaction_date"`
+	TotalSales      int                `json:"total_sales"`
+	TotalRevenue    float64            `json:"total_revenue"`
+	TotalProfit     float64            `json:"total_profit"`
+	Sales           []GetSalesResponse `json:"sales"`
 }
 
 type BranchSalesData struct {

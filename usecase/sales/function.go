@@ -2,6 +2,7 @@ package sales
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/inventory-service/dto"
@@ -11,97 +12,98 @@ import (
 
 func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesRequest, userID string) *error_wrapper.ErrorWrapper {
 	var (
-		sales         model.Sales
-		branchProduct *model.BranchProduct
+		branchProduct   *model.BranchProduct
+		transactionDate time.Time
 	)
-
-	product, errW := s.productDomain.FindByID(ctx, payload.ProductID)
-
-	if errW != nil {
-		return errW
-	}
-
-	productCost, errW := s.productDomain.CalculateProductCost(ctx, product.ProductComposition, payload.BranchID)
-
-	if errW != nil {
-		return errW
-	}
-
-	sales.Cost = productCost
-
-	branchProduct, errW = s.branchProductDomain.GetByBranchIdAndProductId(ctx, payload.BranchID, payload.ProductID)
-
-	if errW != nil {
-		if errW.Is(model.RErrDataNotFound) {
-			// If not found, create 1
-			errW = nil
-
-			branchProduct, errW = s.branchProductDomain.Create(ctx, dto.CreateBranchProductRequest{
-				BranchID:     payload.BranchID,
-				ProductID:    payload.ProductID,
-				SellingPrice: product.SellingPrice,
-			})
-
-			if errW != nil {
-				return errW
-			}
-		} else {
-			return errW
-		}
-
-	}
-
-	sales.BranchProductID = branchProduct.UUID
-	sales.Quantity = payload.Quantity
-	sales.Type = payload.Type
-	if branchProduct.SellingPrice != nil {
-		sales.Price = *branchProduct.SellingPrice
-	} else {
-		sales.Price = 0.0
-	}
-
-	// Set transaction date from request, or use current time if not provided
 	if payload.TransactionDate != "" {
 		parsedDate, err := time.Parse("2006-01-02", payload.TransactionDate)
 		if err != nil {
 			return error_wrapper.New(model.CErrJsonBind, "Invalid date format. Expected YYYY-MM-DD")
 		}
-		sales.TransactionDate = parsedDate
+		transactionDate = parsedDate
 	} else {
-		sales.TransactionDate = time.Now()
+		transactionDate = time.Now()
 	}
 
-	_, errW = s.salesDomain.Create(ctx, sales)
+	for _, sales := range payload.SalesData {
+		var (
+			salesData model.Sales
+		)
 
-	if errW != nil {
-		return errW
-	}
-
-	for _, itemComposition := range product.ProductComposition {
-		total := itemComposition.Amount * payload.Quantity
-		referenceType := "SALES_CREATION"
-		errW = s.stockTransactionDomain.Create(model.StockTransaction{
-			BranchOriginID:      payload.BranchID,
-			BranchDestinationID: payload.BranchID,
-			ItemID:              itemComposition.ItemID,
-			Type:                "OUT",
-			IssuerID:            userID,
-			Quantity:            total,
-			Cost:                sales.Cost,
-			Unit:                itemComposition.Item.Unit,
-			Reference:           "", // Will be updated with sales ID after creation
-			ReferenceType:       &referenceType,
-		})
-
-		if errW != nil {
-			return errW
-		}
-		errW = s.branchItemDomain.SyncBranchItem(ctx, payload.BranchID, itemComposition.ItemID)
-
+		product, errW := s.productDomain.FindByID(ctx, sales.ProductID)
 		if errW != nil {
 			return errW
 		}
 
+		productCost, errW := s.productDomain.CalculateProductCost(ctx, product.ProductRecipe, payload.BranchID)
+		if errW != nil {
+			return errW
+		}
+		fmt.Printf("Product cost : %f, sales data quantity: %f", productCost, salesData.Quantity)
+		salesData.Cost = productCost * sales.Quantity
+
+		branchProduct, errW = s.branchProductDomain.GetByBranchIdAndProductId(ctx, payload.BranchID, sales.ProductID)
+
+		if errW != nil {
+			if errW.Is(model.RErrDataNotFound) {
+				// If not found, create 1
+				errW = nil
+
+				branchProduct, errW = s.branchProductDomain.Create(ctx, dto.CreateBranchProductRequest{
+					BranchID:     payload.BranchID,
+					ProductID:    sales.ProductID,
+					SellingPrice: product.SellingPrice,
+				})
+
+				if errW != nil {
+					return errW
+				}
+			} else {
+				return errW
+			}
+
+		}
+		salesData.BranchProductID = branchProduct.UUID
+		salesData.Quantity = sales.Quantity
+		salesData.Type = sales.Type
+		salesData.TransactionDate = transactionDate
+		if branchProduct.SellingPrice != nil {
+			salesData.Price = *branchProduct.SellingPrice
+		} else {
+			salesData.Price = 0.0
+		}
+
+		newSales, errW := s.salesDomain.Create(ctx, salesData)
+
+		if errW != nil {
+			return errW
+		}
+		for _, itemComposition := range product.ProductRecipe {
+			total := itemComposition.Amount * sales.Quantity
+			referenceType := "SALES_CREATION"
+			errW = s.stockTransactionDomain.Create(model.StockTransaction{
+				BranchOriginID:      payload.BranchID,
+				BranchDestinationID: payload.BranchID,
+				ItemID:              itemComposition.ItemID,
+				Type:                "OUT",
+				IssuerID:            userID,
+				Quantity:            total,
+				Cost:                salesData.Cost,
+				Unit:                itemComposition.Unit,
+				Reference:           newSales.UUID, // Will be updated with sales ID after creation
+				ReferenceType:       &referenceType,
+			})
+
+			if errW != nil {
+				return errW
+			}
+			errW = s.branchItemDomain.SyncBranchItem(ctx, payload.BranchID, itemComposition.ItemID)
+
+			if errW != nil {
+				return errW
+			}
+
+		}
 	}
 
 	return nil
@@ -125,7 +127,7 @@ func (s *salesService) Delete(ctx context.Context, salesID string, userID string
 		return errW
 	}
 
-	for _, itemComposition := range product.ProductComposition {
+	for _, itemComposition := range product.ProductRecipe {
 		total := itemComposition.Amount * salesData.Quantity
 		referenceType := "SALES_DELETION"
 		errW = s.stockTransactionDomain.Create(model.StockTransaction{

@@ -52,7 +52,7 @@ func (i *inventoryResource) FindByItem(itemID string) ([]model.Inventory, *error
 func (i *inventoryResource) FindByBranchAndItem(branchID, itemID string) (*model.Inventory, *error_wrapper.ErrorWrapper) {
 	var inventory model.Inventory
 
-	result := i.db.Where("branch_id = ? AND item_id = ?", branchID, itemID).First(&inventory)
+	result := i.db.Preload("Item").Where("branch_id = ? AND item_id = ?", branchID, itemID).First(&inventory)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, error_wrapper.New(model.RErrDataNotFound, "Stock balance record not found")

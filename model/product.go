@@ -20,7 +20,7 @@ type Product struct {
 	CreatedAt    time.Time   `json:"created_at"`
 	UpdatedAt    time.Time   `json:"updated_at"`
 
-	ProductComposition []ProductRecipe `gorm:"foreignKey:ProductID" json:"product_recipe,omitempty"`
+	ProductRecipe []ProductRecipe `gorm:"foreignKey:ProductID" json:"product_recipe,omitempty"`
 }
 
 type ProductRecipe struct {

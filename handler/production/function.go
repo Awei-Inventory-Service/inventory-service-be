@@ -53,5 +53,8 @@ func (p *productionHandler) GetProductionList(ctx *gin.Context) {
 	}
 
 	productionsResponse, errW = p.productionUsecase.Get(ctx, filter)
+}
+
+func (p *productionHandler) GetProductCOGS(ctx *gin.Context) {
 
 }

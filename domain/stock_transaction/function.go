@@ -25,8 +25,8 @@ func (s *stockTransactionDomain) Delete(id string) *error_wrapper.ErrorWrapper {
 	return s.stockTransactionResource.Delete(id)
 }
 
-func (s *stockTransactionDomain) FindWithFilter(filters []map[string]interface{}) ([]model.StockTransaction, *error_wrapper.ErrorWrapper) {
-	return s.stockTransactionResource.FindWithFilter(filters)
+func (s *stockTransactionDomain) FindWithFilter(filters []map[string]interface{}, sort string) ([]model.StockTransaction, *error_wrapper.ErrorWrapper) {
+	return s.stockTransactionResource.FindWithFilter(filters, sort)
 }
 
 func (s *stockTransactionDomain) CreateReversalStockTransaction(stockTransaction model.StockTransaction) model.StockTransaction {

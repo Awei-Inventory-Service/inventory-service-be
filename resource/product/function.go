@@ -22,8 +22,8 @@ func (p *productResource) FindAll(ctx context.Context) ([]model.Product, *error_
 	var products []model.Product
 
 	result := p.db.WithContext(ctx).
-		Preload("ProductComposition").
-		Preload("ProductComposition.Item").
+		Preload("ProductRecipe").
+		Preload("ProductRecipe.Item").
 		Find(&products)
 
 	if result.Error != nil {
@@ -36,7 +36,7 @@ func (p *productResource) FindAll(ctx context.Context) ([]model.Product, *error_
 func (p *productResource) FindByID(ctx context.Context, productID string) (*model.Product, *error_wrapper.ErrorWrapper) {
 	var product model.Product
 
-	result := p.db.Where("uuid = ?", productID).Preload("ProductComposition").Preload("ProductComposition.Item").First(&product)
+	result := p.db.Where("uuid = ?", productID).Preload("ProductRecipe").Preload("ProductRecipe.Item").First(&product)
 
 	if result.Error != nil {
 		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())

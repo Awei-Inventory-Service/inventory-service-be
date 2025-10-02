@@ -199,9 +199,9 @@ func (b *inventoryDomain) calculateCurrentBalance(ctx context.Context, branchID,
 		if transaction.ItemID != itemID {
 			continue
 		}
-
+		fmt.Println("INi transaction", transaction.Unit, item.Unit, transaction.Quantity)
 		balance := utils.StandarizeMeasurement(float64(transaction.Quantity), transaction.Unit, item.Unit)
-
+		fmt.Println("Ini balance dan transaction type", balance, transaction.Type, branchID, transaction.BranchOriginID)
 		if transaction.Type == "IN" && transaction.BranchDestinationID == branchID {
 			totalBalance += balance
 		} else if transaction.Type == "OUT" && transaction.BranchOriginID == branchID {
@@ -217,28 +217,52 @@ func (b *inventoryDomain) calculatePrice(ctx context.Context, branchID, itemID s
 	limit := 10
 	offset := 0
 
-	purchaseStock := 0.0
+	transactionStock := 0.0
 	var (
-		allPurchases []model.Purchase
+		allStockTransactions []model.StockTransaction
 	)
 
-	for purchaseStock < currentBalance {
-		purchases, errW := b.purchaseResource.FindByBranchAndItem(branchID, itemID, offset, limit)
+	for transactionStock < currentBalance {
+		stockTransactions, errW := b.stockTransactionResource.FindWithFilter([]map[string]interface{}{
+			{
+				"field": "item_id",
+				"value": itemID,
+			},
+		}, "created_at DESC")
+
+		if len(stockTransactions) == 0 {
+			break
+		}
+
 		if errW != nil {
 			return 0.0, errW
 		}
 
-		if len(purchases) == 0 {
-			break
-		}
+		// purchases, errW := b.purchaseResource.FindByBranchAndItem(branchID, itemID, offset, limit)
+		// if errW != nil {
+		// 	return 0.0, errW
+		// }
 
-		for _, purchase := range purchases {
-			allPurchases = append(allPurchases, purchase)
-			// Standarize measurement
-			purchaseQuantity := utils.StandarizeMeasurement(purchase.Quantity, purchase.Unit, purchase.Item.Unit)
-			purchaseStock += purchaseQuantity
-			fmt.Printf("Current stock: %f. Current balance: %f\n", purchaseStock, currentBalance)
-			if purchaseStock >= currentBalance {
+		// if len(purchases) == 0 {
+		// 	break
+		// }
+
+		// for _, purchase := range purchases {
+		// 	allPurchases = append(allPurchases, purchase)
+		// 	// Standarize measurement
+		// 	purchaseQuantity := utils.StandarizeMeasurement(purchase.Quantity, purchase.Unit, purchase.Item.Unit)
+		// 	purchaseStock += purchaseQuantity
+		// 	fmt.Printf("Current stock: %f. Current balance: %f\n", purchaseStock, currentBalance)
+		// 	if purchaseStock >= currentBalance {
+		// 		break
+		// 	}
+		// }
+		for _, transaction := range stockTransactions {
+			allStockTransactions = append(allStockTransactions, transaction)
+			transactionQuantity := utils.StandarizeMeasurement(transaction.Quantity, transaction.Unit, transaction.Item.Unit)
+			transactionStock += transactionQuantity
+
+			if transactionStock >= currentBalance {
 				break
 			}
 		}
@@ -246,17 +270,17 @@ func (b *inventoryDomain) calculatePrice(ctx context.Context, branchID, itemID s
 		offset += limit
 	}
 
-	if len(allPurchases) == 0 {
+	if len(allStockTransactions) == 0 {
 		return 0.0, nil
 	}
 
 	totalPrice := 0.0
 	totalItem := 0.0
 
-	for _, purchase := range allPurchases {
-		balance := utils.StandarizeMeasurement(float64(purchase.Quantity), purchase.Unit, purchase.Item.Unit)
+	for _, transaction := range allStockTransactions {
+		balance := utils.StandarizeMeasurement(float64(transaction.Quantity), transaction.Unit, transaction.Item.Unit)
 		totalItem += balance
-		totalPrice += purchase.PurchaseCost
+		totalPrice += transaction.Cost
 	}
 
 	// Prevent division by zero which causes NaN

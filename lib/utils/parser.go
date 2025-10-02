@@ -13,7 +13,7 @@ func ParseItemCategory(category string) (model.ItemCategory, *error_wrapper.Erro
 		return model.ItemCategoryRaw, nil
 	case "half-processed":
 		return model.ItemCategoryHalfProcessed, nil
-	case "processed":
+	case "finished":
 		return model.ItemCategoryProcessed, nil
 	case "other":
 		return model.ItemCategoryOther, nil

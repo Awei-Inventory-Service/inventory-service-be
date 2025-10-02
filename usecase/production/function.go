@@ -14,6 +14,7 @@ import (
 func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProductionRequest) (*model.Production, *error_wrapper.ErrorWrapper) {
 	var (
 		updatedBranchItems []string
+		totalCostMovement  = 0.0
 	)
 	for _, sourceItem := range payload.SourceItems {
 		initialInventory, errW := p.inventoryDomain.FindByBranchAndItem(payload.BranchID, sourceItem.SourceItemID)
@@ -38,11 +39,12 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 	referenceType := constant.Production
 
 	for _, productionItem := range payload.SourceItems {
-		// inventory, errW := p.inventoryDomain.FindByBranchAndItem(payload.BranchID, productionItem.SourceItemID)
+		inventory, errW := p.inventoryDomain.FindByBranchAndItem(payload.BranchID, productionItem.SourceItemID)
 
-		// if errW != nil {
-		// 	return nil, errW
-		// }
+		if errW != nil {
+			return nil, errW
+		}
+		cost := inventory.Value * productionItem.InitialQuantity
 
 		errW = p.stockTransactionDomain.Create(model.StockTransaction{
 			BranchOriginID:      payload.BranchID,
@@ -54,7 +56,10 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 			IssuerID:            payload.UserID,
 			Reference:           production.UUID,
 			ReferenceType:       &referenceType,
+			Cost:                cost,
 		})
+
+		totalCostMovement += cost
 		updatedBranchItems = append(updatedBranchItems, productionItem.SourceItemID)
 		if errW != nil {
 			return nil, errW
@@ -71,7 +76,7 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 		Unit:                payload.FinalUnit,
 		Reference:           production.UUID,
 		ReferenceType:       &referenceType,
-		Cost:                0.0,
+		Cost:                totalCostMovement,
 	})
 
 	if errW != nil {
@@ -107,7 +112,7 @@ func (p *productionUsecase) Delete(ctx context.Context, payload dto.DeleteProduc
 			"field": "reference",
 			"value": payload.ProductionID,
 		},
-	})
+	}, "")
 
 	if errW != nil {
 		return errW

@@ -52,7 +52,7 @@ func (s *stockTransactionResource) Delete(id string) *error_wrapper.ErrorWrapper
 	return nil
 }
 
-func (s *stockTransactionResource) FindWithFilter(filters []map[string]interface{}) ([]model.StockTransaction, *error_wrapper.ErrorWrapper) {
+func (s *stockTransactionResource) FindWithFilter(filters []map[string]interface{}, sort string) ([]model.StockTransaction, *error_wrapper.ErrorWrapper) {
 	var transactions []model.StockTransaction
 	query := s.db
 
@@ -64,7 +64,11 @@ func (s *stockTransactionResource) FindWithFilter(filters []map[string]interface
 		}
 	}
 
-	result := query.Find(&transactions)
+	if sort != "" {
+		query = query.Order(sort)
+	}
+
+	result := query.Preload("Item").Find(&transactions)
 	if result.Error != nil {
 		return nil, error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())
 	}

@@ -3,10 +3,12 @@ package product
 import (
 	"context"
 
+	inventorydomain "github.com/inventory-service/domain/inventory"
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 	inventory "github.com/inventory-service/resource/inventory"
+
 	"github.com/inventory-service/resource/item"
 	"github.com/inventory-service/resource/product"
 	productrecipe "github.com/inventory-service/resource/product_recipe"
@@ -22,6 +24,7 @@ type ProductDomain interface {
 }
 
 type productDomain struct {
+	inventoryDomain       inventorydomain.InventoryDomain
 	productResource       product.ProductResource
 	itemResource          item.ItemResource
 	productRecipeResource productrecipe.ProductRecipeResource

@@ -12,7 +12,7 @@ type StockTransactionDomain interface {
 	FindByID(id string) (*model.StockTransaction, *error_wrapper.ErrorWrapper)
 	Update(id string, transaction model.StockTransaction) *error_wrapper.ErrorWrapper
 	Delete(id string) *error_wrapper.ErrorWrapper
-	FindWithFilter(filters []map[string]interface{}) ([]model.StockTransaction, *error_wrapper.ErrorWrapper)
+	FindWithFilter(filters []map[string]interface{}, sort string) ([]model.StockTransaction, *error_wrapper.ErrorWrapper)
 }
 
 type stockTransactionDomain struct {
