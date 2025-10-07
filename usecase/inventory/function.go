@@ -39,7 +39,7 @@ func (i *inventoryUsecase) Create(ctx context.Context, payload dto.CreateInvento
 			return errW
 		}
 
-		errW = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, itemComposition.ChildItemID)
+		_, _, errW = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, itemComposition.ChildItemID)
 
 		if errW != nil {
 			return errW
@@ -64,7 +64,7 @@ func (i *inventoryUsecase) Create(ctx context.Context, payload dto.CreateInvento
 		return errW
 	}
 
-	errW = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, payload.ItemID)
+	_, _, errW = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, payload.ItemID)
 
 	if errW != nil {
 		return errW
@@ -85,6 +85,6 @@ func (i *inventoryUsecase) FindAll() ([]dto.GetInventoryResponse, *error_wrapper
 	return i.inventoryDomain.FindAll()
 }
 
-func (i *inventoryUsecase) SyncBranchItem(ctx context.Context, payload dto.SyncBalanceRequest) (errW *error_wrapper.ErrorWrapper) {
+func (i *inventoryUsecase) SyncBranchItem(ctx context.Context, payload dto.SyncBalanceRequest) (currentStock, currentPrice float64, errW *error_wrapper.ErrorWrapper) {
 	return i.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, payload.ItemID)
 }

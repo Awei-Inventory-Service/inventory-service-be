@@ -97,7 +97,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 			if errW != nil {
 				return errW
 			}
-			errW = s.branchItemDomain.SyncBranchItem(ctx, payload.BranchID, itemComposition.ItemID)
+			_, _, errW = s.branchItemDomain.SyncBranchItem(ctx, payload.BranchID, itemComposition.ItemID)
 
 			if errW != nil {
 				return errW

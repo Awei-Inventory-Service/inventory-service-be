@@ -51,6 +51,7 @@ func (i *itemDomain) Update(ctx context.Context, payload dto.UpdateItemRequest, 
 		UUID:       itemID,
 		Name:       payload.Name,
 		Category:   itemCategory,
+		Unit:       payload.Unit,
 		SupplierID: &payload.SupplierID,
 	}
 

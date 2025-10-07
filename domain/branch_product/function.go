@@ -31,3 +31,12 @@ func (b *branchProductDomain) Create(ctx context.Context, payload dto.CreateBran
 func (b *branchProductDomain) GetByBranchIdAndProductId(ctx context.Context, branchID, productID string) (*model.BranchProduct, *error_wrapper.ErrorWrapper) {
 	return b.branchProductResource.GetByBranchIdAndProductId(ctx, branchID, productID)
 }
+
+func (b *branchProductDomain) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (branchProducts []model.BranchProduct, errW *error_wrapper.ErrorWrapper) {
+	branchProducts, errW = b.branchProductResource.Get(ctx, filter, order, limit, offset)
+
+	if errW != nil {
+		return nil, errW
+	}
+	return
+}

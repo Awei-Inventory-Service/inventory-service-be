@@ -143,12 +143,12 @@ func (i *inventoryDomain) CalculatePrice(ctx context.Context, branchID, itemID s
 	return avgPrice, nil
 }
 
-func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID string) *error_wrapper.ErrorWrapper {
+func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID string) (currentStock, currentPrice float64, errW *error_wrapper.ErrorWrapper) {
 	var (
 		branchItem *model.Inventory
 	)
 
-	branchItem, errW := i.inventoryResource.FindByBranchAndItem(branchID, itemID)
+	branchItem, errW = i.inventoryResource.FindByBranchAndItem(branchID, itemID)
 
 	if errW != nil && errW.Is(model.RErrDataNotFound) {
 		errW = nil
@@ -158,18 +158,18 @@ func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID s
 		})
 		fmt.Println("Done creating new branch item", branchItem)
 		if errW != nil {
-			return errW
+			return
 		}
 	}
 	// Update existing branch item
 	currentBalance, errW := i.calculateCurrentBalance(ctx, branchID, itemID)
 	if errW != nil {
-		return errW
+		return
 	}
 	fmt.Println("Current balance", currentBalance)
-	currentPrice, errW := i.calculatePrice(ctx, branchID, itemID, currentBalance)
+	currentPrice, errW = i.calculatePrice(ctx, branchID, itemID, currentBalance)
 	if errW != nil {
-		return errW
+		return
 	}
 	fmt.Println("Current price", currentPrice)
 	_, errW = i.inventoryResource.Update(ctx, model.Inventory{
@@ -180,7 +180,7 @@ func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID s
 		Value:    currentPrice,
 	})
 
-	return errW
+	return
 }
 
 func (b *inventoryDomain) calculateCurrentBalance(ctx context.Context, branchID, itemID string) (float64, *error_wrapper.ErrorWrapper) {
@@ -238,25 +238,6 @@ func (b *inventoryDomain) calculatePrice(ctx context.Context, branchID, itemID s
 			return 0.0, errW
 		}
 
-		// purchases, errW := b.purchaseResource.FindByBranchAndItem(branchID, itemID, offset, limit)
-		// if errW != nil {
-		// 	return 0.0, errW
-		// }
-
-		// if len(purchases) == 0 {
-		// 	break
-		// }
-
-		// for _, purchase := range purchases {
-		// 	allPurchases = append(allPurchases, purchase)
-		// 	// Standarize measurement
-		// 	purchaseQuantity := utils.StandarizeMeasurement(purchase.Quantity, purchase.Unit, purchase.Item.Unit)
-		// 	purchaseStock += purchaseQuantity
-		// 	fmt.Printf("Current stock: %f. Current balance: %f\n", purchaseStock, currentBalance)
-		// 	if purchaseStock >= currentBalance {
-		// 		break
-		// 	}
-		// }
 		for _, transaction := range stockTransactions {
 			allStockTransactions = append(allStockTransactions, transaction)
 			transactionQuantity := utils.StandarizeMeasurement(transaction.Quantity, transaction.Unit, transaction.Item.Unit)
@@ -295,7 +276,7 @@ func (b *inventoryDomain) calculatePrice(ctx context.Context, branchID, itemID s
 
 func (i *inventoryDomain) BulkSyncBranchItems(ctx context.Context, branchID string, itemIDs []string) *error_wrapper.ErrorWrapper {
 	for _, itemId := range itemIDs {
-		errW := i.SyncBranchItem(ctx, branchID, itemId)
+		_, _, errW := i.SyncBranchItem(ctx, branchID, itemId)
 
 		if errW != nil {
 			return errW

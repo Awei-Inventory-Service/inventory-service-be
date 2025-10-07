@@ -16,7 +16,7 @@ type InventoryUsecase interface {
 	FindByBranchIdAndItemId(payload dto.GetStockBalanceRequest) (*model.Inventory, *error_wrapper.ErrorWrapper)
 	FindByBranchId(branchId string) ([]model.Inventory, *error_wrapper.ErrorWrapper)
 	FindAll() ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper)
-	SyncBranchItem(ctx context.Context, payload dto.SyncBalanceRequest) (errW *error_wrapper.ErrorWrapper)
+	SyncBranchItem(ctx context.Context, payload dto.SyncBalanceRequest) (currentStock, currentPrice float64, errW *error_wrapper.ErrorWrapper)
 }
 
 type inventoryUsecase struct {

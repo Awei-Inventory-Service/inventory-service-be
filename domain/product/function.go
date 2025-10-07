@@ -80,7 +80,7 @@ func (p *productDomain) Update(ctx context.Context, payload dto.UpdateProductReq
 		return errW
 	}
 
-	for _, productComposition := range payload.ProductCompositions {
+	for _, productComposition := range payload.ProductRecipes {
 		errW = p.productRecipeResource.Create(ctx, model.ProductRecipe{
 			ProductID: updatedProduct.UUID,
 			Amount:    productComposition.Amount,
@@ -109,7 +109,7 @@ func (p *productDomain) CalculateProductCost(ctx context.Context, productComposi
 	)
 
 	for _, productComposition := range productCompositions {
-		errW := p.inventoryDomain.SyncBranchItem(ctx, branchID, productComposition.ItemID)
+		_, _, errW := p.inventoryDomain.SyncBranchItem(ctx, branchID, productComposition.ItemID)
 
 		if errW != nil {
 			return 0.0, errW

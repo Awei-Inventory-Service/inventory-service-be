@@ -22,7 +22,7 @@ type InventoryDomain interface {
 	Delete(branchID, itemID string) *error_wrapper.ErrorWrapper
 	SyncCurrentBalance(ctx context.Context, branchID, itemID string) (float64, *error_wrapper.ErrorWrapper)
 	CalculatePrice(ctx context.Context, branchID, itemID string, currentBalance float64) (float64, *error_wrapper.ErrorWrapper)
-	SyncBranchItem(ctx context.Context, branchID, itemID string) *error_wrapper.ErrorWrapper
+	SyncBranchItem(ctx context.Context, branchID, itemID string) (currentStock, currentPrice float64, errW *error_wrapper.ErrorWrapper)
 	BulkSyncBranchItems(ctx context.Context, branchID string, itemIDs []string) *error_wrapper.ErrorWrapper
 }
 

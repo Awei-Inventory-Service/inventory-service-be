@@ -16,6 +16,8 @@ import (
 	production_controller "github.com/inventory-service/handler/production"
 	purchase_controller "github.com/inventory-service/handler/purchase"
 
+	branch_product_controller "github.com/inventory-service/handler/branch_product"
+
 	sales_controller "github.com/inventory-service/handler/sales"
 	stock_controller "github.com/inventory-service/handler/stock"
 	supplier_controller "github.com/inventory-service/handler/supplier"
@@ -58,6 +60,7 @@ import (
 
 	auth_service "github.com/inventory-service/usecase/auth"
 	branch_service "github.com/inventory-service/usecase/branch"
+	branch_product "github.com/inventory-service/usecase/branch-product"
 	inventory_usecase "github.com/inventory-service/usecase/inventory"
 	inventory_stock_count_service "github.com/inventory-service/usecase/inventory_stock_count"
 	invoice_service "github.com/inventory-service/usecase/invoice"
@@ -138,6 +141,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	salesUsecase := sales_service.NewSalesUsecase(salesDomain, productDomain, branchProductDomain, stockTransactionDomain, inventoryDomain)
 	inventoryUsecase := inventory_usecase.NewInventoryUsecase(inventoryDomain, itemDomain, stockTransactionDomain)
 	productionUsecase := production_usecase.NewProductionUsecase(productionDomain, stockTransactionDomain, inventoryDomain)
+	branchProductUsecase := branch_product.NewBranchProductUsecase(branchProductDomain, inventoryDomain, productDomain)
 
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)
@@ -153,6 +157,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	inventoryStockCountController := inventory_stock_count_controller.NewInventoryStockCountController(inventoryStockCountService)
 	stockController := stock_controller.NewStockController(stockService)
 	productionController := production_controller.NewProductionHandler(productionUsecase)
+	branchProductController := branch_product_controller.NewBranchProductHanlder(branchProductUsecase)
 
 	router.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -270,6 +275,11 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		{
 			productionRoutes.POST("/create", productionController.Create)
 			productionRoutes.POST("/", productionController.GetProductionList)
+		}
+
+		branchProductRoutes := apiV1.Group("/branch-product")
+		{
+			branchProductRoutes.POST("/", branchProductController.GetBranchProductList)
 		}
 	}
 

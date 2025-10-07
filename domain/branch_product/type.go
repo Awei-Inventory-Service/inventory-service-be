@@ -12,6 +12,7 @@ import (
 type BranchProductDomain interface {
 	Create(ctx context.Context, payload dto.CreateBranchProductRequest) (*model.BranchProduct, *error_wrapper.ErrorWrapper)
 	GetByBranchIdAndProductId(ctx context.Context, branchID, productID string) (*model.BranchProduct, *error_wrapper.ErrorWrapper)
+	Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]model.BranchProduct, *error_wrapper.ErrorWrapper)
 }
 
 type branchProductDomain struct {

@@ -14,12 +14,14 @@ type CreateProductRequest struct {
 }
 
 type UpdateProductRequest struct {
-	Name                string                     `json:"name" binding:"required"`
-	Code                string                     `json:"code" binding:"required"`
-	Category            string                     `json:"category" binding:"required"`
-	Unit                string                     `json:"unit" binding:"required"`
-	SellingPrice        float64                    `json:"selling_price" binding:"required"`
-	ProductCompositions []UpdateProductComposition `json:"product_compositions" binding:"required"`
+	Name           string                `json:"name" binding:"required"`
+	Code           string                `json:"code" binding:"required"`
+	Category       string                `json:"category" binding:"required"`
+	ProductType    string                `json:"product_type" binding:"required"`
+	Unit           string                `json:"unit" binding:"required"`
+	SellingPrice   float64               `json:"selling_price" binding:"required"`
+	ProductRecipes []CreateProductRecipe `json:"product_recipes" binding:"required"`
+	BranchIDs      []string              `json:"branch_ids" binding:"required"`
 }
 
 type CreateProductRecipe struct {

@@ -97,7 +97,7 @@ func (b *inventoryHandler) SyncBalance(c *gin.Context) {
 		return
 	}
 
-	errW = b.inventoryUsecase.SyncBranchItem(c, payload)
+	_, _, errW = b.inventoryUsecase.SyncBranchItem(c, payload)
 	if errW != nil {
 		return
 	}
