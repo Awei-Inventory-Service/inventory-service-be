@@ -65,7 +65,7 @@ func (p *purchaseController) Create(c *gin.Context) {
 	response_wrapper.New(&c.Writer, c, true, nil, errW)
 }
 
-func (p *purchaseController) UpdatePurchase(c *gin.Context) {
+func (p *purchaseController) Update(c *gin.Context) {
 	id := c.Param("id")
 	var (
 		updatePurchaseRequest dto.UpdatePurchaseRequest
@@ -81,14 +81,18 @@ func (p *purchaseController) UpdatePurchase(c *gin.Context) {
 		return
 	}
 
+	userId := c.GetHeader("user_id")
+
+	if userId == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "User id is required")
+		return
+	}
+	updatePurchaseRequest.UserID = userId
+
 	errW = p.purchaseService.Update(
 		c,
 		id,
-		updatePurchaseRequest.SupplierID,
-		updatePurchaseRequest.BranchID,
-		updatePurchaseRequest.ItemID,
-		updatePurchaseRequest.Quantity,
-		updatePurchaseRequest.PurchaseCost,
+		updatePurchaseRequest,
 	)
 	if errW != nil {
 		return

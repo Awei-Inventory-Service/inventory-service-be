@@ -12,7 +12,7 @@ func (s *stockService) GetStockByItemID(itemID string) (model.Stock, *error_wrap
 	itemIdFilter := make(map[string]interface{})
 	itemIdFilter["item_id"] = itemID
 
-	transactions, err := s.stockTransactionDomain.FindWithFilter([]map[string]interface{}{itemIdFilter}, "")
+	transactions, err := s.stockTransactionDomain.FindWithFilter([]map[string]interface{}{itemIdFilter}, "", 0, 0)
 	if err != nil {
 		return model.Stock{}, err
 	}

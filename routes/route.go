@@ -133,7 +133,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	supplierService := supplier_service.NewSupplierService(supplierDomain)
 	itemService := item_service.NewItemService(itemDomain)
 	branchService := branch_service.NewBranchService(branchDomain, userDomain)
-	purchaseService := purchase_service.NewPurchaseService(purchaseDomain, supplierDomain, branchDomain, itemDomain, inventoryDomain)
+	purchaseService := purchase_service.NewPurchaseService(purchaseDomain, supplierDomain, branchDomain, itemDomain, inventoryDomain, stockTransactionDomain)
 	inventoryStockCountService := inventory_stock_count_service.NewInventoryStockCountService(inventoryStockCountDomain, branchDomain, itemDomain)
 	productService := product_service.NewProductservice(productDomain, itemDomain, productCompositionDomain, branchProductDomain)
 	invoiceService := invoice_service.NewInvoiceService(invoiceDomain)
@@ -210,7 +210,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 			purchaseRoutes.GET("/", purchaseController.GetPurchases)
 			purchaseRoutes.GET("/:id", purchaseController.GetPurchase)
 			purchaseRoutes.POST("/", purchaseController.Create)
-			purchaseRoutes.PUT("/:id", purchaseController.UpdatePurchase)
+			purchaseRoutes.PUT("/:id", purchaseController.Update)
 			purchaseRoutes.DELETE("/:id", purchaseController.Delete)
 		}
 

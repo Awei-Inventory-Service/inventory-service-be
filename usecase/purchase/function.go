@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/inventory-service/constant"
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
@@ -64,7 +65,28 @@ func (p *purchaseService) Create(c *gin.Context, payload dto.CreatePurchaseReque
 
 	userId := c.GetHeader("user_id")
 	// All validation completed, domain handles all inventory logic
-	_, errW := p.purchaseDomain.Create(payload, userId)
+	purchase, errW := p.purchaseDomain.Create(payload, userId)
+
+	if errW != nil {
+		return errW
+	}
+	referenceType := string(constant.Purchasing)
+
+	errW = p.stockTransactionDomain.Create(model.StockTransaction{
+		BranchOriginID:      payload.BranchID,
+		BranchDestinationID: payload.BranchID,
+		ItemID:              payload.ItemID,
+		Type:                "IN",
+		IssuerID:            userId,
+		Quantity:            payload.Quantity,
+		Cost:                payload.PurchaseCost,
+		Unit:                payload.Unit,
+		Reference:           purchase.UUID,
+		ReferenceType:       &referenceType,
+	})
+
+	_, _, errW = p.inventoryDomain.SyncBranchItem(c, payload.BranchID, purchase.ItemID)
+
 	return errW
 }
 
@@ -86,12 +108,12 @@ func (p *purchaseService) FindByID(id string) (*model.Purchase, *error_wrapper.E
 	return purchase, nil
 }
 
-func (p *purchaseService) Update(ctx context.Context, id, supplierId, branchId, itemId string, quantity float64, purchaseCost float64) *error_wrapper.ErrorWrapper {
+func (p *purchaseService) Update(ctx context.Context, id string, payload dto.UpdatePurchaseRequest) *error_wrapper.ErrorWrapper {
 	errChan := make(chan *error_wrapper.ErrorWrapper, 3)
 
 	// Supplier check
 	go func() {
-		_, err := p.supplierDomain.FindByID(supplierId)
+		_, err := p.supplierDomain.FindByID(payload.SupplierID)
 		if err != nil {
 			errChan <- err
 		} else {
@@ -101,7 +123,7 @@ func (p *purchaseService) Update(ctx context.Context, id, supplierId, branchId, 
 
 	// Branch check
 	go func() {
-		_, err := p.branchDomain.FindByID(branchId)
+		_, err := p.branchDomain.FindByID(payload.BranchID)
 		if err != nil {
 			errChan <- err
 		} else {
@@ -111,7 +133,7 @@ func (p *purchaseService) Update(ctx context.Context, id, supplierId, branchId, 
 
 	// Item check
 	go func() {
-		_, err := p.itemDomain.FindByID(ctx, itemId)
+		_, err := p.itemDomain.FindByID(ctx, payload.ItemID)
 		if err != nil {
 			errChan <- err
 		} else {
@@ -125,12 +147,48 @@ func (p *purchaseService) Update(ctx context.Context, id, supplierId, branchId, 
 		}
 	}
 
-	err := p.purchaseDomain.Update(id, supplierId, branchId, itemId, quantity, purchaseCost)
-	if err != nil {
-		return err
+	// 1. Update purchase
+	errW := p.purchaseDomain.Update(id, payload)
+	if errW != nil {
+		return errW
+	}
+	// 2. Invalidate old stock transaction and create new one
+	errW = p.stockTransactionDomain.InvalidateStockTransaction(ctx, []map[string]interface{}{
+		{
+			"field": "reference",
+			"value": id,
+		},
+	}, payload.UserID)
+
+	if errW != nil {
+		return errW
 	}
 
-	return nil
+	// 3. Add new stock transaction
+	referenceType := string(constant.Purchasing)
+
+	errW = p.stockTransactionDomain.Create(model.StockTransaction{
+		BranchOriginID:      payload.BranchID,
+		BranchDestinationID: payload.BranchID,
+		ItemID:              payload.ItemID,
+		Type:                "IN",
+		IssuerID:            payload.UserID,
+		Quantity:            payload.Quantity,
+		Cost:                payload.PurchaseCost,
+		Unit:                payload.Unit,
+		ReferenceType:       &referenceType,
+		Reference:           id,
+	})
+
+	if errW != nil {
+		return errW
+	}
+
+	// 4. Sync branch item
+
+	_, _, errW = p.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, payload.ItemID)
+
+	return errW
 }
 
 func (p *purchaseService) Delete(ctx context.Context, id, userID string) *error_wrapper.ErrorWrapper {

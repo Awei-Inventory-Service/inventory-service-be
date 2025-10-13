@@ -9,7 +9,7 @@ type PurchaseController interface {
 	GetPurchases(c *gin.Context)
 	GetPurchase(c *gin.Context)
 	Create(c *gin.Context)
-	UpdatePurchase(c *gin.Context)
+	Update(c *gin.Context)
 	Delete(c *gin.Context)
 }
 

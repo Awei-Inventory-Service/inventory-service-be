@@ -184,7 +184,18 @@ func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID s
 }
 
 func (b *inventoryDomain) calculateCurrentBalance(ctx context.Context, branchID, itemID string) (float64, *error_wrapper.ErrorWrapper) {
-	allTransactions, err := b.stockTransactionResource.FindAll()
+
+	allTransactions, err := b.stockTransactionResource.FindWithFilter([]map[string]interface{}{
+		{
+			"field": "item_id",
+			"value": itemID,
+		},
+		{
+			"field": "deleted_at",
+			"value": nil,
+		},
+	}, "created_at DESC", 0, 0)
+
 	if err != nil {
 		return 0.0, err
 	}
@@ -228,7 +239,11 @@ func (b *inventoryDomain) calculatePrice(ctx context.Context, branchID, itemID s
 				"field": "item_id",
 				"value": itemID,
 			},
-		}, "created_at DESC")
+			{
+				"field": "deleted_at",
+				"value": nil,
+			},
+		}, "created_at DESC", limit, offset)
 
 		if len(stockTransactions) == 0 {
 			break

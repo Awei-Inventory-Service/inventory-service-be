@@ -3,7 +3,6 @@ package branch_product
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -48,7 +47,6 @@ func (b *branchProductResource) Get(ctx context.Context, query []dto.Filter, ord
 
 	// Apply filters
 	for _, filter := range query {
-		fmt.Println("INi len filter values", len(filter.Values))
 		if len(filter.Values) == 1 {
 			value := filter.Values[0]
 			switch filter.Wildcard {

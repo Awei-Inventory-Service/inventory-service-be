@@ -112,7 +112,7 @@ func (p *productionUsecase) Delete(ctx context.Context, payload dto.DeleteProduc
 			"field": "reference",
 			"value": payload.ProductionID,
 		},
-	}, "")
+	}, "", 0, 0)
 
 	if errW != nil {
 		return errW
