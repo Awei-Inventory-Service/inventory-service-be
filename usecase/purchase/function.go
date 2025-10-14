@@ -193,6 +193,25 @@ func (p *purchaseService) Update(ctx context.Context, id string, payload dto.Upd
 
 func (p *purchaseService) Delete(ctx context.Context, id, userID string) *error_wrapper.ErrorWrapper {
 	// Domain handles all inventory logic including sync
-	_, err := p.purchaseDomain.Delete(ctx, id, userID)
-	return err
+	deletedPurchase, errW := p.purchaseDomain.Delete(ctx, id, userID)
+
+	if errW != nil {
+		return errW
+	}
+
+	// 2. Invalidate stock transaction
+	errW = p.stockTransactionDomain.InvalidateStockTransaction(ctx, []map[string]interface{}{
+		{
+			"field": "reference",
+			"value": id,
+		},
+	}, userID)
+
+	if errW != nil {
+		return errW
+	}
+
+	_, _, errW = p.inventoryDomain.SyncBranchItem(ctx, deletedPurchase.BranchID, deletedPurchase.ItemID)
+
+	return errW
 }

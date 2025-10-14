@@ -67,27 +67,5 @@ func (p *purchaseDomain) Update(id string, payload dto.UpdatePurchaseRequest) *e
 
 func (p *purchaseDomain) Delete(ctx context.Context, id, userID string) (*model.Purchase, *error_wrapper.ErrorWrapper) {
 	// 1. Delete the purchase and get the deleted data
-	deletedPurchase, errW := p.purchaseResource.Delete(id)
-	if errW != nil {
-		return nil, errW
-	}
-
-	errW = p.stockTransactionResource.Create(model.StockTransaction{
-		BranchOriginID:      deletedPurchase.BranchID,
-		BranchDestinationID: deletedPurchase.BranchID,
-		ItemID:              deletedPurchase.ItemID,
-		Type:                "OUT",
-		IssuerID:            userID,
-		Quantity:            deletedPurchase.Quantity,
-		Cost:                deletedPurchase.PurchaseCost,
-		Unit:                deletedPurchase.Unit,
-	})
-
-	if errW != nil {
-		return nil, errW
-	}
-
-	// 2. Sync branch item inventory after deletion
-
-	return deletedPurchase, nil
+	return p.purchaseResource.Delete(id)
 }

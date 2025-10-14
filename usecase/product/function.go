@@ -86,3 +86,15 @@ func (p *productService) Update(ctx context.Context, product dto.UpdateProductRe
 func (p *productService) Delete(ctx context.Context, producID string) *error_wrapper.ErrorWrapper {
 	return p.productDomain.Delete(ctx, producID)
 }
+
+func (p *productService) GetProductCost(ctx context.Context, productID, branchID string) (cost float64, errW *error_wrapper.ErrorWrapper) {
+	product, errW := p.productDomain.FindByID(ctx, productID)
+
+	if errW != nil {
+		return
+	}
+
+	_, cost, errW = p.productDomain.CalculateProductCost(ctx, product.ProductRecipe, branchID)
+
+	return
+}

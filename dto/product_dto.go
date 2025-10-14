@@ -49,14 +49,21 @@ type GetIngredient struct {
 	ItemUnit    string  `json:"item_unit"`
 }
 
+type GetProductBranchResponse struct {
+	BranchID           string  `json:"branch_id"`
+	BranchName         string  `json:"branch_name"`
+	BranchProductPrice float64 `json:"branch_product_price"`
+}
+
 type GetProductResponse struct {
-	Id           string          `json:"id"`
-	Name         string          `json:"name"`
-	Code         string          `json:"code"`
-	Category     string          `json:"category"`
-	Unit         string          `json:"unit"`
-	SellingPrice float64         `json:"selling_price"`
-	Ingredients  []GetIngredient `json:"ingredients"`
+	Id           string                     `json:"id"`
+	Name         string                     `json:"name"`
+	Code         string                     `json:"code"`
+	Category     string                     `json:"category"`
+	Unit         string                     `json:"unit"`
+	SellingPrice float64                    `json:"selling_price"`
+	Branches     []GetProductBranchResponse `json:"branches"`
+	Ingredients  []GetIngredient            `json:"ingredients"`
 }
 
 type GetProductCOGSResponse struct {

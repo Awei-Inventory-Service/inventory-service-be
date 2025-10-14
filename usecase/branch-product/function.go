@@ -20,7 +20,7 @@ func (b *branchProductUsecase) Get(ctx context.Context, filter []dto.Filter, ord
 
 	for _, branchProduct := range branchProducts {
 		// cost := b
-		productCost, errW := b.productDomain.CalculateProductCost(ctx, branchProduct.Product.ProductRecipe, branchProduct.BranchID)
+		_, productCost, errW := b.productDomain.CalculateProductCost(ctx, branchProduct.Product.ProductRecipe, branchProduct.BranchID)
 
 		if errW != nil {
 			fmt.Println("Error calculating product cost", errW)

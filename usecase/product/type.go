@@ -18,6 +18,7 @@ type ProductService interface {
 	FindByID(ctx context.Context, prodcutID string) (*model.Product, *error_wrapper.ErrorWrapper)
 	Update(ctx context.Context, payload dto.UpdateProductRequest, productID string) *error_wrapper.ErrorWrapper
 	Delete(ctx context.Context, productID string) *error_wrapper.ErrorWrapper
+	GetProductCost(ctx context.Context, productID, branchID string) (cost float64, errW *error_wrapper.ErrorWrapper)
 }
 
 type productService struct {

@@ -243,7 +243,11 @@ func (b *inventoryDomain) calculatePrice(ctx context.Context, branchID, itemID s
 				"field": "deleted_at",
 				"value": nil,
 			},
-		}, "created_at DESC", limit, offset)
+			{
+				"field": "type",
+				"value": "IN",
+			},
+		}, "created_at ASC", limit, offset)
 
 		if len(stockTransactions) == 0 {
 			break

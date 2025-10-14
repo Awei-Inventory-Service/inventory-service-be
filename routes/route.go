@@ -223,6 +223,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 			productRoutes.PUT("/:id", productController.Update)
 			productRoutes.DELETE("/:id", productController.Delete)
 			productRoutes.POST("/cogs", productionController.Create)
+			// productRoutes.GET("/:id/cost", productController.GetCost)
 		}
 
 		inventoryStockCountRoutes := apiV1.Group("/inventory-stock-count")

@@ -111,3 +111,7 @@ func (p *productController) Delete(ctx *gin.Context) {
 	}
 
 }
+
+// func (p *productController) GetCost(ctx *gin.Context) {
+// 	_, errW := p.productService.GetProductCost(ctx)
+// }

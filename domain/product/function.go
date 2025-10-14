@@ -31,6 +31,7 @@ func (p *productDomain) FindAll(ctx context.Context) ([]dto.GetProductResponse, 
 		product.Unit = rawProduct.Unit
 		product.Category = rawProduct.Category
 		product.SellingPrice = rawProduct.SellingPrice
+		product.Code = rawProduct.Code
 
 		for _, ingredient := range rawProduct.ProductRecipe {
 			item, errW := p.itemResource.FindByID(ingredient.ItemID)
@@ -45,7 +46,14 @@ func (p *productDomain) FindAll(ctx context.Context) ([]dto.GetProductResponse, 
 				ItemUnit:    ingredient.Unit,
 				ItemPortion: ingredient.Amount,
 			})
+		}
 
+		for _, branch := range rawProduct.BranchProducts {
+			product.Branches = append(product.Branches, dto.GetProductBranchResponse{
+				BranchID:           branch.BranchID,
+				BranchName:         branch.Branch.Name,
+				BranchProductPrice: *branch.SellingPrice,
+			})
 		}
 		productsResponse = append(productsResponse, product)
 
@@ -103,29 +111,37 @@ func (p *productDomain) Delete(ctx context.Context, productID string) *error_wra
 	return p.productResource.Delete(ctx, productID)
 }
 
-func (p *productDomain) CalculateProductCost(ctx context.Context, productCompositions []model.ProductRecipe, branchID string) (float64, *error_wrapper.ErrorWrapper) {
-	var (
-		price float64
-	)
+func (p *productDomain) CalculateProductCost(ctx context.Context, productCompositions []model.ProductRecipe, branchID string) (
+	results []dto.ProductRecipeWithPrice,
+	totalCost float64,
+	errW *error_wrapper.ErrorWrapper,
+) {
 
 	for _, productComposition := range productCompositions {
-		_, _, errW := p.inventoryDomain.SyncBranchItem(ctx, branchID, productComposition.ItemID)
+		_, _, errW = p.inventoryDomain.SyncBranchItem(ctx, branchID, productComposition.ItemID)
 
 		if errW != nil {
-			return 0.0, errW
+			return
 		}
 
 		inventory, errW := p.inventoryResource.FindByBranchAndItem(branchID, productComposition.ItemID)
 		if errW != nil {
 			fmt.Printf("Error finding branch item with branch_idx: %s and item_id: %s ", branchID, productComposition.ItemID)
-			return price, errW
+			return nil, 0.0, errW
 		}
 		fmt.Println("Product composition amount", productComposition.Amount, productComposition.Unit, inventory.Item.Unit)
 
 		productCompositionAmount := utils.StandarizeMeasurement(productComposition.Amount, productComposition.Unit, inventory.Item.Unit)
 		fmt.Println("Product composition amount", productCompositionAmount, inventory.Value)
-		price += (inventory.Value * productCompositionAmount)
+		results = append(results, dto.ProductRecipeWithPrice{
+			UUID:   productComposition.UUID,
+			ItemID: productComposition.ItemID,
+			Cost:   inventory.Value * productCompositionAmount,
+			Unit:   productComposition.Unit,
+			Amount: productComposition.Amount,
+		})
+		totalCost += (inventory.Value * productCompositionAmount)
 	}
 
-	return price, nil
+	return
 }

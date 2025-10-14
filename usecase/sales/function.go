@@ -35,13 +35,12 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 			return errW
 		}
 
-		productCost, errW := s.productDomain.CalculateProductCost(ctx, product.ProductRecipe, payload.BranchID)
+		productRecipes, totalPrice, errW := s.productDomain.CalculateProductCost(ctx, product.ProductRecipe, payload.BranchID)
 		if errW != nil {
 			return errW
 		}
-		fmt.Printf("Product cost : %f, sales data quantity: %f", productCost, salesData.Quantity)
-		salesData.Cost = productCost * sales.Quantity
-
+		fmt.Printf("Product cost : %f, sales data quantity: %f", totalPrice, sales.Quantity)
+		salesData.Cost = totalPrice * sales.Quantity
 		branchProduct, errW = s.branchProductDomain.GetByBranchIdAndProductId(ctx, payload.BranchID, sales.ProductID)
 
 		if errW != nil {
@@ -78,35 +77,32 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 		if errW != nil {
 			return errW
 		}
-		for _, itemComposition := range product.ProductRecipe {
-			total := itemComposition.Amount * sales.Quantity
+
+		for _, productRecipe := range productRecipes {
+			total := productRecipe.Amount * sales.Quantity
 			referenceType := "SALES_CREATION"
 			errW = s.stockTransactionDomain.Create(model.StockTransaction{
 				BranchOriginID:      payload.BranchID,
 				BranchDestinationID: payload.BranchID,
-				ItemID:              itemComposition.ItemID,
+				ItemID:              productRecipe.ItemID,
 				Type:                "OUT",
 				IssuerID:            userID,
 				Quantity:            total,
-				Cost:                salesData.Cost,
-				Unit:                itemComposition.Unit,
-				Reference:           newSales.UUID, // Will be updated with sales ID after creation
+				Cost:                productRecipe.Cost,
+				Unit:                productRecipe.Unit,
+				Reference:           newSales.UUID,
 				ReferenceType:       &referenceType,
 			})
 
 			if errW != nil {
-				return errW
+				fmt.Println("Error", errW)
+				continue
 			}
-			_, _, errW = s.branchItemDomain.SyncBranchItem(ctx, payload.BranchID, itemComposition.ItemID)
-
-			if errW != nil {
-				return errW
-			}
-
 		}
 	}
 
 	return nil
+
 }
 
 func (s *salesService) Delete(ctx context.Context, salesID string, userID string) *error_wrapper.ErrorWrapper {
