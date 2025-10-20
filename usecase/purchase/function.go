@@ -2,6 +2,7 @@ package purchase
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -86,6 +87,11 @@ func (p *purchaseService) Create(c *gin.Context, payload dto.CreatePurchaseReque
 	})
 
 	_, _, errW = p.inventoryDomain.SyncBranchItem(c, payload.BranchID, purchase.ItemID)
+
+	if errW != nil {
+		fmt.Println("Error syncing branch item")
+		return errW
+	}
 
 	return errW
 }

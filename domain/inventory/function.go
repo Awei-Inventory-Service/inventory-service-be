@@ -180,6 +180,22 @@ func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID s
 		Value:    currentPrice,
 	})
 
+	if errW != nil {
+		fmt.Println("Error updating inventory", errW)
+		return
+	}
+
+	errW = i.inventorySnapshotResource.Upsert(ctx, dto.CreateInventorySnapshotRequest{
+		ItemID:   itemID,
+		BranchID: branchID,
+		Value:    currentPrice,
+	})
+
+	if errW != nil {
+		fmt.Println("Error upserting inventory snapshot", errW)
+		return
+	}
+
 	return
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 	inventory "github.com/inventory-service/resource/inventory"
+	"github.com/inventory-service/resource/inventory_snapshot"
 	"github.com/inventory-service/resource/item"
 	"github.com/inventory-service/resource/purchase"
 	stocktransaction "github.com/inventory-service/resource/stock_transaction"
@@ -27,8 +28,9 @@ type InventoryDomain interface {
 }
 
 type inventoryDomain struct {
-	inventoryResource        inventory.InventoryResource
-	stockTransactionResource stocktransaction.StockTransactionResource
-	itemResource             item.ItemResource
-	purchaseResource         purchase.PurchaseResource
+	inventoryResource         inventory.InventoryResource
+	stockTransactionResource  stocktransaction.StockTransactionResource
+	itemResource              item.ItemResource
+	purchaseResource          purchase.PurchaseResource
+	inventorySnapshotResource inventory_snapshot.InventorySnapshotResource
 }

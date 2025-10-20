@@ -25,6 +25,7 @@ import (
 
 	branch_resource "github.com/inventory-service/resource/branch"
 	branch_product_reosurce "github.com/inventory-service/resource/branch_product"
+	inventory_snapshot_resource "github.com/inventory-service/resource/inventory_snapshot"
 	inventory_stock_count_resource "github.com/inventory-service/resource/inventory_stock_count"
 	invoice_resource "github.com/inventory-service/resource/invoice"
 	item_resource "github.com/inventory-service/resource/item"
@@ -43,6 +44,7 @@ import (
 	user_resource "github.com/inventory-service/resource/user"
 
 	branch_domain "github.com/inventory-service/domain/branch"
+	inventory_snapshot_domain "github.com/inventory-service/domain/inventory_snapshot"
 	inventory_stock_count_domain "github.com/inventory-service/domain/inventory_stock_count"
 	invoice_domain "github.com/inventory-service/domain/invoice"
 	item_domain "github.com/inventory-service/domain/item"
@@ -102,6 +104,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 
 	productResource := product_resource.NewProductResource(pgDB)
 	inventoryStockCountResource := inventory_stock_count_resource.NewInventoryStockCountResource(mongodbResource, "inventory_service", "inventory_stock_counts")
+	inventorySnapshotResource := inventory_snapshot_resource.NewInventorySnapshot(mongodbResource)
 	invoiceResource := invoice_resource.NewInvoiceResource(pgDB)
 	stockTransactionResource := stock_transaction_resource.NewStockTransactionResource(pgDB)
 	salesResource := sales_resource.NewSalesResource(pgDB)
@@ -120,20 +123,21 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	invoiceDomain := invoice_domain.NewInvoiceDomain(invoiceResource)
 	stockTransactionDomain := stock_transaction_domain.NewStockTransactionDomain(stockTransactionResource)
 	salesDomain := sales_domain.NewSalesDomain(salesResource, productResource, branchProductResource)
-	inventoryDomain := inventory_domain.NewBranchItemDomain(inventoryResource, stockTransactionResource, itemResource, purchaseResource)
+	inventoryDomain := inventory_domain.NewBranchItemDomain(inventoryResource, stockTransactionResource, itemResource, purchaseResource, inventorySnapshotResource)
 	// Tech debt : domain manggil domain, gaboleh
 	productDomain := product_domain.NewProductDomain(productResource, itemResource, productCompositionResource, inventoryResource, inventoryDomain)
 
 	productCompositionDomain := product_recipe_domain.NewProductCompositionDomain(productCompositionResource)
 	branchProductDomain := branch_product_domain.NewBranchProductDomain(branchProductResource)
 	productionDomain := production_domain.NewProductionDomain(productionResource, productionItemResource)
+	inventorySnapshotDomain := inventory_snapshot_domain.NewInventorySnapshotDomain(inventorySnapshotResource)
 
 	// initialize service
 	userService := auth_service.NewUserService(userDomain)
 	supplierService := supplier_service.NewSupplierService(supplierDomain)
 	itemService := item_service.NewItemService(itemDomain)
 	branchService := branch_service.NewBranchService(branchDomain, userDomain)
-	purchaseService := purchase_service.NewPurchaseService(purchaseDomain, supplierDomain, branchDomain, itemDomain, inventoryDomain, stockTransactionDomain)
+	purchaseService := purchase_service.NewPurchaseService(purchaseDomain, supplierDomain, branchDomain, itemDomain, inventoryDomain, stockTransactionDomain, inventorySnapshotDomain)
 	inventoryStockCountService := inventory_stock_count_service.NewInventoryStockCountService(inventoryStockCountDomain, branchDomain, itemDomain)
 	productService := product_service.NewProductservice(productDomain, itemDomain, productCompositionDomain, branchProductDomain)
 	invoiceService := invoice_service.NewInvoiceService(invoiceDomain)

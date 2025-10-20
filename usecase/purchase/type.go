@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/domain/branch"
 	"github.com/inventory-service/domain/inventory"
+	"github.com/inventory-service/domain/inventory_snapshot"
 	"github.com/inventory-service/domain/item"
 	"github.com/inventory-service/domain/purchase"
 	stocktransaction "github.com/inventory-service/domain/stock_transaction"
@@ -26,10 +27,11 @@ type PurchaseService interface {
 }
 
 type purchaseService struct {
-	purchaseDomain         purchase.PurchaseDomain
-	supplierDomain         supplier.SupplierDomain
-	branchDomain           branch.BranchDomain
-	itemDomain             item.ItemDomain
-	inventoryDomain        inventory.InventoryDomain
-	stockTransactionDomain stocktransaction.StockTransactionDomain
+	purchaseDomain          purchase.PurchaseDomain
+	supplierDomain          supplier.SupplierDomain
+	branchDomain            branch.BranchDomain
+	itemDomain              item.ItemDomain
+	inventoryDomain         inventory.InventoryDomain
+	stockTransactionDomain  stocktransaction.StockTransactionDomain
+	inventorySnapshotDomain inventory_snapshot.InventorySnapshotDomain
 }
