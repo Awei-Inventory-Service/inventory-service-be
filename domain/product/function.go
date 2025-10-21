@@ -111,36 +111,73 @@ func (p *productDomain) Delete(ctx context.Context, productID string) *error_wra
 	return p.productResource.Delete(ctx, productID)
 }
 
-func (p *productDomain) CalculateProductCost(ctx context.Context, productCompositions []model.ProductRecipe, branchID string) (
+func (p *productDomain) CalculateProductCost(
+	ctx context.Context,
+	productCompositions []model.ProductRecipe,
+	branchID string,
+	timestamp time.Time,
+) (
 	results []dto.ProductRecipeWithPrice,
 	totalCost float64,
 	errW *error_wrapper.ErrorWrapper,
 ) {
 
 	for _, productComposition := range productCompositions {
+		item, errW := p.itemResource.FindByID(productComposition.ItemID)
+
+		if errW != nil {
+			fmt.Println("Error getting item", errW)
+			return results, totalCost, errW
+		}
+
 		_, _, errW = p.inventoryDomain.SyncBranchItem(ctx, branchID, productComposition.ItemID)
 
 		if errW != nil {
-			return
+			return results, totalCost, errW
 		}
 
-		inventory, errW := p.inventoryResource.FindByBranchAndItem(branchID, productComposition.ItemID)
+		inventorySnapshot, errW := p.inventorySnapshotResource.Get(ctx, []dto.Filter{
+			{
+				Key:    "item_id",
+				Values: []string{productComposition.ItemID},
+			},
+			{
+				Key:    "day",
+				Values: []string{fmt.Sprintf("%d", timestamp.Day())},
+			},
+			{
+				Key:    "month",
+				Values: []string{fmt.Sprintf("%d", int(timestamp.Month()))},
+			},
+			{
+				Key:    "year",
+				Values: []string{fmt.Sprintf("%d", timestamp.Year())},
+			},
+		},
+			[]dto.Order{}, 1, 0)
+
 		if errW != nil {
-			fmt.Printf("Error finding branch item with branch_idx: %s and item_id: %s ", branchID, productComposition.ItemID)
-			return nil, 0.0, errW
+			fmt.Println("Error getting inventory snapshot")
+			return results, totalCost, errW
 		}
-		fmt.Println("Product composition amount", productComposition.Amount, productComposition.Unit, inventory.Item.Unit)
+		fmt.Println("INI INVENTORY SNAPSHOT", inventorySnapshot)
+		var itemValue float64
+		if len(inventorySnapshot) > 0 && len(inventorySnapshot[0].Values) > 0 {
+			inventorySnapshot[0].SortValuesBasedOnTimestamp()
+			itemValue = inventorySnapshot[0].Values[0].Value
+		}
 
-		productCompositionAmount := utils.StandarizeMeasurement(productComposition.Amount, productComposition.Unit, inventory.Item.Unit)
-		fmt.Println("Product composition amount", productCompositionAmount, inventory.Value)
+		productCompositionAmount := utils.StandarizeMeasurement(productComposition.Amount, productComposition.Unit, item.Unit)
+		fmt.Println("Product composition amount", productCompositionAmount, itemValue)
+
 		results = append(results, dto.ProductRecipeWithPrice{
 			UUID:   productComposition.UUID,
 			ItemID: productComposition.ItemID,
-			Cost:   inventory.Value * productCompositionAmount,
+			Cost:   itemValue * productCompositionAmount,
 			Unit:   productComposition.Unit,
 			Amount: productComposition.Amount,
 		})
-		totalCost += (inventory.Value * productCompositionAmount)
+		totalCost += (itemValue * productCompositionAmount)
 	}
 
 	return

@@ -125,7 +125,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	salesDomain := sales_domain.NewSalesDomain(salesResource, productResource, branchProductResource)
 	inventoryDomain := inventory_domain.NewBranchItemDomain(inventoryResource, stockTransactionResource, itemResource, purchaseResource, inventorySnapshotResource)
 	// Tech debt : domain manggil domain, gaboleh
-	productDomain := product_domain.NewProductDomain(productResource, itemResource, productCompositionResource, inventoryResource, inventoryDomain)
+	productDomain := product_domain.NewProductDomain(productResource, itemResource, productCompositionResource, inventoryResource, inventoryDomain, inventorySnapshotResource)
 
 	productCompositionDomain := product_recipe_domain.NewProductCompositionDomain(productCompositionResource)
 	branchProductDomain := branch_product_domain.NewBranchProductDomain(branchProductResource)

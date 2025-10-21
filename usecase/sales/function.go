@@ -35,7 +35,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 			return errW
 		}
 
-		productRecipes, totalPrice, errW := s.productDomain.CalculateProductCost(ctx, product.ProductRecipe, payload.BranchID)
+		productRecipes, totalPrice, errW := s.productDomain.CalculateProductCost(ctx, product.ProductRecipe, payload.BranchID, time.Now())
 		if errW != nil {
 			return errW
 		}
@@ -88,7 +88,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 				Type:                "OUT",
 				IssuerID:            userID,
 				Quantity:            total,
-				Cost:                productRecipe.Cost,
+				Cost:                productRecipe.Cost * sales.Quantity,
 				Unit:                productRecipe.Unit,
 				Reference:           newSales.UUID,
 				ReferenceType:       &referenceType,
@@ -107,13 +107,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 
 func (s *salesService) Delete(ctx context.Context, salesID string, userID string) *error_wrapper.ErrorWrapper {
 	// First, get the sales data before deleting to create reversing transactions
-	salesData, errW := s.salesDomain.FindByID(salesID)
-	if errW != nil {
-		return errW
-	}
-
-	// Get product composition to reverse stock transactions
-	product, errW := s.productDomain.FindByID(ctx, salesData.BranchProduct.ProductID)
+	_, errW := s.salesDomain.FindByID(salesID)
 	if errW != nil {
 		return errW
 	}
@@ -123,25 +117,16 @@ func (s *salesService) Delete(ctx context.Context, salesID string, userID string
 		return errW
 	}
 
-	for _, itemComposition := range product.ProductRecipe {
-		total := itemComposition.Amount * salesData.Quantity
-		referenceType := "SALES_DELETION"
-		errW = s.stockTransactionDomain.Create(model.StockTransaction{
-			BranchOriginID:      salesData.BranchProduct.BranchID,
-			BranchDestinationID: salesData.BranchProduct.BranchID,
-			ItemID:              itemComposition.ItemID,
-			Type:                "IN", // Opposite of original "OUT" transaction
-			IssuerID:            userID,
-			Quantity:            total,
-			Cost:                salesData.Cost,
-			Unit:                itemComposition.Item.Unit,
-			Reference:           salesID,
-			ReferenceType:       &referenceType,
-		})
+	errW = s.stockTransactionDomain.InvalidateStockTransaction(ctx, []map[string]interface{}{
+		{
+			"field": "reference",
+			"value": salesID,
+		},
+	}, userID)
 
-		if errW != nil {
-			return errW
-		}
+	if errW != nil {
+		fmt.Println("Error invalidating stock transaction", errW)
+		return errW
 	}
 
 	return nil

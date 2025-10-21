@@ -2,6 +2,7 @@ package product
 
 import (
 	"context"
+	"time"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -94,7 +95,7 @@ func (p *productService) GetProductCost(ctx context.Context, productID, branchID
 		return
 	}
 
-	_, cost, errW = p.productDomain.CalculateProductCost(ctx, product.ProductRecipe, branchID)
+	_, cost, errW = p.productDomain.CalculateProductCost(ctx, product.ProductRecipe, branchID, time.Now())
 
 	return
 }

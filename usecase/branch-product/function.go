@@ -3,6 +3,7 @@ package branch_product
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -20,7 +21,7 @@ func (b *branchProductUsecase) Get(ctx context.Context, filter []dto.Filter, ord
 
 	for _, branchProduct := range branchProducts {
 		// cost := b
-		_, productCost, errW := b.productDomain.CalculateProductCost(ctx, branchProduct.Product.ProductRecipe, branchProduct.BranchID)
+		_, productCost, errW := b.productDomain.CalculateProductCost(ctx, branchProduct.Product.ProductRecipe, branchProduct.BranchID, time.Now())
 
 		if errW != nil {
 			fmt.Println("Error calculating product cost", errW)
