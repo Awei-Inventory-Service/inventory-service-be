@@ -1,0 +1,18 @@
+package inventory_transfer_item
+
+import (
+	"context"
+
+	"github.com/inventory-service/lib/error_wrapper"
+	"github.com/inventory-service/model"
+	"gorm.io/gorm"
+)
+
+type InventoryTransferItemResource interface {
+	Create(ctx context.Context, payload model.InventoryTransferItem) (result model.InventoryTransferItem, errW *error_wrapper.ErrorWrapper)
+	Delete(ctx context.Context, id string) (errW *error_wrapper.ErrorWrapper)
+}
+
+type inventoryTransferItemResource struct {
+	db *gorm.DB
+}

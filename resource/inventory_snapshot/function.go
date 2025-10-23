@@ -184,6 +184,10 @@ func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.Crea
 			Values: []string{payload.ItemID},
 		},
 		{
+			Key:    "branch_id",
+			Values: []string{payload.BranchID},
+		},
+		{
 			Key:    "day",
 			Values: []string{fmt.Sprintf("%d", now.Day())},
 		},
@@ -228,12 +232,13 @@ func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.Crea
 	}
 	// If snapshot doesn't exist, create new one
 	newSnapshot := model.InventorySnapshot{
-		ItemID:  payload.ItemID,
-		Date:    today,
-		Average: payload.Value,
-		Day:     now.Day(),
-		Month:   int(now.Month()),
-		Year:    now.Year(),
+		ItemID:   payload.ItemID,
+		BranchID: payload.BranchID,
+		Date:     today,
+		Average:  payload.Value,
+		Day:      now.Day(),
+		Month:    int(now.Month()),
+		Year:     now.Year(),
 		Values: []struct {
 			Timestamp time.Time `json:"timestamp"`
 			Value     float64   `json:"value"`

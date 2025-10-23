@@ -10,6 +10,7 @@ import (
 	branch_controller "github.com/inventory-service/handler/branch"
 	inventory_controller "github.com/inventory-service/handler/inventory"
 	inventory_stock_count_controller "github.com/inventory-service/handler/inventory_stock_count"
+	inventory_transfer_controller "github.com/inventory-service/handler/inventory_transfer"
 	invoice_controller "github.com/inventory-service/handler/invoice"
 	item_controller "github.com/inventory-service/handler/item"
 	product_controller "github.com/inventory-service/handler/product"
@@ -27,6 +28,8 @@ import (
 	branch_product_reosurce "github.com/inventory-service/resource/branch_product"
 	inventory_snapshot_resource "github.com/inventory-service/resource/inventory_snapshot"
 	inventory_stock_count_resource "github.com/inventory-service/resource/inventory_stock_count"
+	inventory_transfer_resource "github.com/inventory-service/resource/inventory_transfer"
+	inventory_transfer_item_resource "github.com/inventory-service/resource/inventory_transfer_item"
 	invoice_resource "github.com/inventory-service/resource/invoice"
 	item_resource "github.com/inventory-service/resource/item"
 	"github.com/inventory-service/resource/mongodb"
@@ -46,6 +49,8 @@ import (
 	branch_domain "github.com/inventory-service/domain/branch"
 	inventory_snapshot_domain "github.com/inventory-service/domain/inventory_snapshot"
 	inventory_stock_count_domain "github.com/inventory-service/domain/inventory_stock_count"
+	inventory_transfer_domain "github.com/inventory-service/domain/inventory_transfer"
+	inventory_transfer_item_domain "github.com/inventory-service/domain/inventory_transfer_item"
 	invoice_domain "github.com/inventory-service/domain/invoice"
 	item_domain "github.com/inventory-service/domain/item"
 	product_domain "github.com/inventory-service/domain/product"
@@ -65,6 +70,7 @@ import (
 	branch_product "github.com/inventory-service/usecase/branch-product"
 	inventory_usecase "github.com/inventory-service/usecase/inventory"
 	inventory_stock_count_service "github.com/inventory-service/usecase/inventory_stock_count"
+	inventory_transfer_usecase "github.com/inventory-service/usecase/inventory_transfer"
 	invoice_service "github.com/inventory-service/usecase/invoice"
 	item_service "github.com/inventory-service/usecase/item"
 	product_service "github.com/inventory-service/usecase/product"
@@ -112,6 +118,8 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	branchProductResource := branch_product_reosurce.NewBranchProductResource(pgDB)
 	productionResource := production_resource.NewProductionResource(pgDB)
 	productionItemResource := production_item_resource.NewProductionItemResource(pgDB)
+	inventoryTransferResource := inventory_transfer_resource.NewInventoryTransferResource(pgDB)
+	inventoryTransferItemResource := inventory_transfer_item_resource.NewInventoryTransferItemResource(pgDB)
 
 	// Initialize usecase
 	userDomain := user_domain.NewUserDomain(userResource)
@@ -131,6 +139,8 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	branchProductDomain := branch_product_domain.NewBranchProductDomain(branchProductResource)
 	productionDomain := production_domain.NewProductionDomain(productionResource, productionItemResource)
 	inventorySnapshotDomain := inventory_snapshot_domain.NewInventorySnapshotDomain(inventorySnapshotResource)
+	inventoryTransferDomain := inventory_transfer_domain.NewInventoryTransferDomain(inventoryTransferResource, inventoryTransferItemResource)
+	inventoryTransferItemDomain := inventory_transfer_item_domain.NewInventoryTransferItemDomain(inventoryTransferItemResource)
 
 	// initialize service
 	userService := auth_service.NewUserService(userDomain)
@@ -146,6 +156,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	inventoryUsecase := inventory_usecase.NewInventoryUsecase(inventoryDomain, itemDomain, stockTransactionDomain)
 	productionUsecase := production_usecase.NewProductionUsecase(productionDomain, stockTransactionDomain, inventoryDomain)
 	branchProductUsecase := branch_product.NewBranchProductUsecase(branchProductDomain, inventoryDomain, productDomain)
+	inventoryTransferUsecase := inventory_transfer_usecase.NewInventoryTransferUsecase(inventoryTransferDomain, inventoryTransferItemDomain, inventoryDomain, stockTransactionDomain)
 
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)
@@ -162,6 +173,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	stockController := stock_controller.NewStockController(stockService)
 	productionController := production_controller.NewProductionHandler(productionUsecase)
 	branchProductController := branch_product_controller.NewBranchProductHanlder(branchProductUsecase)
+	inventoryTransferController := inventory_transfer_controller.NewInventoryTransferHandler(inventoryTransferUsecase)
 
 	router.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -285,6 +297,12 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		branchProductRoutes := apiV1.Group("/branch-product")
 		{
 			branchProductRoutes.POST("/", branchProductController.GetBranchProductList)
+		}
+
+		inventoryTransferRoutes := apiV1.Group("/inventory-transfer")
+		{
+			inventoryTransferRoutes.POST("/create", inventoryTransferController.Create)
+			inventoryTransferRoutes.POST("/update-status", inventoryTransferController.UpdateStatus)
 		}
 	}
 

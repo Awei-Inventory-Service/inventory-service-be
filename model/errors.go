@@ -50,9 +50,10 @@ var (
 	//	- Handler -
 
 	// Usecase
-	UErrInvalidItemCategory = errW.NewDefinition(300000, "Error Invalid Item Category", true, CategoryBadRequest)
-	UErrInvalidProductType  = errW.NewDefinition(400000, "Error Invalid Product Type", true, CategoryBadRequest)
-	UErrStockIsNotEnough    = errW.NewDefinition(300001, "Error Stock Not Enough", false, CategoryBadRequest)
+	UErrInvalidItemCategory            = errW.NewDefinition(300000, "Error Invalid Item Category", true, CategoryBadRequest)
+	UErrInvalidProductType             = errW.NewDefinition(400000, "Error Invalid Product Type", true, CategoryBadRequest)
+	UErrStockIsNotEnough               = errW.NewDefinition(300001, "Error Stock Not Enough", false, CategoryBadRequest)
+	UErrInvalidInventoryTransferStatus = errW.NewDefinition(300002, "Error Transfer Status Not Valid", false, CategoryBadRequest)
 
 	//	Service
 	SErrDataExist       = errW.NewDefinition(200000, "Error Data Already Exist", false, CategoryBadRequest)

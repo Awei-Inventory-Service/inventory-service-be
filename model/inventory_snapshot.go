@@ -8,14 +8,15 @@ import (
 )
 
 type InventorySnapshot struct {
-	ID      primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	ItemID  string             `json:"item_id" bson:"item_id"`
-	Average float64            `json:"average" bson:"average"`
-	Date    time.Time          `json:"date" bson:"date"`
-	Day     int                `json:"day" bson:"day"`
-	Month   int                `json:"month" bson:"month"`
-	Year    int                `json:"year" bson:"year"`
-	Values  []struct {
+	ID       primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	ItemID   string             `json:"item_id" bson:"item_id"`
+	BranchID string             `json:"branch_id" bson:"branch_id"`
+	Average  float64            `json:"average" bson:"average"`
+	Date     time.Time          `json:"date" bson:"date"`
+	Day      int                `json:"day" bson:"day"`
+	Month    int                `json:"month" bson:"month"`
+	Year     int                `json:"year" bson:"year"`
+	Values   []struct {
 		Timestamp time.Time `json:"timestamp"`
 		Value     float64   `json:"value"`
 	} `json:"values"`

@@ -91,58 +91,6 @@ func (i *inventoryDomain) SyncCurrentBalance(ctx context.Context, branchID, item
 	return totalBalance, nil
 }
 
-func (i *inventoryDomain) CalculatePrice(ctx context.Context, branchID, itemID string, currentBalance float64) (float64, *error_wrapper.ErrorWrapper) {
-	limit := 10
-	offset := 0
-
-	purchaseStock := 0.0
-	var (
-		allPurchases []model.Purchase
-	)
-
-	for purchaseStock < currentBalance {
-		purchases, errW := i.purchaseResource.FindByBranchAndItem(branchID, itemID, offset, limit)
-		if errW != nil {
-			return 0.0, errW
-		}
-
-		if len(purchases) == 0 {
-			break
-		}
-
-		for _, purchase := range purchases {
-			allPurchases = append(allPurchases, purchase)
-			purchaseStock += purchase.Quantity
-			if purchaseStock >= currentBalance {
-				break
-			}
-		}
-
-		offset += limit
-	}
-
-	if len(allPurchases) == 0 {
-		return 0.0, nil
-	}
-
-	totalPrice := 0.0
-	totalItem := 0.0
-
-	for _, purchase := range allPurchases {
-		balance := utils.StandarizeMeasurement(float64(purchase.Quantity), purchase.Unit, purchase.Item.Unit)
-		totalItem += balance
-		totalPrice += purchase.PurchaseCost
-	}
-
-	// Prevent division by zero which causes NaN
-	if totalItem == 0 {
-		return 0.0, nil
-	}
-
-	avgPrice := totalPrice / totalItem
-	return avgPrice, nil
-}
-
 func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID string) (currentStock, currentPrice float64, errW *error_wrapper.ErrorWrapper) {
 	var (
 		branchItem *model.Inventory
@@ -318,4 +266,50 @@ func (i *inventoryDomain) BulkSyncBranchItems(ctx context.Context, branchID stri
 		}
 	}
 	return nil
+}
+
+func (i *inventoryDomain) GetPrice(ctx context.Context, date dto.CustomDate, itemID, branchID string) (price float64, errW *error_wrapper.ErrorWrapper) {
+
+	inventorySnapshot, errW := i.inventorySnapshotResource.Get(ctx, []dto.Filter{
+		{
+			Key:    "day",
+			Values: []string{fmt.Sprintf("%d", date.Day)},
+		},
+		{
+			Key:    "month",
+			Values: []string{fmt.Sprintf("%d", date.Month)},
+		},
+		{
+			Key:    "year",
+			Values: []string{fmt.Sprintf("%d", date.Year)},
+		},
+		{
+			Key:    "item_id",
+			Values: []string{itemID},
+		},
+		{
+			Key:    "branch_id",
+			Values: []string{branchID},
+		},
+	}, []dto.Order{}, 1, 0)
+
+	if errW != nil {
+		return
+	}
+
+	if len(inventorySnapshot) == 0 {
+		errW = error_wrapper.New(model.RErrDataNotFound, "No inventory snapshot found")
+		return
+	}
+
+	snapshot := inventorySnapshot[0]
+	snapshot.SortValuesBasedOnTimestamp()
+
+	if len(snapshot.Values) == 0 {
+		errW = error_wrapper.New(model.RErrDataNotFound, "No price values found in inventory snapshot")
+		return
+	}
+
+	price = snapshot.Values[0].Value
+	return
 }
