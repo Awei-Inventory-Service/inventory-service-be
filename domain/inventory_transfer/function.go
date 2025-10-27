@@ -38,3 +38,38 @@ func (i *inventoryTransferDomain) FindByID(ctx context.Context, id string) (resu
 func (i *inventoryTransferDomain) UpdateStatus(ctx context.Context, id, status string) (errW *error_wrapper.ErrorWrapper) {
 	return i.inventoryTransferResource.UpdateStatus(ctx, id, status)
 }
+
+func (i *inventoryTransferDomain) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (results dto.GetInventoryTransferListResponse, errW *error_wrapper.ErrorWrapper) {
+	inventoryTransfers, errW := i.inventoryTransferResource.Get(ctx, filter, order, limit, offset)
+
+	if errW != nil {
+		return
+	}
+
+	for _, inventoryTransfer := range inventoryTransfers {
+		var (
+			items []dto.GetInventoryTransferItemResponse
+		)
+		for _, rawItem := range inventoryTransfer.Items {
+			items = append(items, dto.GetInventoryTransferItemResponse{
+				UUID:         rawItem.UUID,
+				ItemID:       rawItem.Item.UUID,
+				ItemName:     rawItem.Item.Name,
+				ItemQuantity: rawItem.ItemQuantity,
+				ItemUnit:     rawItem.Unit,
+			})
+		}
+		results.InventoryTansfers = append(results.InventoryTansfers, dto.InventoryTransferResponse{
+			UUID:                  inventoryTransfer.UUID,
+			BranchOriginID:        inventoryTransfer.BranchOriginID,
+			BranchOriginName:      inventoryTransfer.BranchOrigin.Name,
+			BranchDestinationID:   inventoryTransfer.BranchDestinationID,
+			BranchDestinationName: inventoryTransfer.BranchDestination.Name,
+			Items:                 items,
+			TransferDate:          inventoryTransfer.TransferDate.String(),
+			Status:                inventoryTransfer.Status,
+		})
+	}
+
+	return
+}

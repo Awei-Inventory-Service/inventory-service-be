@@ -95,7 +95,7 @@ func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID s
 	var (
 		branchItem *model.Inventory
 	)
-
+	fmt.Printf("Syncing branch: %s and item with id: %s\n", branchID, itemID)
 	branchItem, errW = i.inventoryResource.FindByBranchAndItem(branchID, itemID)
 
 	if errW != nil && errW.Is(model.RErrDataNotFound) {
@@ -311,5 +311,30 @@ func (i *inventoryDomain) GetPrice(ctx context.Context, date dto.CustomDate, ite
 	}
 
 	price = snapshot.Values[0].Value
+	return
+}
+
+func (i *inventoryDomain) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offest int) (inventories []dto.GetInventoryResponse, errW *error_wrapper.ErrorWrapper) {
+	inventoriesRaw, errW := i.inventoryResource.Get(ctx, filter, order, limit, offest)
+
+	if errW != nil {
+		fmt.Println("Error getting all inventories resource", errW)
+		return
+	}
+
+	for _, inventory := range inventoriesRaw {
+		inventories = append(inventories, dto.GetInventoryResponse{
+			UUID:         inventory.UUID,
+			BranchID:     inventory.Branch.UUID,
+			BranchName:   inventory.Branch.Name,
+			ItemID:       inventory.Item.UUID,
+			ItemName:     inventory.Item.Name,
+			ItemCategory: inventory.Item.Category,
+			ItemUnit:     inventory.Item.Unit,
+			CurrentStock: inventory.Stock,
+			Price:        inventory.Value,
+			CreatedAt:    inventory.CreatedAt.String(),
+		})
+	}
 	return
 }

@@ -8,6 +8,7 @@ import (
 type InventoryTransferHandler interface {
 	Create(c *gin.Context)
 	UpdateStatus(c *gin.Context)
+	GetList(c *gin.Context)
 }
 
 type inventoryTransferHandler struct {

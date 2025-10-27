@@ -51,3 +51,22 @@ func (h *inventoryTransferHandler) UpdateStatus(ctx *gin.Context) {
 
 	errW = h.inventoryTransferUsecase.UpdateStatus(ctx, updateStatusRequest)
 }
+
+func (h *inventoryTransferHandler) GetList(ctx *gin.Context) {
+	var (
+		payload            dto.GetListRequest
+		errW               *error_wrapper.ErrorWrapper
+		inventoryTransfers dto.GetInventoryTransferListResponse
+	)
+
+	defer func() {
+		response_wrapper.New(&ctx.Writer, ctx, errW == nil, inventoryTransfers, errW)
+	}()
+
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+		return
+	}
+
+	inventoryTransfers, errW = h.inventoryTransferUsecase.Get(ctx, payload)
+}

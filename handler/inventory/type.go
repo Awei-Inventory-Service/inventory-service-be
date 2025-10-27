@@ -10,6 +10,7 @@ type InventoryHandler interface {
 	FindAll(c *gin.Context)
 	SyncBalance(c *gin.Context)
 	Create(c *gin.Context)
+	GetList(c *gin.Context)
 }
 
 type inventoryHandler struct {

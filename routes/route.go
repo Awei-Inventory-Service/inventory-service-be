@@ -156,7 +156,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	inventoryUsecase := inventory_usecase.NewInventoryUsecase(inventoryDomain, itemDomain, stockTransactionDomain)
 	productionUsecase := production_usecase.NewProductionUsecase(productionDomain, stockTransactionDomain, inventoryDomain)
 	branchProductUsecase := branch_product.NewBranchProductUsecase(branchProductDomain, inventoryDomain, productDomain)
-	inventoryTransferUsecase := inventory_transfer_usecase.NewInventoryTransferUsecase(inventoryTransferDomain, inventoryTransferItemDomain, inventoryDomain, stockTransactionDomain)
+	inventoryTransferUsecase := inventory_transfer_usecase.NewInventoryTransferUsecase(inventoryTransferDomain, inventoryTransferItemDomain, inventoryDomain, stockTransactionDomain, itemDomain)
 
 	// initialize controller
 	authController := auth_controller.NewAuthController(userService)
@@ -284,8 +284,10 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		branchItemRoutes := apiV1.Group("/inventory")
 		{
 			branchItemRoutes.GET("/", inventoryController.FindAll)
+			branchItemRoutes.POST("/get-list", inventoryController.GetList)
 			branchItemRoutes.POST("/sync", inventoryController.SyncBalance)
 			branchItemRoutes.POST("/", inventoryController.Create)
+			branchItemRoutes.GET("/:branch_id/:item_id", inventoryController.FindByBranchIdAndItemId)
 		}
 
 		productionRoutes := apiV1.Group("/production")
@@ -303,6 +305,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		{
 			inventoryTransferRoutes.POST("/create", inventoryTransferController.Create)
 			inventoryTransferRoutes.POST("/update-status", inventoryTransferController.UpdateStatus)
+			inventoryTransferRoutes.POST("/get-list", inventoryTransferController.GetList)
 		}
 	}
 

@@ -52,11 +52,11 @@ func (s *inventoryHandler) FindByBranchIdAndItemId(c *gin.Context) {
 		response_wrapper.New(&c.Writer, c, errW == nil, itemBranch, errW)
 	}()
 
-	if err := c.ShouldBindJSON(&getStockBalanceReqest); err != nil {
-		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
-		return
-	}
+	branchID := c.Param("branch_id")
 
+	itemID := c.Param("item_id")
+	getStockBalanceReqest.BranchId = branchID
+	getStockBalanceReqest.ItemId = itemID
 	itemBranch, errW = s.inventoryUsecase.FindByBranchIdAndItemId(getStockBalanceReqest)
 
 	if errW != nil {
@@ -101,4 +101,22 @@ func (b *inventoryHandler) SyncBalance(c *gin.Context) {
 	if errW != nil {
 		return
 	}
+}
+func (i *inventoryHandler) GetList(c *gin.Context) {
+	var (
+		errW        *error_wrapper.ErrorWrapper
+		inventories []dto.GetInventoryResponse
+		payload     dto.GetListRequest
+	)
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+		return
+	}
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, inventories, errW)
+	}()
+
+	inventories, errW = i.inventoryUsecase.Get(c, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 }

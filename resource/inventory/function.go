@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 	"gorm.io/gorm"
@@ -89,4 +91,62 @@ func (i *inventoryResource) Delete(branchID, itemID string) *error_wrapper.Error
 	}
 
 	return nil
+}
+
+func (i *inventoryResource) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (inventories []model.Inventory, errW *error_wrapper.ErrorWrapper) {
+	db := i.db.Model(&model.Inventory{})
+
+	// Check if we need to join with items table
+	needItemJoin := false
+	for _, fil := range filter {
+		if strings.HasPrefix(fil.Key, "items.") || strings.HasPrefix(fil.Key, "item.") {
+			needItemJoin = true
+			break
+		}
+	}
+
+	// Add join if needed
+	if needItemJoin {
+		db = db.Joins("JOIN items ON inventories.item_id = items.uuid")
+	}
+
+	for _, fil := range filter {
+		if len(fil.Values) == 1 {
+			value := fil.Values[0]
+
+			switch fil.Wildcard {
+			case "==":
+				db = db.Where(fil.Key+" = ?", value)
+			case "<":
+				db = db.Where(fil.Key+" < ?", value)
+			}
+		} else {
+			db = db.Where(fil.Key+" IN ?", fil.Values)
+		}
+	}
+	for _, ord := range order {
+		if ord.IsAsc {
+			db = db.Order(ord.Key + " ASC")
+		} else {
+			db = db.Order(ord.Key + " DESC")
+		}
+	}
+
+	if limit > 0 {
+		db = db.Limit(limit)
+	}
+	if offset > 0 {
+		db = db.Offset(offset)
+	}
+
+	result := db.WithContext(ctx).
+		Preload("Branch").
+		Preload("Item").
+		Find(&inventories)
+
+	if result.Error != nil {
+		errW = error_wrapper.New(model.RErrPostgresReadDocument, result.Error)
+		return
+	}
+	return
 }

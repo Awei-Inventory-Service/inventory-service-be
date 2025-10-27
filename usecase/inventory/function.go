@@ -88,3 +88,7 @@ func (i *inventoryUsecase) FindAll() ([]dto.GetInventoryResponse, *error_wrapper
 func (i *inventoryUsecase) SyncBranchItem(ctx context.Context, payload dto.SyncBalanceRequest) (currentStock, currentPrice float64, errW *error_wrapper.ErrorWrapper) {
 	return i.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, payload.ItemID)
 }
+
+func (i *inventoryUsecase) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper) {
+	return i.inventoryDomain.Get(ctx, filter, order, limit, offset)
+}

@@ -78,7 +78,7 @@ func (i *inventoryTransferResource) Get(ctx context.Context, filter []dto.Filter
 }
 
 func (i *inventoryTransferResource) FindByID(ctx context.Context, id string) (inventoryTransfer model.InventoryTransfer, errW *error_wrapper.ErrorWrapper) {
-	result := i.db.WithContext(ctx).Where("uuid = ? ", id).First(&inventoryTransfer)
+	result := i.db.WithContext(ctx).Where("uuid = ? ", id).Preload("Items").First(&inventoryTransfer)
 
 	if result.Error != nil {
 		errW = error_wrapper.New(model.RErrPostgresReadDocument, result.Error)
@@ -88,7 +88,7 @@ func (i *inventoryTransferResource) FindByID(ctx context.Context, id string) (in
 }
 
 func (i *inventoryTransferResource) UpdateStatus(ctx context.Context, id, status string) (errW *error_wrapper.ErrorWrapper) {
-	result := i.db.Where("uuid = ? ", id).Select("status").Updates(&status)
+	result := i.db.WithContext(ctx).Model(&model.InventoryTransfer{}).Where("uuid = ?", id).Update("status", status)
 
 	if result.Error != nil {
 		return error_wrapper.New(model.RErrPostgresUpdateDocument, result.Error.Error())

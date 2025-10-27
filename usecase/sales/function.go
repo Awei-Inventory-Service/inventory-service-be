@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/inventory-service/constant"
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
@@ -80,7 +81,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 
 		for _, productRecipe := range productRecipes {
 			total := productRecipe.Amount * sales.Quantity
-			referenceType := "SALES_CREATION"
+			referenceType := constant.Sales
 			errW = s.stockTransactionDomain.Create(model.StockTransaction{
 				BranchOriginID:      payload.BranchID,
 				BranchDestinationID: payload.BranchID,

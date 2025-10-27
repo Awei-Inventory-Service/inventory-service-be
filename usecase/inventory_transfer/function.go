@@ -86,6 +86,7 @@ func (i *inventoryTransferUsecase) UpdateStatus(ctx context.Context, payload dto
 
 		// If an inventory status is completed, then create new stock transaction
 		for _, inventoryTransferItem := range inventoryTransfer.Items {
+			referenceType := constant.InventoryTransfer
 			stockTransaction := model.StockTransaction{
 				BranchOriginID:      inventoryTransfer.BranchOriginID,
 				BranchDestinationID: inventoryTransfer.BranchDestinationID,
@@ -96,6 +97,7 @@ func (i *inventoryTransferUsecase) UpdateStatus(ctx context.Context, payload dto
 				Unit:                inventoryTransferItem.Unit,
 				Reference:           inventoryTransfer.UUID,
 				Cost:                inventoryTransferItem.ItemCost,
+				ReferenceType:       &referenceType,
 			}
 			errW = i.stockTransactionDomain.Create(stockTransaction)
 
@@ -113,7 +115,26 @@ func (i *inventoryTransferUsecase) UpdateStatus(ctx context.Context, payload dto
 				fmt.Println("Error creating stock transaction for OUT process in UpdateStatus", errW)
 				return
 			}
+
+			_, _, errW = i.inventoryDomain.SyncBranchItem(ctx, inventoryTransfer.BranchDestinationID, inventoryTransferItem.ItemID)
+
+			if errW != nil {
+				fmt.Println("Error sync branch item", errW, inventoryTransferItem.ItemID)
+				continue
+			}
+
+			_, _, errW = i.inventoryDomain.SyncBranchItem(ctx, inventoryTransfer.BranchOriginID, inventoryTransferItem.ItemID)
+
+			if errW != nil {
+				fmt.Println("Error sync branch item", errW, inventoryTransferItem.ItemID)
+				continue
+			}
+
 		}
 	}
 	return
+}
+
+func (i *inventoryTransferUsecase) Get(ctx context.Context, payload dto.GetListRequest) (result dto.GetInventoryTransferListResponse, errW *error_wrapper.ErrorWrapper) {
+	return i.inventoryTransferDomain.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 }
