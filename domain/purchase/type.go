@@ -18,6 +18,7 @@ type PurchaseDomain interface {
 	FindByID(id string) (*model.Purchase, *error_wrapper.ErrorWrapper)
 	Update(id string, payload dto.UpdatePurchaseRequest) *error_wrapper.ErrorWrapper
 	Delete(ctx context.Context, id, userID string) (*model.Purchase, *error_wrapper.ErrorWrapper)
+	Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (payload []dto.GetPurchaseResponse, errW *error_wrapper.ErrorWrapper)
 }
 
 type purchaseDomain struct {

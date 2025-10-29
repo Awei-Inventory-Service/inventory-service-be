@@ -50,6 +50,29 @@ func (p *purchaseDomain) FindAll() (payload []dto.GetPurchaseResponse, errW *err
 	return
 }
 
+func (p *purchaseDomain) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (payload []dto.GetPurchaseResponse, errW *error_wrapper.ErrorWrapper) {
+	result, errW := p.purchaseResource.Get(ctx, filter, order, limit, offset)
+
+	if errW != nil {
+		return
+	}
+
+	for _, data := range result {
+		payload = append(payload, dto.GetPurchaseResponse{
+			UUID:       data.UUID,
+			Supplier:   data.Supplier,
+			BranchID:   data.Branch.UUID,
+			BranchName: data.Branch.Name,
+			ItemID:     data.Item.UUID,
+			ItemName:   data.Item.Name,
+			Quantity:   data.Quantity,
+			Unit:       data.Unit,
+			Cost:       data.PurchaseCost,
+		})
+	}
+	return
+}
+
 func (p *purchaseDomain) FindByID(id string) (*model.Purchase, *error_wrapper.ErrorWrapper) {
 	return p.purchaseResource.FindByID(id)
 }

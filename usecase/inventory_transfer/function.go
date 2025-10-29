@@ -138,3 +138,128 @@ func (i *inventoryTransferUsecase) UpdateStatus(ctx context.Context, payload dto
 func (i *inventoryTransferUsecase) Get(ctx context.Context, payload dto.GetListRequest) (result dto.GetInventoryTransferListResponse, errW *error_wrapper.ErrorWrapper) {
 	return i.inventoryTransferDomain.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 }
+
+func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payload dto.UpdateInventoryTransferRequest) (result model.InventoryTransfer, errW *error_wrapper.ErrorWrapper) {
+	var (
+		updatedItems []string
+	)
+	// 1. Update the old inventory transfer
+	inventoryTransfer, errW := i.inventoryTransferDomain.Update(ctx, id, payload)
+
+	if errW != nil {
+		fmt.Println("Error updating inventory transfer", errW)
+		return
+	}
+
+	// 2. Delete the old inventory transfer item and the stock transaction
+	errW = i.inventoryTransferItemDomain.Delete(ctx, model.InventoryTransferItem{
+		InventoryTransferID: inventoryTransfer.UUID,
+	})
+
+	if errW != nil {
+		fmt.Println("Error deleting inventory transfer item", errW)
+		return
+	}
+
+	items, errW := i.stockTransactionDomain.InvalidateStockTransaction(ctx, []map[string]interface{}{
+		{
+			"field": "reference",
+			"value": inventoryTransfer.UUID,
+		},
+	}, payload.IssuerID)
+
+	if errW != nil {
+		fmt.Println("Fail invalidating stock transaction")
+		return inventoryTransfer, errW
+	}
+	updatedItems = append(updatedItems, items...)
+
+	now := time.Now()
+	// 3. Create new inventory transfer item and stock transaction
+	for _, transferItem := range payload.Items {
+		_, _, _ = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchOriginID, transferItem.ItemID)
+		itemCost, errW := i.inventoryDomain.GetPrice(ctx, dto.CustomDate{
+			Day:   now.Day(),
+			Month: int(now.Month()),
+			Year:  now.Year(),
+		}, transferItem.ItemID, payload.BranchOriginID)
+
+		if errW != nil {
+			fmt.Println("Error getting inventory price", errW)
+			continue
+		}
+
+		item, errW := i.itemDomain.FindByID(ctx, transferItem.ItemID)
+
+		if errW != nil {
+			fmt.Println("Error getting item by id in create inventory transfer")
+			return inventoryTransfer, errW
+		}
+
+		standarizeUnit := utils.StandarizeMeasurement(transferItem.Quantity, transferItem.Unit, item.Unit)
+
+		_, errW = i.inventoryTransferItemDomain.Create(ctx, model.InventoryTransferItem{
+			InventoryTransferID: inventoryTransfer.UUID,
+			ItemID:              transferItem.ItemID,
+			ItemQuantity:        transferItem.Quantity,
+			Unit:                transferItem.Unit,
+			ItemCost:            itemCost * standarizeUnit,
+		})
+
+		if errW != nil {
+			fmt.Println("Error creating inventory transfer", errW)
+			continue
+		}
+
+		if payload.Status == constant.TRANSFER_STATUS_COMPLETED {
+			// IF status is completed, then crate stock transaction
+			referenceType := constant.InventoryTransfer
+			stockTransaction := model.StockTransaction{
+				BranchOriginID:      inventoryTransfer.BranchOriginID,
+				BranchDestinationID: inventoryTransfer.BranchDestinationID,
+				ItemID:              transferItem.ItemID,
+				Type:                "IN",
+				Quantity:            transferItem.Quantity,
+				IssuerID:            inventoryTransfer.IssuerID,
+				Unit:                transferItem.Unit,
+				Reference:           inventoryTransfer.UUID,
+				Cost:                itemCost * standarizeUnit,
+				ReferenceType:       &referenceType,
+			}
+			errW = i.stockTransactionDomain.Create(stockTransaction)
+
+			if errW != nil {
+				fmt.Println("Error creating stock transaction for IN process in UpdateStatus", errW)
+				return inventoryTransfer, errW
+			}
+
+			stockTransactionOut := stockTransaction
+			stockTransactionOut.Type = "OUT"
+
+			errW = i.stockTransactionDomain.Create(stockTransactionOut)
+
+			if errW != nil {
+				fmt.Println("Error creating stock transaction for OUT process in UpdateStatus", errW)
+				return inventoryTransfer, errW
+			}
+
+			updatedItems = append(updatedItems, transferItem.ItemID)
+		}
+	}
+	// 4.Sync branch item for all impacted items
+	errW = i.inventoryDomain.BulkSyncBranchItems(ctx, payload.BranchDestinationID, updatedItems)
+
+	if errW != nil {
+		fmt.Println("Error bulk sync branch items for branch destination id", errW)
+		return
+	}
+
+	errW = i.inventoryDomain.BulkSyncBranchItems(ctx, payload.BranchOriginID, updatedItems)
+
+	if errW != nil {
+		fmt.Println("Error bulk sync branch items for branch origin id", errW)
+		return
+	}
+
+	return
+}

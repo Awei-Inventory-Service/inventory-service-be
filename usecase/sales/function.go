@@ -118,7 +118,7 @@ func (s *salesService) Delete(ctx context.Context, salesID string, userID string
 		return errW
 	}
 
-	errW = s.stockTransactionDomain.InvalidateStockTransaction(ctx, []map[string]interface{}{
+	_, errW = s.stockTransactionDomain.InvalidateStockTransaction(ctx, []map[string]interface{}{
 		{
 			"field": "reference",
 			"value": salesID,

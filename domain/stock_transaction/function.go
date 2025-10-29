@@ -56,7 +56,7 @@ func (s *stockTransactionDomain) CreateReversalStockTransaction(stockTransaction
 	}
 }
 
-func (s *stockTransactionDomain) InvalidateStockTransaction(ctx context.Context, filter []map[string]interface{}, userID string) (errW *error_wrapper.ErrorWrapper) {
+func (s *stockTransactionDomain) InvalidateStockTransaction(ctx context.Context, filter []map[string]interface{}, userID string) (items []string, errW *error_wrapper.ErrorWrapper) {
 	stockTransactions, errW := s.FindWithFilter(filter, "created_at DESC", 0, 0)
 
 	if errW != nil {
@@ -67,6 +67,7 @@ func (s *stockTransactionDomain) InvalidateStockTransaction(ctx context.Context,
 		now := time.Now()
 		stockTransaction.DeletedAt = &now
 		stockTransaction.DeletedBy = &userID
+		items = append(items, stockTransaction.ItemID)
 		errW = s.stockTransactionResource.Update(stockTransaction.UUID, stockTransaction)
 		if errW != nil {
 			return

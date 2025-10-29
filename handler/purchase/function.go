@@ -8,17 +8,23 @@ import (
 	"github.com/inventory-service/model"
 )
 
-func (p *purchaseController) GetPurchases(c *gin.Context) {
+func (p *purchaseController) Get(c *gin.Context) {
 	var (
 		purchases []dto.GetPurchaseResponse
 		errW      *error_wrapper.ErrorWrapper
+		payload   dto.GetListRequest
 	)
 
 	defer func() {
 		response_wrapper.New(&c.Writer, c, errW == nil, purchases, errW)
 	}()
 
-	purchases, errW = p.purchaseService.FindAll()
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+		return
+	}
+
+	purchases, errW = p.purchaseService.Get(c, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 	if errW != nil {
 		return
 	}

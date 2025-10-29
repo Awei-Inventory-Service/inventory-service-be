@@ -10,6 +10,7 @@ import (
 
 type InventoryTransferItemDomain interface {
 	Create(ctx context.Context, payload model.InventoryTransferItem) (result model.InventoryTransferItem, errW *error_wrapper.ErrorWrapper)
+	Delete(ctx context.Context, payload model.InventoryTransferItem) (errW *error_wrapper.ErrorWrapper)
 }
 
 type inventoryTransferItemDomain struct {

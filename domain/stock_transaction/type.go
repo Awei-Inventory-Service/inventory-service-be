@@ -15,7 +15,7 @@ type StockTransactionDomain interface {
 	Update(id string, transaction model.StockTransaction) *error_wrapper.ErrorWrapper
 	Delete(id string) *error_wrapper.ErrorWrapper
 	FindWithFilter(filters []map[string]interface{}, sort string, limit, offset int) ([]model.StockTransaction, *error_wrapper.ErrorWrapper)
-	InvalidateStockTransaction(ctx context.Context, filter []map[string]interface{}, userID string) (errW *error_wrapper.ErrorWrapper)
+	InvalidateStockTransaction(ctx context.Context, filter []map[string]interface{}, userID string) (deletedItems []string, errW *error_wrapper.ErrorWrapper)
 }
 
 type stockTransactionDomain struct {

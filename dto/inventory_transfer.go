@@ -11,6 +11,22 @@ type CreateInventoryTransferRequest struct {
 	Items               []CreateInventoryTransferItemRequest `json:"items" binding:"required"`
 }
 
+type UpdateInventoryTransferRequest struct {
+	BranchDestinationID string                               `json:"branch_destination_id" binding:"required"`
+	BranchOriginID      string                               `json:"branch_origin_id" binding:"required"`
+	IssuerID            string                               `json:"issuer_id"`
+	TransferDate        string                               `json:"transfer_date" binding:"required"`
+	Status              string                               `json:"status" binding:"required"`
+	Remarks             string                               `json:"remarks"`
+	Items               []UpdateInventoryTransferItemRequest `json:"items" binding:"required"`
+}
+
+type UpdateInventoryTransferItemRequest struct {
+	ItemID   string  `json:"item_id" binding:"required"`
+	Quantity float64 `json:"quantity" binding:"required"`
+	Unit     string  `json:"unit" binding:"required"`
+}
+
 type CreateInventoryTransferItemRequest struct {
 	ItemID   string  `json:"item_id" binding:"required"`
 	Quantity float64 `json:"quantity" binding:"required"`

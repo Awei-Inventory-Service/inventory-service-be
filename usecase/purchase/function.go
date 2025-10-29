@@ -159,7 +159,7 @@ func (p *purchaseService) Update(ctx context.Context, id string, payload dto.Upd
 		return errW
 	}
 	// 2. Invalidate old stock transaction and create new one
-	errW = p.stockTransactionDomain.InvalidateStockTransaction(ctx, []map[string]interface{}{
+	_, errW = p.stockTransactionDomain.InvalidateStockTransaction(ctx, []map[string]interface{}{
 		{
 			"field": "reference",
 			"value": id,
@@ -206,7 +206,7 @@ func (p *purchaseService) Delete(ctx context.Context, id, userID string) *error_
 	}
 
 	// 2. Invalidate stock transaction
-	errW = p.stockTransactionDomain.InvalidateStockTransaction(ctx, []map[string]interface{}{
+	_, errW = p.stockTransactionDomain.InvalidateStockTransaction(ctx, []map[string]interface{}{
 		{
 			"field": "reference",
 			"value": id,
@@ -220,4 +220,13 @@ func (p *purchaseService) Delete(ctx context.Context, id, userID string) *error_
 	_, _, errW = p.inventoryDomain.SyncBranchItem(ctx, deletedPurchase.BranchID, deletedPurchase.ItemID)
 
 	return errW
+}
+
+func (p *purchaseService) Get(
+	ctx context.Context,
+	filter []dto.Filter,
+	order []dto.Order,
+	limit, offset int,
+) (results []dto.GetPurchaseResponse, errW *error_wrapper.ErrorWrapper) {
+	return p.purchaseDomain.Get(ctx, filter, order, limit, offset)
 }

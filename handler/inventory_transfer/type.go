@@ -7,6 +7,7 @@ import (
 
 type InventoryTransferHandler interface {
 	Create(c *gin.Context)
+	Update(c *gin.Context)
 	UpdateStatus(c *gin.Context)
 	GetList(c *gin.Context)
 }

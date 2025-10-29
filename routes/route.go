@@ -223,7 +223,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		purchaseRoutes := apiV1.Group("/purchase")
 		{
 			// purchaseRoutes.Use(middleware.AuthMiddleware())
-			purchaseRoutes.GET("/", purchaseController.GetPurchases)
+			purchaseRoutes.POST("/get-list", purchaseController.Get)
 			purchaseRoutes.GET("/:id", purchaseController.GetPurchase)
 			purchaseRoutes.POST("/", purchaseController.Create)
 			purchaseRoutes.PUT("/:id", purchaseController.Update)
@@ -305,6 +305,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		{
 			inventoryTransferRoutes.POST("/create", inventoryTransferController.Create)
 			inventoryTransferRoutes.POST("/update-status", inventoryTransferController.UpdateStatus)
+			inventoryTransferRoutes.PUT("/update", inventoryTransferController.Update)
 			inventoryTransferRoutes.POST("/get-list", inventoryTransferController.GetList)
 		}
 	}

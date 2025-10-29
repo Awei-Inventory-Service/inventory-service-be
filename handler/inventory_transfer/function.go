@@ -34,6 +34,26 @@ func (h *inventoryTransferHandler) Create(ctx *gin.Context) {
 	createResponse, errW = h.inventoryTransferUsecase.Create(ctx, createRequest)
 }
 
+func (h *inventoryTransferHandler) Update(ctx *gin.Context) {
+	var (
+		payload dto.UpdateInventoryTransferRequest
+		resp    model.InventoryTransfer
+		errW    *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&ctx.Writer, ctx, errW == nil, resp, errW)
+	}()
+
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+		return
+	}
+
+	id := ctx.Param("id")
+	resp, errW = h.inventoryTransferUsecase.Update(ctx, id, payload)
+}
+
 func (h *inventoryTransferHandler) UpdateStatus(ctx *gin.Context) {
 	var (
 		updateStatusRequest dto.UpdateInventoryTransferStatus

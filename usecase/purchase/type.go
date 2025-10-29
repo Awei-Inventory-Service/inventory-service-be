@@ -24,6 +24,7 @@ type PurchaseService interface {
 	FindByID(id string) (*model.Purchase, *error_wrapper.ErrorWrapper)
 	Update(ctx context.Context, id string, payload dto.UpdatePurchaseRequest) *error_wrapper.ErrorWrapper
 	Delete(ctx context.Context, id, userID string) *error_wrapper.ErrorWrapper
+	Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (purchases []dto.GetPurchaseResponse, errW *error_wrapper.ErrorWrapper)
 }
 
 type purchaseService struct {

@@ -17,6 +17,7 @@ type InventoryTransferUsecase interface {
 	Create(ctx context.Context, payload dto.CreateInventoryTransferRequest) (newData model.InventoryTransfer, errW *error_wrapper.ErrorWrapper)
 	UpdateStatus(ctx context.Context, payload dto.UpdateInventoryTransferStatus) (errW *error_wrapper.ErrorWrapper)
 	Get(ctx context.Context, payload dto.GetListRequest) (result dto.GetInventoryTransferListResponse, errW *error_wrapper.ErrorWrapper)
+	Update(ctx context.Context, id string, payload dto.UpdateInventoryTransferRequest) (result model.InventoryTransfer, errW *error_wrapper.ErrorWrapper)
 }
 
 type inventoryTransferUsecase struct {

@@ -6,7 +6,7 @@ import (
 )
 
 type PurchaseController interface {
-	GetPurchases(c *gin.Context)
+	Get(c *gin.Context)
 	GetPurchase(c *gin.Context)
 	Create(c *gin.Context)
 	Update(c *gin.Context)
