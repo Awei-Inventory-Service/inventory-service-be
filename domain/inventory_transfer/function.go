@@ -93,3 +93,14 @@ func (i *inventoryTransferDomain) Get(ctx context.Context, filter []dto.Filter, 
 
 	return
 }
+
+func (i *inventoryTransferDomain) Delete(ctx context.Context, id string) (errW *error_wrapper.ErrorWrapper) {
+	// 1. Delete inventory transfer
+	errW = i.inventoryTransferResource.Delete(ctx, model.InventoryTransfer{UUID: id})
+	if errW != nil {
+		fmt.Println("Error deleting inventory transfer")
+		return
+	}
+
+	return
+}

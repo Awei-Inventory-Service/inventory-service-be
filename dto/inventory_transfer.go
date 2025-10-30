@@ -60,6 +60,12 @@ type GetInventoryTransferItemResponse struct {
 	ItemUnit     string  `json:"item_unit"`
 }
 
+type DeleteInventoryTransferRequest struct {
+	ID       string `json:"id"`
+	BranchID string `json:"branch_id"`
+	UserID   string `json:"user_id"`
+}
+
 func (u UpdateInventoryTransferStatus) ValidateStatus() bool {
 	if u.Status != constant.TRANSFER_STATUS_CANCELLED && u.Status != constant.TRANSFER_STATUS_IN_PROGRESS && u.Status != constant.TRANSFER_STATUS_COMPLETED {
 		return false

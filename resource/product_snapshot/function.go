@@ -1,4 +1,4 @@
-package inventory_snapshot
+package product_snapshot
 
 import (
 	"context"
@@ -14,8 +14,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (i *inventorySnapshotResource) Create(ctx context.Context, payload model.InventorySnapshot) (errW *error_wrapper.ErrorWrapper) {
-	_, err := i.inventorySnapshotCollection.InsertOne(ctx, payload)
+func (p *productSnapshotResource) Create(ctx context.Context, payload model.ProductSnapshot) (errW *error_wrapper.ErrorWrapper) {
+	_, err := p.productSnapshotCollection.InsertOne(ctx, payload)
 
 	if err != nil {
 		return error_wrapper.New(model.RErrMongoDBCreateDocument, err.Error())
@@ -24,30 +24,8 @@ func (i *inventorySnapshotResource) Create(ctx context.Context, payload model.In
 	return
 }
 
-func (i *inventorySnapshotResource) Update(ctx context.Context, snapshotID string, payload model.InventorySnapshot) (errW *error_wrapper.ErrorWrapper) {
-	id, err := primitive.ObjectIDFromHex(snapshotID)
-
-	if err != nil {
-		return error_wrapper.New(model.RErrDecodeStringToObjectID, err.Error())
-	}
-
-	filter := bson.D{{Key: "_id", Value: id}}
-
-	update := bson.D{{Key: "$set", Value: payload}}
-
-	_, err = i.inventorySnapshotCollection.UpdateOne(ctx, filter, update)
-
-	if err != nil {
-		return error_wrapper.New(model.RErrMongoDBUpdateDocument, err.Error())
-	}
-
-	return
-}
-
-func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]model.InventorySnapshot, *error_wrapper.ErrorWrapper) {
-	var inventorySnapshots []model.InventorySnapshot
-
-	// Build MongoDB filter
+func (p *productSnapshotResource) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]model.ProductSnapshot, *error_wrapper.ErrorWrapper) {
+	var productSnapshots []model.ProductSnapshot
 	mongoFilter := bson.D{}
 
 	for _, f := range filter {
@@ -56,11 +34,11 @@ func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter
 		}
 
 		switch f.Key {
-		case "item_id":
+		case "product_id":
 			if len(f.Values) == 1 {
-				mongoFilter = append(mongoFilter, bson.E{Key: "item_id", Value: f.Values[0]})
+				mongoFilter = append(mongoFilter, bson.E{Key: "product_id", Value: f.Values[0]})
 			} else {
-				mongoFilter = append(mongoFilter, bson.E{Key: "item_id", Value: bson.D{{Key: "$in", Value: f.Values}}})
+				mongoFilter = append(mongoFilter, bson.E{Key: "product_id", Value: bson.D{{Key: "$in", Value: f.Values}}})
 			}
 		case "day":
 			if len(f.Values) == 1 {
@@ -112,10 +90,7 @@ func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter
 			}
 		}
 	}
-
-	// Build sort options
 	findOptions := options.Find()
-
 	for _, o := range order {
 		sortDirection := 1
 		if !o.IsAsc {
@@ -133,7 +108,7 @@ func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter
 	}
 
 	// Execute query
-	cursor, err := i.inventorySnapshotCollection.Find(ctx, mongoFilter, findOptions)
+	cursor, err := p.productSnapshotCollection.Find(ctx, mongoFilter, findOptions)
 	if err != nil {
 		return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 	}
@@ -142,46 +117,48 @@ func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter
 
 	// Decode results
 	for cursor.Next(ctx) {
-		var inventorySnapshot model.InventorySnapshot
-		if err := cursor.Decode(&inventorySnapshot); err != nil {
+		var productSnapshot model.ProductSnapshot
+		if err := cursor.Decode(&productSnapshot); err != nil {
 			return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 		}
-		inventorySnapshots = append(inventorySnapshots, inventorySnapshot)
+		productSnapshots = append(productSnapshots, productSnapshot)
 	}
 
 	if err := cursor.Err(); err != nil {
 		return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 	}
 
-	return inventorySnapshots, nil
+	return productSnapshots, nil
 }
 
-func (i *inventorySnapshotResource) FindByID(ctx context.Context, snapshotID string) (inventorySnapshot model.InventorySnapshot, errW *error_wrapper.ErrorWrapper) {
+func (p *productSnapshotResource) Update(ctx context.Context, snapshotID string, payload model.ProductSnapshot) (errW *error_wrapper.ErrorWrapper) {
 	id, err := primitive.ObjectIDFromHex(snapshotID)
 
 	if err != nil {
-		return model.InventorySnapshot{}, error_wrapper.New(model.RErrDecodeStringToObjectID, err.Error())
+		return error_wrapper.New(model.RErrDecodeStringToObjectID, err.Error())
 	}
 
-	result := i.inventorySnapshotCollection.FindOne(ctx, bson.M{
-		"_id": id,
-	})
+	filter := bson.D{{Key: "_id", Value: id}}
 
-	if err = result.Decode(&inventorySnapshot); err != nil {
-		return model.InventorySnapshot{}, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
+	update := bson.D{{Key: "$set", Value: payload}}
+
+	_, err = p.productSnapshotCollection.UpdateOne(ctx, filter, update)
+
+	if err != nil {
+		return error_wrapper.New(model.RErrMongoDBUpdateDocument, err.Error())
 	}
 
 	return
 }
 
-func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.CreateInventorySnapshotRequest) (errW *error_wrapper.ErrorWrapper) {
+func (p *productSnapshotResource) Upsert(ctx context.Context, payload dto.CreateProductSnapshotRequest) (errW *error_wrapper.ErrorWrapper) {
 	today := time.Now().Truncate(24 * time.Hour)
 	now := time.Now()
 
 	filter := []dto.Filter{
 		{
 			Key:    "item_id",
-			Values: []string{payload.ItemID},
+			Values: []string{payload.ProductID},
 		},
 		{
 			Key:    "branch_id",
@@ -200,16 +177,14 @@ func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.Crea
 			Values: []string{fmt.Sprintf("%d", now.Year())},
 		},
 	}
-
-	existingInventorySnapshots, errW := i.Get(ctx, filter, []dto.Order{}, 1, 0)
+	existingProductSnapshots, errW := p.Get(ctx, filter, []dto.Order{}, 1, 0)
 
 	if errW != nil {
 		return errW
 	}
 
-	// If snapshot exists, update it
-	if len(existingInventorySnapshots) > 0 {
-		existingSnapshot := existingInventorySnapshots[0]
+	if len(existingProductSnapshots) > 0 {
+		existingProductSnasphot := existingProductSnapshots[0]
 
 		newValue := struct {
 			Timestamp time.Time `json:"timestamp"`
@@ -219,27 +194,28 @@ func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.Crea
 			Value:     payload.Value,
 		}
 
-		existingSnapshot.Values = append(existingSnapshot.Values, newValue)
+		existingProductSnasphot.Values = append(existingProductSnasphot.Values, newValue)
 
-		// Recalculate average
 		var total float64
-		for _, v := range existingSnapshot.Values {
+		for _, v := range existingProductSnasphot.Values {
 			total += v.Value
 		}
-		existingSnapshot.Average = total / float64(len(existingSnapshot.Values))
-		existingSnapshot.Latest = payload.Value
-		return i.Update(ctx, existingSnapshot.ID.Hex(), existingSnapshot)
+
+		existingProductSnasphot.Average = total / float64(len(existingProductSnasphot.Values))
+		existingProductSnasphot.Latest = payload.Value
+
+		return p.Update(ctx, existingProductSnasphot.ID.Hex(), existingProductSnasphot)
 	}
-	// If snapshot doesn't exist, create new one
-	newSnapshot := model.InventorySnapshot{
-		ItemID:   payload.ItemID,
-		BranchID: payload.BranchID,
-		Date:     today,
-		Average:  payload.Value,
-		Latest:   payload.Value,
-		Day:      now.Day(),
-		Month:    int(now.Month()),
-		Year:     now.Year(),
+
+	newSnapshot := model.ProductSnapshot{
+		ProductID: payload.ProductID,
+		BranchID:  payload.BranchID,
+		Date:      today,
+		Average:   payload.Value,
+		Latest:    payload.Value,
+		Day:       now.Day(),
+		Month:     int(now.Month()),
+		Year:      now.Year(),
 		Values: []struct {
 			Timestamp time.Time `json:"timestamp"`
 			Value     float64   `json:"value"`
@@ -251,5 +227,5 @@ func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.Crea
 		},
 	}
 
-	return i.Create(ctx, newSnapshot)
+	return p.Create(ctx, newSnapshot)
 }

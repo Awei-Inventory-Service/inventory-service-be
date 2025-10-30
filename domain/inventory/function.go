@@ -137,6 +137,7 @@ func (i *inventoryDomain) SyncBranchItem(ctx context.Context, branchID, itemID s
 		ItemID:   itemID,
 		BranchID: branchID,
 		Value:    currentPrice,
+		Balance:  currentBalance,
 	})
 
 	if errW != nil {
@@ -298,19 +299,16 @@ func (i *inventoryDomain) GetPrice(ctx context.Context, date dto.CustomDate, ite
 	}
 
 	if len(inventorySnapshot) == 0 {
-		errW = error_wrapper.New(model.RErrDataNotFound, "No inventory snapshot found")
+		_, _, errW = i.SyncBranchItem(ctx, branchID, itemID)
+		if errW != nil {
+			return
+		}
 		return
 	}
 
 	snapshot := inventorySnapshot[0]
-	snapshot.SortValuesBasedOnTimestamp()
 
-	if len(snapshot.Values) == 0 {
-		errW = error_wrapper.New(model.RErrDataNotFound, "No price values found in inventory snapshot")
-		return
-	}
-
-	price = snapshot.Values[0].Value
+	price = snapshot.Latest
 	return
 }
 

@@ -15,6 +15,7 @@ type InventoryTransferResource interface {
 	Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]model.InventoryTransfer, *error_wrapper.ErrorWrapper)
 	FindByID(ctx context.Context, id string) (model.InventoryTransfer, *error_wrapper.ErrorWrapper)
 	UpdateStatus(ctx context.Context, id, status string) (errW *error_wrapper.ErrorWrapper)
+	Delete(ctx context.Context, payload model.InventoryTransfer) (errW *error_wrapper.ErrorWrapper)
 }
 
 type inventoryTransferResource struct {

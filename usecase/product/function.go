@@ -95,7 +95,7 @@ func (p *productService) GetProductCost(ctx context.Context, productID, branchID
 		return
 	}
 
-	_, cost, errW = p.productDomain.CalculateProductCost(ctx, product.ProductRecipe, branchID, time.Now())
+	_, cost, errW = p.productDomain.CalculateProductCost(ctx, *product, branchID, time.Now())
 
 	return
 }

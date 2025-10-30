@@ -16,6 +16,7 @@ type InventoryTransferDomain interface {
 	FindByID(ctx context.Context, id string) (result model.InventoryTransfer, errW *error_wrapper.ErrorWrapper)
 	Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (results dto.GetInventoryTransferListResponse, errW *error_wrapper.ErrorWrapper)
 	Update(ctx context.Context, id string, payload dto.UpdateInventoryTransferRequest) (result model.InventoryTransfer, errW *error_wrapper.ErrorWrapper)
+	Delete(ctx context.Context, id string) (errW *error_wrapper.ErrorWrapper)
 }
 
 type inventoryTransferDomain struct {

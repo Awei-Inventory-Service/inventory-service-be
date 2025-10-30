@@ -113,7 +113,7 @@ func (p *productDomain) Delete(ctx context.Context, productID string) *error_wra
 
 func (p *productDomain) CalculateProductCost(
 	ctx context.Context,
-	productCompositions []model.ProductRecipe,
+	product model.Product,
 	branchID string,
 	timestamp time.Time,
 ) (
@@ -122,7 +122,7 @@ func (p *productDomain) CalculateProductCost(
 	errW *error_wrapper.ErrorWrapper,
 ) {
 
-	for _, productComposition := range productCompositions {
+	for _, productComposition := range product.ProductRecipe {
 		item, errW := p.itemResource.FindByID(productComposition.ItemID)
 
 		if errW != nil {
@@ -160,13 +160,8 @@ func (p *productDomain) CalculateProductCost(
 			fmt.Println("Error getting inventory snapshot")
 			return results, totalCost, errW
 		}
-		fmt.Println("INI INVENTORY SNAPSHOT", inventorySnapshot)
-		var itemValue float64
-		if len(inventorySnapshot) > 0 && len(inventorySnapshot[0].Values) > 0 {
-			inventorySnapshot[0].SortValuesBasedOnTimestamp()
-			itemValue = inventorySnapshot[0].Values[0].Value
-		}
 
+		itemValue := inventorySnapshot[0].Latest
 		productCompositionAmount := utils.StandarizeMeasurement(productComposition.Amount, productComposition.Unit, item.Unit)
 		fmt.Println("Product composition amount", productCompositionAmount, itemValue)
 
@@ -180,5 +175,15 @@ func (p *productDomain) CalculateProductCost(
 		totalCost += (itemValue * productCompositionAmount)
 	}
 
+	errW = p.productSnapshotResource.Upsert(ctx, dto.CreateProductSnapshotRequest{
+		ProductID: product.UUID,
+		BranchID:  branchID,
+		Value:     totalCost,
+	})
+
+	if errW != nil {
+		fmt.Println("Error upserting product snapshot resource", errW)
+		return
+	}
 	return
 }

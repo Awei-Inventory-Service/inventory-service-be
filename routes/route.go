@@ -27,6 +27,8 @@ import (
 	branch_resource "github.com/inventory-service/resource/branch"
 	branch_product_reosurce "github.com/inventory-service/resource/branch_product"
 	inventory_snapshot_resource "github.com/inventory-service/resource/inventory_snapshot"
+	product_snapshot_resource "github.com/inventory-service/resource/product_snapshot"
+
 	inventory_stock_count_resource "github.com/inventory-service/resource/inventory_stock_count"
 	inventory_transfer_resource "github.com/inventory-service/resource/inventory_transfer"
 	inventory_transfer_item_resource "github.com/inventory-service/resource/inventory_transfer_item"
@@ -120,6 +122,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	productionItemResource := production_item_resource.NewProductionItemResource(pgDB)
 	inventoryTransferResource := inventory_transfer_resource.NewInventoryTransferResource(pgDB)
 	inventoryTransferItemResource := inventory_transfer_item_resource.NewInventoryTransferItemResource(pgDB)
+	productSnapshotResource := product_snapshot_resource.NewProductSnapshotResource(mongodbResource)
 
 	// Initialize usecase
 	userDomain := user_domain.NewUserDomain(userResource)
@@ -133,7 +136,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	salesDomain := sales_domain.NewSalesDomain(salesResource, productResource, branchProductResource)
 	inventoryDomain := inventory_domain.NewBranchItemDomain(inventoryResource, stockTransactionResource, itemResource, purchaseResource, inventorySnapshotResource)
 	// Tech debt : domain manggil domain, gaboleh
-	productDomain := product_domain.NewProductDomain(productResource, itemResource, productCompositionResource, inventoryResource, inventoryDomain, inventorySnapshotResource)
+	productDomain := product_domain.NewProductDomain(productResource, itemResource, productCompositionResource, inventoryResource, inventoryDomain, inventorySnapshotResource, productSnapshotResource)
 
 	productCompositionDomain := product_recipe_domain.NewProductCompositionDomain(productCompositionResource)
 	branchProductDomain := branch_product_domain.NewBranchProductDomain(branchProductResource)
@@ -307,6 +310,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 			inventoryTransferRoutes.POST("/update-status", inventoryTransferController.UpdateStatus)
 			inventoryTransferRoutes.PUT("/update", inventoryTransferController.Update)
 			inventoryTransferRoutes.POST("/get-list", inventoryTransferController.GetList)
+			inventoryTransferRoutes.DELETE("/:id", inventoryTransferController.Delete)
 		}
 	}
 

@@ -1,6 +1,8 @@
 package inventory_transfer
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -89,4 +91,39 @@ func (h *inventoryTransferHandler) GetList(ctx *gin.Context) {
 	}
 
 	inventoryTransfers, errW = h.inventoryTransferUsecase.Get(ctx, payload)
+}
+
+func (h *inventoryTransferHandler) Delete(ctx *gin.Context) {
+	var (
+		payload dto.DeleteInventoryTransferRequest
+		errW    *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&ctx.Writer, ctx, errW == nil, nil, errW)
+	}()
+
+	id := ctx.Param("id")
+
+	userID := fmt.Sprint(ctx.Value("user_id"))
+	if userID == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "User id can't be empty in the header")
+		return
+	}
+
+	branchID := fmt.Sprint(ctx.Value("branch_id"))
+	if branchID == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "Branch id can't be empty in the header")
+		return
+	}
+
+	payload.ID = id
+	payload.UserID = userID
+	payload.BranchID = branchID
+
+	errW = h.inventoryTransferUsecase.Delete(ctx, payload)
+
+	if errW != nil {
+		return
+	}
 }

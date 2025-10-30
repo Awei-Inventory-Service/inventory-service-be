@@ -263,3 +263,46 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 
 	return
 }
+
+func (i *inventoryTransferUsecase) Delete(ctx context.Context, payload dto.DeleteInventoryTransferRequest) (errW *error_wrapper.ErrorWrapper) {
+	// 1. Delete inventory transfer
+	errW = i.inventoryTransferDomain.Delete(ctx, payload.ID)
+
+	if errW != nil {
+		fmt.Println("Error deleting inventory transfer", errW)
+		return
+	}
+
+	// 2. Delete inventory transfer item
+	errW = i.inventoryTransferItemDomain.Delete(ctx, model.InventoryTransferItem{
+		InventoryTransferID: payload.ID,
+	})
+
+	if errW != nil {
+		fmt.Println("Error deleting invnetory transfer item", errW)
+		return
+	}
+
+	// 3. Invalidate Stock Transaction
+	items, errW := i.stockTransactionDomain.InvalidateStockTransaction(ctx, []map[string]interface{}{
+		{
+			"field": "reference",
+			"value": payload.ID,
+		},
+	}, payload.UserID)
+
+	if errW != nil {
+		fmt.Println("Error invalidating stock transaction", errW)
+		return
+	}
+
+	// 4. Sync branch item
+	errW = i.inventoryDomain.BulkSyncBranchItems(ctx, payload.BranchID, items)
+
+	if errW != nil {
+		fmt.Println("Error bulk sync branch item", errW)
+		return
+	}
+
+	return
+}

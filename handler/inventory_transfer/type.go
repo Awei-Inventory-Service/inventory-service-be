@@ -10,6 +10,7 @@ type InventoryTransferHandler interface {
 	Update(c *gin.Context)
 	UpdateStatus(c *gin.Context)
 	GetList(c *gin.Context)
+	Delete(c *gin.Context)
 }
 
 type inventoryTransferHandler struct {

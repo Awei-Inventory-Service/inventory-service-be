@@ -12,6 +12,8 @@ type InventorySnapshot struct {
 	ItemID   string             `json:"item_id" bson:"item_id"`
 	BranchID string             `json:"branch_id" bson:"branch_id"`
 	Average  float64            `json:"average" bson:"average"`
+	Latest   float64            `json:"latest" bson:"latest"`
+	Balance  float64            `json:"balance"`
 	Date     time.Time          `json:"date" bson:"date"`
 	Day      int                `json:"day" bson:"day"`
 	Month    int                `json:"month" bson:"month"`

@@ -96,3 +96,28 @@ func (i *inventoryTransferResource) UpdateStatus(ctx context.Context, id, status
 
 	return
 }
+
+func (i *inventoryTransferResource) Delete(ctx context.Context, payload model.InventoryTransfer) (errW *error_wrapper.ErrorWrapper) {
+	query := i.db.WithContext(ctx)
+
+	if payload.UUID != "" {
+		query = query.Where("uuid = ? ", payload.UUID)
+	}
+
+	if payload.BranchDestinationID != "" {
+		query = query.Where("branch_destination_id = ? ", payload.BranchDestinationID)
+	}
+
+	if payload.BranchOriginID != "" {
+		query = query.Where("branch_origin_id = ? ", payload.BranchOriginID)
+	}
+
+	result := query.Delete(&model.InventoryTransfer{})
+
+	if result.Error != nil {
+		errW = error_wrapper.New(model.RErrPostgresDeleteDocument, result.Error)
+		return
+	}
+
+	return
+}
