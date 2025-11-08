@@ -18,6 +18,7 @@ type InventoryUsecase interface {
 	FindAll() ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper)
 	SyncBranchItem(ctx context.Context, payload dto.SyncBalanceRequest) (currentStock, currentPrice float64, errW *error_wrapper.ErrorWrapper)
 	Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper)
+	RecalculateInventory(ctx context.Context, payload dto.RecalculateInventoryRequest) (errW *error_wrapper.ErrorWrapper)
 }
 
 type inventoryUsecase struct {

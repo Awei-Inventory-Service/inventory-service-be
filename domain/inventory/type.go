@@ -26,6 +26,7 @@ type InventoryDomain interface {
 	BulkSyncBranchItems(ctx context.Context, branchID string, itemIDs []string) *error_wrapper.ErrorWrapper
 	GetPrice(ctx context.Context, date dto.CustomDate, itemID, branchID string) (price float64, errW *error_wrapper.ErrorWrapper)
 	Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offest int) (inventories []dto.GetInventoryResponse, errW *error_wrapper.ErrorWrapper)
+	RecalculateInventory(ctx context.Context, payload dto.RecalculateInventoryRequest) (errW *error_wrapper.ErrorWrapper)
 }
 
 type inventoryDomain struct {

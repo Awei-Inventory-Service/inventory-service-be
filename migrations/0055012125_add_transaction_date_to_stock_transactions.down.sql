@@ -1,0 +1,1 @@
+ALTER TABLE stock_transactions DROP COLUMN transaction_date;

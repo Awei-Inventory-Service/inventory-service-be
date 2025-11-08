@@ -1,6 +1,8 @@
 package dto
 
-import "github.com/inventory-service/model"
+import (
+	"github.com/inventory-service/model"
+)
 
 type GetInventoryResponse struct {
 	UUID         string             `json:"uuid"`
@@ -25,4 +27,10 @@ type CreateInventoryRequest struct {
 	ItemID   string  `json:"item_id"`
 	UserID   string  `json:"user_id"`
 	Quantity float64 `json:"quantity"`
+}
+
+type RecalculateInventoryRequest struct {
+	StartTime string `json:"start_time"`
+	BranchID  string `json:"branch_id"`
+	ItemID    string `json:"item_id"`
 }

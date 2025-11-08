@@ -26,6 +26,7 @@ type CreatePurchaseRequest struct {
 	Quantity     float64 `json:"quantity" binding:"required"`
 	PurchaseCost float64 `json:"purchase_cost" binding:"required"`
 	Unit         string  `json:"unit" binding:"required"`
+	PurchaseDate string  `json:"purchase_date" binding:"required"`
 }
 
 type UpdatePurchaseRequest struct {
@@ -36,4 +37,5 @@ type UpdatePurchaseRequest struct {
 	PurchaseCost float64 `json:"purchase_cost" binding:"required"`
 	Unit         string  `json:"unit" binding:"required"`
 	UserID       string  `json:"user_id"`
+	PurchaseDate string  `json:"purchase_date" binding:"required"`
 }

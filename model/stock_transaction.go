@@ -26,6 +26,7 @@ type StockTransaction struct {
 	DeletedByUser       *User      `gorm:"foreignKey:DeletedBy;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL"`
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
+	TransactionDate     time.Time `gorm:"transaction_date"`
 }
 
 func (StockTransaction) TableName() string {

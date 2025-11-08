@@ -92,3 +92,7 @@ func (i *inventoryUsecase) SyncBranchItem(ctx context.Context, payload dto.SyncB
 func (i *inventoryUsecase) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper) {
 	return i.inventoryDomain.Get(ctx, filter, order, limit, offset)
 }
+
+func (i *inventoryUsecase) RecalculateInventory(ctx context.Context, payload dto.RecalculateInventoryRequest) (errW *error_wrapper.ErrorWrapper) {
+	return i.inventoryDomain.RecalculateInventory(ctx, payload)
+}

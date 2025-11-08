@@ -93,6 +93,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 				Unit:                productRecipe.Unit,
 				Reference:           newSales.UUID,
 				ReferenceType:       &referenceType,
+				TransactionDate:     transactionDate,
 			})
 
 			if errW != nil {

@@ -2,6 +2,7 @@ package purchase
 
 import (
 	"context"
+	"time"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -9,6 +10,11 @@ import (
 )
 
 func (p *purchaseDomain) Create(payload dto.CreatePurchaseRequest, userID string) (*model.Purchase, *error_wrapper.ErrorWrapper) {
+	purchaseDate, err := time.Parse("2006-01-02", payload.PurchaseDate)
+	if err != nil {
+		return nil, error_wrapper.New(model.ErrInvalidTimestamp, "Invalid purchase date format")
+	}
+
 	purchase := model.Purchase{
 		SupplierID:   payload.SupplierID,
 		BranchID:     payload.BranchID,
@@ -16,6 +22,7 @@ func (p *purchaseDomain) Create(payload dto.CreatePurchaseRequest, userID string
 		Quantity:     payload.Quantity,
 		PurchaseCost: payload.PurchaseCost,
 		Unit:         payload.Unit,
+		PurchaseDate: purchaseDate,
 	}
 
 	// 1. Create the purchase record first
@@ -59,15 +66,16 @@ func (p *purchaseDomain) Get(ctx context.Context, filter []dto.Filter, order []d
 
 	for _, data := range result {
 		payload = append(payload, dto.GetPurchaseResponse{
-			UUID:       data.UUID,
-			Supplier:   data.Supplier,
-			BranchID:   data.Branch.UUID,
-			BranchName: data.Branch.Name,
-			ItemID:     data.Item.UUID,
-			ItemName:   data.Item.Name,
-			Quantity:   data.Quantity,
-			Unit:       data.Unit,
-			Cost:       data.PurchaseCost,
+			UUID:         data.UUID,
+			Supplier:     data.Supplier,
+			BranchID:     data.Branch.UUID,
+			BranchName:   data.Branch.Name,
+			ItemID:       data.Item.UUID,
+			ItemName:     data.Item.Name,
+			Quantity:     data.Quantity,
+			Unit:         data.Unit,
+			Cost:         data.PurchaseCost,
+			PurchaseDate: data.PurchaseDate,
 		})
 	}
 	return

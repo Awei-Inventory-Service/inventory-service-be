@@ -11,6 +11,7 @@ type InventoryHandler interface {
 	SyncBalance(c *gin.Context)
 	Create(c *gin.Context)
 	GetList(c *gin.Context)
+	Recalculate(c *gin.Context)
 }
 
 type inventoryHandler struct {

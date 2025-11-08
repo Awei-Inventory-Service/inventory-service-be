@@ -98,6 +98,7 @@ func (i *inventoryTransferUsecase) UpdateStatus(ctx context.Context, payload dto
 				Reference:           inventoryTransfer.UUID,
 				Cost:                inventoryTransferItem.ItemCost,
 				ReferenceType:       &referenceType,
+				TransactionDate:     time.Now(),
 			}
 			errW = i.stockTransactionDomain.Create(stockTransaction)
 
@@ -108,6 +109,7 @@ func (i *inventoryTransferUsecase) UpdateStatus(ctx context.Context, payload dto
 
 			stockTransactionOut := stockTransaction
 			stockTransactionOut.Type = "OUT"
+			stockTransactionOut.TransactionDate = inventoryTransfer.TransferDate
 
 			errW = i.stockTransactionDomain.Create(stockTransactionOut)
 
@@ -225,6 +227,7 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 				Reference:           inventoryTransfer.UUID,
 				Cost:                itemCost * standarizeUnit,
 				ReferenceType:       &referenceType,
+				TransactionDate:     time.Now(),
 			}
 			errW = i.stockTransactionDomain.Create(stockTransaction)
 
@@ -235,6 +238,7 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 
 			stockTransactionOut := stockTransaction
 			stockTransactionOut.Type = "OUT"
+			stockTransactionOut.TransactionDate = inventoryTransfer.TransferDate
 
 			errW = i.stockTransactionDomain.Create(stockTransactionOut)
 

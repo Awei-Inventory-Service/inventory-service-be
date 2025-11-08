@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/constant"
@@ -73,6 +74,11 @@ func (p *purchaseService) Create(c *gin.Context, payload dto.CreatePurchaseReque
 	}
 	referenceType := string(constant.Purchasing)
 
+	purchaseDate, err := time.Parse("2006-01-02", payload.PurchaseDate)
+	if err != nil {
+		return error_wrapper.New(model.ErrInvalidTimestamp, "Invalid purchase date format")
+	}
+
 	errW = p.stockTransactionDomain.Create(model.StockTransaction{
 		BranchOriginID:      payload.BranchID,
 		BranchDestinationID: payload.BranchID,
@@ -84,10 +90,25 @@ func (p *purchaseService) Create(c *gin.Context, payload dto.CreatePurchaseReque
 		Unit:                payload.Unit,
 		Reference:           purchase.UUID,
 		ReferenceType:       &referenceType,
+		TransactionDate:     purchaseDate,
 	})
+	if errW != nil {
+		fmt.Println("Error creating new stock transaction in create purchase", errW)
+		return errW
+	}
+
+	// Updating inventory snapshot, etc
+	errW = p.inventoryDomain.RecalculateInventory(c, dto.RecalculateInventoryRequest{
+		BranchID:  payload.BranchID,
+		ItemID:    payload.ItemID,
+		StartTime: payload.PurchaseDate,
+	})
+	if errW != nil {
+		fmt.Println("Error recalculating inventory", errW)
+		return errW
+	}
 
 	_, _, errW = p.inventoryDomain.SyncBranchItem(c, payload.BranchID, purchase.ItemID)
-
 	if errW != nil {
 		fmt.Println("Error syncing branch item")
 		return errW
@@ -173,6 +194,11 @@ func (p *purchaseService) Update(ctx context.Context, id string, payload dto.Upd
 	// 3. Add new stock transaction
 	referenceType := string(constant.Purchasing)
 
+	parsedPurchaseDate, err := time.Parse("2006-01-02", payload.PurchaseDate)
+	if err != nil {
+		return error_wrapper.New(model.ErrInvalidTimestamp, err.Error())
+	}
+
 	errW = p.stockTransactionDomain.Create(model.StockTransaction{
 		BranchOriginID:      payload.BranchID,
 		BranchDestinationID: payload.BranchID,
@@ -184,8 +210,8 @@ func (p *purchaseService) Update(ctx context.Context, id string, payload dto.Upd
 		Unit:                payload.Unit,
 		ReferenceType:       &referenceType,
 		Reference:           id,
+		TransactionDate:     parsedPurchaseDate,
 	})
-
 	if errW != nil {
 		return errW
 	}

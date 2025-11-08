@@ -3,6 +3,7 @@ package production
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/inventory-service/constant"
 	"github.com/inventory-service/dto"
@@ -16,6 +17,12 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 		updatedBranchItems []string
 		totalCostMovement  = 0.0
 	)
+
+	productionParsedDate, err := time.Parse("2006-01-02", payload.ProductionDate)
+	if err != nil {
+		return nil, error_wrapper.New(model.ErrInvalidTimestamp, err.Error())
+	}
+
 	for _, sourceItem := range payload.SourceItems {
 		initialInventory, errW := p.inventoryDomain.FindByBranchAndItem(payload.BranchID, sourceItem.SourceItemID)
 
@@ -57,6 +64,7 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 			Reference:           production.UUID,
 			ReferenceType:       &referenceType,
 			Cost:                cost,
+			TransactionDate:     productionParsedDate,
 		})
 
 		totalCostMovement += cost
@@ -77,6 +85,7 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 		Reference:           production.UUID,
 		ReferenceType:       &referenceType,
 		Cost:                totalCostMovement,
+		TransactionDate:     productionParsedDate,
 	})
 
 	if errW != nil {

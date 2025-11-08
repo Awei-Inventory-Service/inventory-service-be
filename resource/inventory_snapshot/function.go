@@ -176,7 +176,6 @@ func (i *inventorySnapshotResource) FindByID(ctx context.Context, snapshotID str
 
 func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.CreateInventorySnapshotRequest) (errW *error_wrapper.ErrorWrapper) {
 	today := time.Now().Truncate(24 * time.Hour)
-	now := time.Now()
 
 	filter := []dto.Filter{
 		{
@@ -189,20 +188,19 @@ func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.Crea
 		},
 		{
 			Key:    "day",
-			Values: []string{fmt.Sprintf("%d", now.Day())},
+			Values: []string{fmt.Sprintf("%d", payload.Date.Day())},
 		},
 		{
 			Key:    "month",
-			Values: []string{fmt.Sprintf("%d", int(now.Month()))},
+			Values: []string{fmt.Sprintf("%d", int(payload.Date.Month()))},
 		},
 		{
 			Key:    "year",
-			Values: []string{fmt.Sprintf("%d", now.Year())},
+			Values: []string{fmt.Sprintf("%d", payload.Date.Year())},
 		},
 	}
 
 	existingInventorySnapshots, errW := i.Get(ctx, filter, []dto.Order{}, 1, 0)
-
 	if errW != nil {
 		return errW
 	}
@@ -228,6 +226,7 @@ func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.Crea
 		}
 		existingSnapshot.Average = total / float64(len(existingSnapshot.Values))
 		existingSnapshot.Latest = payload.Value
+		existingSnapshot.Balance = payload.Balance
 		return i.Update(ctx, existingSnapshot.ID.Hex(), existingSnapshot)
 	}
 	// If snapshot doesn't exist, create new one
@@ -235,21 +234,87 @@ func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.Crea
 		ItemID:   payload.ItemID,
 		BranchID: payload.BranchID,
 		Date:     today,
+		Balance:  payload.Balance,
 		Average:  payload.Value,
 		Latest:   payload.Value,
-		Day:      now.Day(),
-		Month:    int(now.Month()),
-		Year:     now.Year(),
+		Day:      payload.Date.Day(),
+		Month:    int(payload.Date.Month()),
+		Year:     payload.Date.Year(),
 		Values: []struct {
 			Timestamp time.Time `json:"timestamp"`
 			Value     float64   `json:"value"`
 		}{
 			{
-				Timestamp: time.Now(),
+				Timestamp: payload.Date,
 				Value:     payload.Value,
 			},
 		},
 	}
 
 	return i.Create(ctx, newSnapshot)
+}
+
+func (i *inventorySnapshotResource) GetPreviousDaySnapshot(ctx context.Context, targetTime time.Time, branchID, itemID string) (*model.InventorySnapshot, *error_wrapper.ErrorWrapper) {
+	previousDay := targetTime.AddDate(0, 0, -1)
+
+	filter := []dto.Filter{
+		{
+			Key:    "item_id",
+			Values: []string{itemID},
+		},
+		{
+			Key:    "branch_id",
+			Values: []string{branchID},
+		},
+		{
+			Key:    "day",
+			Values: []string{fmt.Sprintf("%d", previousDay.Day())},
+		},
+		{
+			Key:    "month",
+			Values: []string{fmt.Sprintf("%d", int(previousDay.Month()))},
+		},
+		{
+			Key:    "year",
+			Values: []string{fmt.Sprintf("%d", previousDay.Year())},
+		},
+	}
+
+	snapshots, errW := i.Get(ctx, filter, []dto.Order{}, 1, 0)
+	if errW != nil {
+		return nil, errW
+	}
+
+	if len(snapshots) == 0 {
+		return nil, error_wrapper.New(model.RErrDataNotFound, "no snapshot found for previous day")
+	}
+
+	return &snapshots[0], nil
+}
+
+func (i *inventorySnapshotResource) GetSnapshotBasedOndDate(ctx context.Context, date time.Time) (model.InventorySnapshot, *error_wrapper.ErrorWrapper) {
+	filter := []dto.Filter{
+		{
+			Key:      "day",
+			Values:   []string{fmt.Sprintf("%d", date.Day())},
+			Wildcard: "==",
+		},
+		{
+			Key:      "month",
+			Values:   []string{fmt.Sprintf("%d", int(date.Month()))},
+			Wildcard: "==",
+		},
+		{
+			Key:    "year",
+			Values: []string{fmt.Sprintf("%d", date.Year())},
+		},
+	}
+
+	snapshot, errW := i.Get(ctx, filter, []dto.Order{}, 0, 0)
+	if errW != nil {
+		fmt.Println("Error getting snapshot based on date", errW)
+		return model.InventorySnapshot{}, errW
+	}
+
+	return snapshot[0], nil
 }

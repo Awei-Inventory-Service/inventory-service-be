@@ -291,6 +291,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 			branchItemRoutes.POST("/sync", inventoryController.SyncBalance)
 			branchItemRoutes.POST("/", inventoryController.Create)
 			branchItemRoutes.GET("/:branch_id/:item_id", inventoryController.FindByBranchIdAndItemId)
+			branchItemRoutes.POST("/recalculate", inventoryController.Recalculate)
 		}
 
 		productionRoutes := apiV1.Group("/production")

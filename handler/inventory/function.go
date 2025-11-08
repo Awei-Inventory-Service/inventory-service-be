@@ -120,3 +120,21 @@ func (i *inventoryHandler) GetList(c *gin.Context) {
 
 	inventories, errW = i.inventoryUsecase.Get(c, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 }
+
+func (i *inventoryHandler) Recalculate(c *gin.Context) {
+	var (
+		errW    *error_wrapper.ErrorWrapper
+		payload dto.RecalculateInventoryRequest
+	)
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+		return
+	}
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
+
+	errW = i.inventoryUsecase.RecalculateInventory(c, payload)
+}
