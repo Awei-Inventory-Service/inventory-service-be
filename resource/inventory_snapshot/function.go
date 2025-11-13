@@ -103,7 +103,7 @@ func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter
 				if err != nil {
 					continue
 				}
-				
+
 				// Single date filtering based on wildcard
 				switch f.Wildcard {
 				case "==":
@@ -319,6 +319,11 @@ func (i *inventorySnapshotResource) GetSnapshotBasedOndDate(ctx context.Context,
 	snapshot, errW := i.Get(ctx, filter, []dto.Order{}, 0, 0)
 	if errW != nil {
 		fmt.Println("Error getting snapshot based on date", errW)
+		return model.InventorySnapshot{}, errW
+	}
+
+	if len(snapshot) == 0 {
+		errW = error_wrapper.New(model.RErrDataNotFound, "Inventory snapshot not found")
 		return model.InventorySnapshot{}, errW
 	}
 
