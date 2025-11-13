@@ -86,12 +86,18 @@ func (p *purchaseDomain) FindByID(id string) (*model.Purchase, *error_wrapper.Er
 }
 
 func (p *purchaseDomain) Update(id string, payload dto.UpdatePurchaseRequest) *error_wrapper.ErrorWrapper {
+	parsedTime, err := time.Parse("2006-01-02", payload.PurchaseDate)
+	if err != nil {
+		return error_wrapper.New(model.ErrInvalidTimestamp, err.Error())
+	}
+
 	purchase := model.Purchase{
 		SupplierID:   payload.SupplierID,
 		BranchID:     payload.BranchID,
 		ItemID:       payload.ItemID,
 		Quantity:     payload.Quantity,
 		PurchaseCost: payload.PurchaseCost,
+		PurchaseDate: parsedTime,
 	}
 	return p.purchaseResource.Update(id, purchase)
 }

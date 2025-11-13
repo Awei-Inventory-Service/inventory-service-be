@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"time"
+
 	"github.com/inventory-service/model"
 )
 
@@ -30,7 +32,8 @@ type CreateInventoryRequest struct {
 }
 
 type RecalculateInventoryRequest struct {
-	StartTime string `json:"start_time"`
-	BranchID  string `json:"branch_id"`
-	ItemID    string `json:"item_id"`
+	NewTime      string     `json:"start_time"`
+	PreviousTime *time.Time `json:"previous_time"`
+	BranchID     string     `json:"branch_id"`
+	ItemID       string     `json:"item_id"`
 }

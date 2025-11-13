@@ -343,19 +343,93 @@ func (i *inventoryDomain) Get(ctx context.Context, filter []dto.Filter, order []
 	return
 }
 
+// Old purcahse date  time.now() -> salah
+func (i *inventoryDomain) BuildInventorySnapshotFilter(newPurchaseDate, oldPurchaseDate time.Time) (filters []dto.Filter) {
+	if newPurchaseDate.After(oldPurchaseDate) {
+		filters = append(filters, []dto.Filter{
+			{
+				Key:      "date",
+				Wildcard: ">=",
+				Values:   []string{utils.StartOfDay(oldPurchaseDate).Format("2006-01-02 15:04:05")},
+			},
+			{
+				Key:      "date",
+				Wildcard: "<=",
+				Values:   []string{utils.EndOfDay(newPurchaseDate).Format("2006-01-02 15:04:05")},
+			},
+		}...)
+	} else {
+		filters = append(filters, []dto.Filter{
+			{
+				Key:      "date",
+				Wildcard: ">=",
+				Values:   []string{utils.EndOfDay(oldPurchaseDate).Format("2006-01-02 15:04:05")},
+			},
+			{
+				Key:      "date",
+				Wildcard: "<=",
+				Values:   []string{utils.StartOfDay(newPurchaseDate).Format("2006-01-02 15:04:05")},
+			},
+		}...)
+	}
+	return
+}
+
 func (i *inventoryDomain) RecalculateInventory(ctx context.Context, payload dto.RecalculateInventoryRequest) (errW *error_wrapper.ErrorWrapper) {
 	// Parse the startTime and check if it's today
-	parsedTime, err := time.Parse("2006-01-02", payload.StartTime)
+	parsedTime, err := time.Parse("2006-01-02", payload.NewTime)
 	if err != nil {
 		return error_wrapper.New(model.ErrInvalidTimestamp, "invalid start time format: "+err.Error())
 	}
-
+	fmt.Println("Ini parsed time", parsedTime)
 	today := time.Now().Truncate(24 * time.Hour)
 	if parsedTime.Equal(today) {
 		fmt.Println("Skipping recalculate inventory because start time equal to today, no need to recalculte anything")
 		return nil
 	}
 
+	var (
+		endTime        = time.Now()
+		backFilledTime = parsedTime
+	)
+
+	startTime := parsedTime
+
+	if payload.PreviousTime != nil && payload.PreviousTime.Before(parsedTime) {
+		startTime = *payload.PreviousTime
+		backFilledTime = *payload.PreviousTime
+		fmt.Println("Back filling inventory snapshot for parsed time", parsedTime)
+		fmt.Println("Calculating price and balance for parsed time", parsedTime)
+		previousSnapshot, errW := i.BackFillInventorySnapshot(ctx, parsedTime, payload.BranchID, payload.ItemID)
+		if errW != nil {
+			fmt.Println("Error getting previous inventory snasphot on index 0", errW)
+			return errW
+		}
+
+		balance, price, errW := i.CalculatePriceAndBalance(ctx, parsedTime, payload.ItemID, payload.BranchID, &parsedTime)
+		if errW != nil {
+			fmt.Println("Error calculating pirce and balance for payload start time", errW)
+			return errW
+		}
+		fmt.Println("iNi previous snapshot", previousSnapshot)
+		newPrice := 0.0
+		totalBalance := previousSnapshot.Balance + balance
+
+		if totalBalance > 0.0 {
+			newPrice = (price*balance + previousSnapshot.Balance*previousSnapshot.Latest) / totalBalance
+		}
+		fmt.Println("Ini total balance dan new price before", totalBalance, newPrice)
+		errW = i.inventorySnapshotResource.Upsert(ctx, dto.CreateInventorySnapshotRequest{
+			ItemID:   payload.ItemID,
+			BranchID: payload.BranchID,
+			Balance:  totalBalance,
+			Value:    newPrice,
+			Date:     parsedTime,
+		})
+
+	}
+
+	fmt.Println("Ini start time", startTime)
 	filter := []dto.Filter{
 		{
 			Key:    "branch_id",
@@ -366,70 +440,85 @@ func (i *inventoryDomain) RecalculateInventory(ctx context.Context, payload dto.
 			Values: []string{payload.ItemID},
 		},
 		{
-			Key:      "created_at",
-			Values:   []string{payload.StartTime},
-			Wildcard: ">=",
+			Key:      "date",
+			Wildcard: ">",
+			Values:   []string{utils.EndOfDay(startTime).Format("2006-01-02 15:04:05")},
 		},
 		{
-			Key:    "deleted_at",
-			Values: []string{"nil"},
-		},
-		{
-			Key:      "created_at",
-			Values:   []string{time.Now().AddDate(0, 0, -1).String()},
+			Key:      "date",
 			Wildcard: "<=",
+			Values:   []string{utils.EndOfDay(endTime).Format("2006-01-02 15:04:05")},
 		},
-		// To do: filter by deleted at
-	}
-	fmt.Println("Ini filter di recalculate inventory", filter)
-	// Get all inventory snapshots need to be updated
-	inventorySnasphots, errW := i.inventorySnapshotResource.Get(ctx, filter, []dto.Order{}, 0, 0)
-	if errW != nil {
-		fmt.Println("Error getting inventory snapshout", errW)
-		return
 	}
 
-	previousSnapshot, errW := i.BackFillInventorySnapshot(ctx, payload.StartTime, payload.BranchID, payload.ItemID)
+	order := []dto.Order{
+		{
+			Key:   "date",
+			IsAsc: true,
+		},
+	}
+
+	previousSnapshot, errW := i.BackFillInventorySnapshot(ctx, backFilledTime, payload.BranchID, payload.ItemID)
 	if errW != nil {
 		fmt.Println("Error getting previous inventory snasphot on index 0", errW)
 		return errW
 	}
 
 	fmt.Println("Calculating price and balance for parsed time", parsedTime)
-	balance, price, errW := i.CalculatePriceAndBalance(ctx, parsedTime, payload.ItemID, payload.BranchID, &parsedTime)
+	backeFilledEndTime := utils.EndOfDay(backFilledTime)
+	balance, price, errW := i.CalculatePriceAndBalance(ctx, backFilledTime, payload.ItemID, payload.BranchID, &backeFilledEndTime)
 	if errW != nil {
 		fmt.Println("Error calculating pirce and balance for payload start time", errW)
 		return
 	}
 
+	newPrice := 0.0
+	totalBalance := previousSnapshot.Balance + balance
+
+	if totalBalance > 0 {
+		newPrice = (price*balance + previousSnapshot.Balance*previousSnapshot.Latest) / totalBalance
+	}
+	fmt.Println("Ini balance and price di upsert before loop", balance, price)
 	errW = i.inventorySnapshotResource.Upsert(ctx, dto.CreateInventorySnapshotRequest{
 		ItemID:   payload.ItemID,
 		BranchID: payload.BranchID,
-		Balance:  balance,
-		Value:    price,
-		Date:     parsedTime,
+		Balance:  totalBalance,
+		Value:    newPrice,
+		Date:     backFilledTime,
 	})
 	if errW != nil {
 		fmt.Println("Error upserting inventory snapshot resource", errW)
 		return
 	}
 
-	for index, inventorySnapshot := range inventorySnasphots {
+	fmt.Println("Ini filter di recalculate inventory", filter)
+	// Get all inventory snapshots need to be updated
+	inventorySnasphots, errW := i.inventorySnapshotResource.Get(ctx, filter, order, 0, 0)
+	if errW != nil {
+		fmt.Println("Error getting inventory snapshout", errW)
+		return
+	}
+	fmt.Println("Ini inventory snapshots", len(inventorySnasphots), inventorySnasphots)
+
+	for _, inventorySnapshot := range inventorySnasphots {
 		fmt.Println("Ini inventory snapshot", inventorySnapshot)
 		fmt.Println("Ini previous snapshot", previousSnapshot)
-		if index != 0 {
-			previousSnapshot = inventorySnasphots[index-1]
-		}
 
+		previousSnapshotDate := utils.EndOfDay(previousSnapshot.Date)
 		// Update balance nya
-		balance, price, errW := i.CalculatePriceAndBalance(ctx, inventorySnapshot.Date, payload.ItemID, payload.BranchID, &previousSnapshot.Date)
+		balance, price, errW := i.CalculatePriceAndBalance(ctx, inventorySnapshot.Date, payload.ItemID, payload.BranchID, &previousSnapshotDate)
 		if errW != nil {
 			fmt.Println("Error calculating price and balance", errW)
 			return errW
 		}
 		fmt.Println("iNi balance dan price", balance, price)
-		totalBalance := inventorySnapshot.Balance + balance
-		newPrice := (price*balance + previousSnapshot.Balance*previousSnapshot.Latest) / totalBalance
+		totalBalance := previousSnapshot.Balance + balance
+
+		newPrice := 0.0
+
+		if totalBalance > 0 {
+			newPrice = (price*balance + previousSnapshot.Balance*previousSnapshot.Latest) / totalBalance
+		}
 
 		inventorySnapshot.Balance = totalBalance
 		inventorySnapshot.Latest = newPrice
@@ -446,12 +535,15 @@ func (i *inventoryDomain) RecalculateInventory(ctx context.Context, payload dto.
 			fmt.Println("Error updating inventory resource", errW)
 			return errW
 		}
+		previousSnapshot = inventorySnapshot
 	}
 	return
 }
 
 func (i *inventoryDomain) CalculatePriceAndBalance(ctx context.Context, endTime time.Time, itemID, branchID string, startTime *time.Time) (balance, price float64, errW *error_wrapper.ErrorWrapper) {
 	// 1. Get stock transactions until the end time
+	endOfDay := utils.EndOfDay(endTime)
+
 	filter := []dto.Filter{
 		{
 			Key:    "item_id",
@@ -460,7 +552,11 @@ func (i *inventoryDomain) CalculatePriceAndBalance(ctx context.Context, endTime 
 		{
 			Key:      "transaction_date",
 			Wildcard: "<=",
-			Values:   []string{endTime.AddDate(0, 0, 1).Format("2006-01-02 15:04:05")},
+			Values:   []string{endOfDay.Format("2006-01-02 15:04:05")},
+		},
+		{
+			Key:    "deleted_at",
+			Values: []string{""},
 		},
 	}
 
@@ -506,18 +602,13 @@ func (i *inventoryDomain) CalculatePriceAndBalance(ctx context.Context, endTime 
 	return totalBalance, avg, nil
 }
 
-func (i *inventoryDomain) BackFillInventorySnapshot(ctx context.Context, startTime, branchID, itemID string) (inventorySnapshot model.InventorySnapshot, errW *error_wrapper.ErrorWrapper) {
-	// Parse the startTime string into time.Time
-	parsedTime, err := time.Parse("2006-01-02", startTime)
-	if err != nil {
-		errW = error_wrapper.New(model.ErrInvalidTimestamp, "invalid start time format: "+err.Error())
-		return
-	}
+func (i *inventoryDomain) BackFillInventorySnapshot(ctx context.Context, startTime time.Time, branchID, itemID string) (inventorySnapshot model.InventorySnapshot, errW *error_wrapper.ErrorWrapper) {
+
 	// Get 1 snapshot before the date
-	previousSnapshot, errW := i.inventorySnapshotResource.GetPreviousDaySnapshot(ctx, parsedTime, branchID, itemID)
+	previousSnapshot, errW := i.inventorySnapshotResource.GetPreviousDaySnapshot(ctx, startTime, branchID, itemID)
 	if errW != nil {
 		if errW.Is(model.RErrDataNotFound) {
-			previousDay := parsedTime.AddDate(0, 0, -1)
+			previousDay := startTime.AddDate(0, 0, -1)
 
 			balance, price, errW := i.CalculatePriceAndBalance(ctx, previousDay, itemID, branchID, nil)
 			fmt.Println("Ini baalance dan price di backfill", balance, price)
@@ -545,6 +636,7 @@ func (i *inventoryDomain) BackFillInventorySnapshot(ctx context.Context, startTi
 					Value:     price,
 				}},
 			}
+			fmt.Println("Ini new inventory snapshot di backfill", newInventorySnaspshot)
 			errW = i.inventorySnapshotResource.Create(ctx, newInventorySnaspshot)
 
 			if errW != nil {

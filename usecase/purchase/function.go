@@ -99,9 +99,9 @@ func (p *purchaseService) Create(c *gin.Context, payload dto.CreatePurchaseReque
 
 	// Updating inventory snapshot, etc
 	errW = p.inventoryDomain.RecalculateInventory(c, dto.RecalculateInventoryRequest{
-		BranchID:  payload.BranchID,
-		ItemID:    payload.ItemID,
-		StartTime: payload.PurchaseDate,
+		BranchID: payload.BranchID,
+		ItemID:   payload.ItemID,
+		NewTime:  payload.PurchaseDate,
 	})
 	if errW != nil {
 		fmt.Println("Error recalculating inventory", errW)
@@ -174,8 +174,14 @@ func (p *purchaseService) Update(ctx context.Context, id string, payload dto.Upd
 		}
 	}
 
+	purchase, errW := p.purchaseDomain.FindByID(id)
+	if errW != nil {
+		fmt.Println("Error getting purchase by id", errW)
+		return errW
+	}
+
 	// 1. Update purchase
-	errW := p.purchaseDomain.Update(id, payload)
+	errW = p.purchaseDomain.Update(id, payload)
 	if errW != nil {
 		return errW
 	}
@@ -212,12 +218,27 @@ func (p *purchaseService) Update(ctx context.Context, id string, payload dto.Upd
 		Reference:           id,
 		TransactionDate:     parsedPurchaseDate,
 	})
+
 	if errW != nil {
 		return errW
 	}
 
-	// 4. Sync branch item
+	fmt.Println("ini purchase date", purchase.PurchaseDate)
+	fmt.Println("Ini bfore", purchase.PurchaseDate.Before(parsedPurchaseDate))
 
+	errW = p.inventoryDomain.RecalculateInventory(ctx, dto.RecalculateInventoryRequest{
+		ItemID:       payload.ItemID,
+		BranchID:     payload.BranchID,
+		NewTime:      payload.PurchaseDate,
+		PreviousTime: &purchase.PurchaseDate,
+	})
+
+	if errW != nil {
+		fmt.Println("Error recalculating inventory", errW)
+		return errW
+	}
+
+	// 4. Sync branch item
 	_, _, errW = p.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, payload.ItemID)
 
 	return errW

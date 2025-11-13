@@ -89,25 +89,33 @@ func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter
 		case "date":
 			if len(f.Values) == 2 {
 				// Date range filtering - expecting start_date and end_date
-				startDate := f.Values[0]
-				endDate := f.Values[1]
-				mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: bson.D{
-					{Key: "$gte", Value: startDate},
-					{Key: "$lte", Value: endDate},
-				}})
+				startDate, err1 := time.Parse("2006-01-02 15:04:05", f.Values[0])
+				endDate, err2 := time.Parse("2006-01-02 15:04:05", f.Values[1])
+				if err1 == nil && err2 == nil {
+					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: bson.D{
+						{Key: "$gte", Value: startDate},
+						{Key: "$lte", Value: endDate},
+					}})
+				}
 			} else if len(f.Values) == 1 {
+				// Parse the date string to time.Time
+				dateValue, err := time.Parse("2006-01-02 15:04:05", f.Values[0])
+				if err != nil {
+					continue
+				}
+				
 				// Single date filtering based on wildcard
 				switch f.Wildcard {
 				case "==":
-					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: f.Values[0]})
+					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: dateValue})
 				case ">=":
-					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: bson.D{{Key: "$gte", Value: f.Values[0]}}})
+					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: bson.D{{Key: "$gte", Value: dateValue}}})
 				case "<=":
-					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: bson.D{{Key: "$lte", Value: f.Values[0]}}})
+					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: bson.D{{Key: "$lte", Value: dateValue}}})
 				case ">":
-					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: bson.D{{Key: "$gt", Value: f.Values[0]}}})
+					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: bson.D{{Key: "$gt", Value: dateValue}}})
 				case "<":
-					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: bson.D{{Key: "$lt", Value: f.Values[0]}}})
+					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: bson.D{{Key: "$lt", Value: dateValue}}})
 				}
 			}
 		}
@@ -175,8 +183,6 @@ func (i *inventorySnapshotResource) FindByID(ctx context.Context, snapshotID str
 }
 
 func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.CreateInventorySnapshotRequest) (errW *error_wrapper.ErrorWrapper) {
-	today := time.Now().Truncate(24 * time.Hour)
-
 	filter := []dto.Filter{
 		{
 			Key:    "item_id",
@@ -233,7 +239,7 @@ func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.Crea
 	newSnapshot := model.InventorySnapshot{
 		ItemID:   payload.ItemID,
 		BranchID: payload.BranchID,
-		Date:     today,
+		Date:     payload.Date,
 		Balance:  payload.Balance,
 		Average:  payload.Value,
 		Latest:   payload.Value,

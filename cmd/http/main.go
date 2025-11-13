@@ -11,10 +11,10 @@ import (
 
 func main() {
 	// Load .env file
-	err := godotenv.Load(".env", ".env")
+	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatalf("Error loading environment files")
-		return
+		log.Printf("Warning: Error loading environment files: %v", err)
+		log.Println("Continuing with system environment variables...")
 	}
 
 	// Initialize PostgreSQL database
