@@ -1,6 +1,8 @@
 package purchase
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -118,9 +120,10 @@ func (p *purchaseController) Delete(c *gin.Context) {
 	id := c.Param("id")
 
 	userId := c.GetHeader("user_id")
-
+	fmt.Println("Ini user id", userId)
 	if userId == "" {
 		errW = error_wrapper.New(model.CErrHeaderIncomplete, "User id is missing on the header")
+		return
 	}
 	errW = p.purchaseService.Delete(c, id, userId)
 	if errW != nil {

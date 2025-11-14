@@ -264,6 +264,15 @@ func (p *purchaseService) Delete(ctx context.Context, id, userID string) *error_
 		return errW
 	}
 
+	errW = p.inventoryDomain.RecalculateInventory(ctx, dto.RecalculateInventoryRequest{
+		BranchID: deletedPurchase.BranchID,
+		ItemID:   deletedPurchase.ItemID,
+		NewTime:  deletedPurchase.PurchaseDate.Format("2006-01-02"),
+	})
+	if errW != nil {
+		fmt.Println("Error recalculating inventory", errW)
+		return errW
+	}
 	_, _, errW = p.inventoryDomain.SyncBranchItem(ctx, deletedPurchase.BranchID, deletedPurchase.ItemID)
 
 	return errW

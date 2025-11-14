@@ -68,6 +68,7 @@ func (s *stockTransactionDomain) InvalidateStockTransaction(ctx context.Context,
 		stockTransaction.DeletedAt = &now
 		stockTransaction.DeletedBy = &userID
 		items = append(items, stockTransaction.ItemID)
+		fmt.Println("Ini stock transaction", stockTransaction)
 		errW = s.stockTransactionResource.Update(stockTransaction.UUID, stockTransaction)
 		if errW != nil {
 			return
