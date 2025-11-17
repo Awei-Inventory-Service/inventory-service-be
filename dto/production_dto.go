@@ -60,3 +60,14 @@ type DeleteProductionRequest struct {
 	BranchID     string `json:"branch_id"`
 	UserID       string `json:"user_id"`
 }
+
+type UpdateProductionRequest struct {
+	SourceItems    []SourceItemCreateProductionRequest `json:"source_items"`
+	ProductionID   string                              `json:"production_id"`
+	FinalItemID    string                              `json:"final_item_id"`
+	FinalQuantity  float64                             `json:"final_quantity"`
+	FinalUnit      string                              `json:"final_unit"`
+	BranchID       string                              `json:"branch_id"`
+	ProductionDate string                              `json:"production_date"`
+	UserID         string                              `json:"user_id"`
+}

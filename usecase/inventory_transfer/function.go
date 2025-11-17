@@ -24,7 +24,7 @@ func (i *inventoryTransferUsecase) Create(ctx context.Context, payload dto.Creat
 	for _, transferItem := range payload.Items {
 		// Sync brnach item in destination id, so that it get the correct price
 		_, _, _ = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchOriginID, transferItem.ItemID)
-		itemCost, errW := i.inventoryDomain.GetPrice(ctx, dto.CustomDate{
+		inventory, errW := i.inventoryDomain.GetInventoryByDate(ctx, dto.CustomDate{
 			Day:   now.Day(),
 			Month: int(now.Month()),
 			Year:  now.Year(),
@@ -49,7 +49,7 @@ func (i *inventoryTransferUsecase) Create(ctx context.Context, payload dto.Creat
 			ItemID:              transferItem.ItemID,
 			ItemQuantity:        transferItem.Quantity,
 			Unit:                transferItem.Unit,
-			ItemCost:            itemCost * standarizeUnit,
+			ItemCost:            inventory.Price * standarizeUnit,
 		})
 
 		if errW != nil {
@@ -180,7 +180,7 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 	// 3. Create new inventory transfer item and stock transaction
 	for _, transferItem := range payload.Items {
 		_, _, _ = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchOriginID, transferItem.ItemID)
-		itemCost, errW := i.inventoryDomain.GetPrice(ctx, dto.CustomDate{
+		inventory, errW := i.inventoryDomain.GetInventoryByDate(ctx, dto.CustomDate{
 			Day:   now.Day(),
 			Month: int(now.Month()),
 			Year:  now.Year(),
@@ -205,7 +205,7 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 			ItemID:              transferItem.ItemID,
 			ItemQuantity:        transferItem.Quantity,
 			Unit:                transferItem.Unit,
-			ItemCost:            itemCost * standarizeUnit,
+			ItemCost:            inventory.Price * standarizeUnit,
 		})
 
 		if errW != nil {
@@ -225,7 +225,7 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 				IssuerID:            inventoryTransfer.IssuerID,
 				Unit:                transferItem.Unit,
 				Reference:           inventoryTransfer.UUID,
-				Cost:                itemCost * standarizeUnit,
+				Cost:                inventory.Price * standarizeUnit,
 				ReferenceType:       &referenceType,
 				TransactionDate:     time.Now(),
 			}

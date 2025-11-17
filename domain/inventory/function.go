@@ -275,7 +275,7 @@ func (i *inventoryDomain) BulkSyncBranchItems(ctx context.Context, branchID stri
 	return nil
 }
 
-func (i *inventoryDomain) GetPrice(ctx context.Context, date dto.CustomDate, itemID, branchID string) (price float64, errW *error_wrapper.ErrorWrapper) {
+func (i *inventoryDomain) GetInventoryByDate(ctx context.Context, date dto.CustomDate, itemID, branchID string) (response dto.GetInventoryPriceAndValueByDate, errW *error_wrapper.ErrorWrapper) {
 
 	inventorySnapshot, errW := i.inventorySnapshotResource.Get(ctx, []dto.Filter{
 		{
@@ -314,7 +314,9 @@ func (i *inventoryDomain) GetPrice(ctx context.Context, date dto.CustomDate, ite
 
 	snapshot := inventorySnapshot[0]
 
-	price = snapshot.Latest
+	response.Price = snapshot.Latest
+	response.Balance = snapshot.Balance
+	response.ItemID = inventorySnapshot[0].ItemID
 	return
 }
 

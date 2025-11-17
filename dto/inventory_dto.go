@@ -19,6 +19,12 @@ type GetInventoryResponse struct {
 	CreatedAt    string             `json:"created_at"`
 }
 
+type GetInventoryPriceAndValueByDate struct {
+	Price   float64 `json:"price"`
+	Balance float64 `json:"balance"`
+	ItemID  string  `json:"item_id"`
+}
+
 type SyncBalanceRequest struct {
 	ItemID   string `json:"item_id"`
 	BranchID string `json:"branch_id"`

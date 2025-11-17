@@ -55,6 +55,31 @@ func (p *productionHandler) GetProductionList(ctx *gin.Context) {
 	productionsResponse, errW = p.productionUsecase.Get(ctx, filter)
 }
 
+func (p *productionHandler) Delete(ctx *gin.Context) {
+	var (
+		errW *error_wrapper.ErrorWrapper
+	)
+
+	defer func() {
+		response_wrapper.New(&ctx.Writer, ctx, errW == nil, nil, errW)
+	}()
+
+	id := ctx.Param("id")
+	userID := ctx.GetHeader("user_id")
+	branchID := ctx.GetHeader("branch_id")
+
+	if userID == "" || branchID == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "User id or branch id is missing the header")
+		return
+	}
+
+	errW = p.productionUsecase.Delete(ctx, dto.DeleteProductionRequest{
+		BranchID:     branchID,
+		UserID:       userID,
+		ProductionID: id,
+	})
+}
+
 func (p *productionHandler) GetProductCOGS(ctx *gin.Context) {
 
 }

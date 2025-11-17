@@ -24,7 +24,7 @@ type InventoryDomain interface {
 	SyncCurrentBalance(ctx context.Context, branchID, itemID string) (float64, *error_wrapper.ErrorWrapper)
 	SyncBranchItem(ctx context.Context, branchID, itemID string) (currentStock, currentPrice float64, errW *error_wrapper.ErrorWrapper)
 	BulkSyncBranchItems(ctx context.Context, branchID string, itemIDs []string) *error_wrapper.ErrorWrapper
-	GetPrice(ctx context.Context, date dto.CustomDate, itemID, branchID string) (price float64, errW *error_wrapper.ErrorWrapper)
+	GetInventoryByDate(ctx context.Context, date dto.CustomDate, itemID, branchID string) (resp dto.GetInventoryPriceAndValueByDate, errW *error_wrapper.ErrorWrapper)
 	Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offest int) (inventories []dto.GetInventoryResponse, errW *error_wrapper.ErrorWrapper)
 	RecalculateInventory(ctx context.Context, payload dto.RecalculateInventoryRequest) (errW *error_wrapper.ErrorWrapper)
 }

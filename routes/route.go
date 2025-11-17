@@ -284,20 +284,21 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 			salesRoutes.GET("/grouped-by-date-and-branch", salesController.FindGroupedByDateAndBranch)
 		}
 
-		branchItemRoutes := apiV1.Group("/inventory")
+		inventory := apiV1.Group("/inventory")
 		{
-			branchItemRoutes.GET("/", inventoryController.FindAll)
-			branchItemRoutes.POST("/get-list", inventoryController.GetList)
-			branchItemRoutes.POST("/sync", inventoryController.SyncBalance)
-			branchItemRoutes.POST("/", inventoryController.Create)
-			branchItemRoutes.GET("/:branch_id/:item_id", inventoryController.FindByBranchIdAndItemId)
-			branchItemRoutes.POST("/recalculate", inventoryController.Recalculate)
+			inventory.GET("/", inventoryController.FindAll)
+			inventory.POST("/get-list", inventoryController.GetList)
+			inventory.POST("/sync", inventoryController.SyncBalance)
+			inventory.POST("/", inventoryController.Create)
+			inventory.GET("/:branch_id/:item_id", inventoryController.FindByBranchIdAndItemId)
+			inventory.POST("/recalculate", inventoryController.Recalculate)
 		}
 
 		productionRoutes := apiV1.Group("/production")
 		{
 			productionRoutes.POST("/create", productionController.Create)
 			productionRoutes.POST("/", productionController.GetProductionList)
+			
 		}
 
 		branchProductRoutes := apiV1.Group("/branch-product")

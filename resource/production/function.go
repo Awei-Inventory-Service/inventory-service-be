@@ -33,6 +33,10 @@ func (p *productionResource) Get(ctx context.Context, filter dto.GetProductionFi
 	var productions []model.Production
 	query := p.db.Model(&model.Production{})
 
+	if filter.ProductionID != "" {
+		query = query.Where("uuid = ? ", filter.ProductionID)
+	}
+
 	if filter.FinalItemID != "" {
 		query = query.Where("final_item_id = ?", filter.FinalItemID)
 	}

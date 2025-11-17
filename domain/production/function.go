@@ -119,3 +119,20 @@ func (p *productionDomain) Delete(ctx context.Context, productionID string) *err
 	}
 	return nil
 }
+
+func (p *productionDomain) Update(ctx context.Context, payload dto.UpdateProductionRequest) (errW *error_wrapper.ErrorWrapper) {
+	productionDate, err := time.Parse("2006-01-02", payload.ProductionDate)
+	if err != nil {
+		return error_wrapper.New(model.ErrInvalidTimestamp, err.Error())
+	}
+	productionPayload := model.Production{
+		FinalItemID:    payload.FinalItemID,
+		FinalQuantity:  payload.FinalQuantity,
+		FinalUnit:      payload.FinalUnit,
+		BranchID:       payload.BranchID,
+		ProductionDate: productionDate,
+		UpdatedAt:      time.Now(),
+	}
+
+	return p.productionResource.Update(payload.ProductionID, productionPayload)
+}
