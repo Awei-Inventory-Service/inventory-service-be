@@ -16,7 +16,6 @@ type GetInventoryResponse struct {
 	ItemUnit     string             `json:"item_unit"`
 	CurrentStock float64            `json:"current_stock"`
 	Price        float64            `json:"price"`
-	CreatedAt    string             `json:"created_at"`
 }
 
 type GetInventoryPriceAndValueByDate struct {

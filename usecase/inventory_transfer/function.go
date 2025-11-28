@@ -14,7 +14,6 @@ import (
 
 func (i *inventoryTransferUsecase) Create(ctx context.Context, payload dto.CreateInventoryTransferRequest) (newData model.InventoryTransfer, errW *error_wrapper.ErrorWrapper) {
 	newData, errW = i.inventoryTransferDomain.Create(ctx, payload)
-
 	if errW != nil {
 		fmt.Println("Error creating inventory transfer", errW)
 		return
@@ -56,6 +55,16 @@ func (i *inventoryTransferUsecase) Create(ctx context.Context, payload dto.Creat
 			fmt.Println("Error creating inventory transfer", errW)
 			continue
 		}
+
+		errW = i.inventoryDomain.RecalculateInventory(ctx, dto.RecalculateInventoryRequest{
+			ItemID:   transferItem.ItemID,
+			BranchID: payload.BranchOriginID,
+			NewTime:  payload.TransferDate,
+		})
+		if errW != nil {
+			fmt.Println("Error recalculating inventory domain", errW)
+			continue
+		}
 	}
 	return
 }
@@ -69,14 +78,12 @@ func (i *inventoryTransferUsecase) UpdateStatus(ctx context.Context, payload dto
 	}
 
 	errW = i.inventoryTransferDomain.UpdateStatus(ctx, payload.InventoryTransferID, payload.Status)
-
 	if errW != nil {
 		fmt.Println("Error updating inventory transfer status", errW)
 		return
 	}
 
 	inventoryTransfer, errW := i.inventoryTransferDomain.FindByID(ctx, payload.InventoryTransferID)
-
 	if errW != nil {
 		fmt.Println("Error getting inventory transfer based on id ", errW)
 		return
@@ -119,14 +126,20 @@ func (i *inventoryTransferUsecase) UpdateStatus(ctx context.Context, payload dto
 			}
 
 			_, _, errW = i.inventoryDomain.SyncBranchItem(ctx, inventoryTransfer.BranchDestinationID, inventoryTransferItem.ItemID)
-
 			if errW != nil {
 				fmt.Println("Error sync branch item", errW, inventoryTransferItem.ItemID)
 				continue
 			}
+			errW := i.inventoryDomain.RecalculateInventory(ctx, dto.RecalculateInventoryRequest{
+				BranchID: inventoryTransfer.BranchOriginID,
+				ItemID:   inventoryTransferItem.ItemID,
+				NewTime:  inventoryTransfer.TransferDate.String(),
+			})
+			if errW != nil {
+				fmt.Println("Error recalculating inventory", errW)
+			}
 
 			_, _, errW = i.inventoryDomain.SyncBranchItem(ctx, inventoryTransfer.BranchOriginID, inventoryTransferItem.ItemID)
-
 			if errW != nil {
 				fmt.Println("Error sync branch item", errW, inventoryTransferItem.ItemID)
 				continue
@@ -147,7 +160,6 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 	)
 	// 1. Update the old inventory transfer
 	inventoryTransfer, errW := i.inventoryTransferDomain.Update(ctx, id, payload)
-
 	if errW != nil {
 		fmt.Println("Error updating inventory transfer", errW)
 		return

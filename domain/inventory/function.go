@@ -320,9 +320,8 @@ func (i *inventoryDomain) GetInventoryByDate(ctx context.Context, date dto.Custo
 	return
 }
 
-func (i *inventoryDomain) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offest int) (inventories []dto.GetInventoryResponse, errW *error_wrapper.ErrorWrapper) {
-	inventoriesRaw, errW := i.inventoryResource.Get(ctx, filter, order, limit, offest)
-
+func (i *inventoryDomain) Get(ctx context.Context, payload dto.GetListRequest) (inventories []dto.GetInventoryResponse, errW *error_wrapper.ErrorWrapper) {
+	inventoriesRaw, errW := i.inventoryResource.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 	if errW != nil {
 		fmt.Println("Error getting all inventories resource", errW)
 		return
@@ -339,7 +338,6 @@ func (i *inventoryDomain) Get(ctx context.Context, filter []dto.Filter, order []
 			ItemUnit:     inventory.Item.Unit,
 			CurrentStock: inventory.Stock,
 			Price:        inventory.Value,
-			CreatedAt:    inventory.CreatedAt.String(),
 		})
 	}
 	return

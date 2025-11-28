@@ -16,4 +16,5 @@ type GetListRequest struct {
 	Order  []Order  `json:"order"`
 	Limit  int      `json:"limit"`
 	Offset int      `json:"offset"`
+	Date   string   `json:"date"`
 }

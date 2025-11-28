@@ -57,6 +57,7 @@ import (
 	item_domain "github.com/inventory-service/domain/item"
 	product_domain "github.com/inventory-service/domain/product"
 	product_recipe_domain "github.com/inventory-service/domain/product_recipe"
+	production_item_domain "github.com/inventory-service/domain/production_item"
 
 	branch_product_domain "github.com/inventory-service/domain/branch_product"
 	inventory_domain "github.com/inventory-service/domain/inventory"
@@ -144,6 +145,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	inventorySnapshotDomain := inventory_snapshot_domain.NewInventorySnapshotDomain(inventorySnapshotResource)
 	inventoryTransferDomain := inventory_transfer_domain.NewInventoryTransferDomain(inventoryTransferResource, inventoryTransferItemResource)
 	inventoryTransferItemDomain := inventory_transfer_item_domain.NewInventoryTransferItemDomain(inventoryTransferItemResource)
+	productionItemDomain := production_item_domain.NewProductionItemDomain(productionItemResource)
 
 	// initialize service
 	userService := auth_service.NewUserService(userDomain)
@@ -156,8 +158,8 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	invoiceService := invoice_service.NewInvoiceService(invoiceDomain)
 	stockService := stock_service.NewStockService(stockTransactionDomain)
 	salesUsecase := sales_service.NewSalesUsecase(salesDomain, productDomain, branchProductDomain, stockTransactionDomain, inventoryDomain)
-	inventoryUsecase := inventory_usecase.NewInventoryUsecase(inventoryDomain, itemDomain, stockTransactionDomain)
-	productionUsecase := production_usecase.NewProductionUsecase(productionDomain, stockTransactionDomain, inventoryDomain)
+	inventoryUsecase := inventory_usecase.NewInventoryUsecase(inventoryDomain, itemDomain, stockTransactionDomain, inventorySnapshotDomain, branchDomain)
+	productionUsecase := production_usecase.NewProductionUsecase(productionDomain, stockTransactionDomain, inventoryDomain, itemDomain, productionItemDomain)
 	branchProductUsecase := branch_product.NewBranchProductUsecase(branchProductDomain, inventoryDomain, productDomain)
 	inventoryTransferUsecase := inventory_transfer_usecase.NewInventoryTransferUsecase(inventoryTransferDomain, inventoryTransferItemDomain, inventoryDomain, stockTransactionDomain, itemDomain)
 
@@ -298,7 +300,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		{
 			productionRoutes.POST("/create", productionController.Create)
 			productionRoutes.POST("/", productionController.GetProductionList)
-			
+
 		}
 
 		branchProductRoutes := apiV1.Group("/branch-product")

@@ -115,10 +115,23 @@ func (i *inventoryHandler) GetList(c *gin.Context) {
 	}
 
 	defer func() {
+		fmt.Println("Ini inventories di response wrapper", inventories)
 		response_wrapper.New(&c.Writer, c, errW == nil, inventories, errW)
 	}()
+	branchID := c.GetHeader("branch_id")
+	fmt.Println("ini branch id", branchID)
 
-	inventories, errW = i.inventoryUsecase.Get(c, payload.Filter, payload.Order, payload.Limit, payload.Offset)
+	if branchID == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "Branch id is required in header")
+		return
+	}
+	inventories, errW = i.inventoryUsecase.Get(c, payload, branchID)
+	fmt.Println("Ini len inventories", len(inventories), inventories)
+
+	if errW != nil {
+		fmt.Println("Error getting inventory", errW)
+		return
+	}
 }
 
 func (i *inventoryHandler) Recalculate(c *gin.Context) {

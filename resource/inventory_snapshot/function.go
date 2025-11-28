@@ -98,16 +98,31 @@ func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter
 					}})
 				}
 			} else if len(f.Values) == 1 {
-				// Parse the date string to time.Time
-				dateValue, err := time.Parse("2006-01-02 15:04:05", f.Values[0])
+				// Parse the date string to time.Time - try multiple formats
+				var dateValue time.Time
+				var err error
+
+				// Try with time format first
+				dateValue, err = time.Parse("2006-01-02 15:04:05", f.Values[0])
 				if err != nil {
-					continue
+					// Try date-only format
+					dateValue, err = time.Parse("2006-01-02", f.Values[0])
+					if err != nil {
+						fmt.Println("Error parsing time in get inventory snapshot resource", f.Values[0])
+						continue
+					}
 				}
 
 				// Single date filtering based on wildcard
 				switch f.Wildcard {
 				case "==":
-					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: dateValue})
+					// For equality, use date range for the entire day
+					startOfDay := time.Date(dateValue.Year(), dateValue.Month(), dateValue.Day(), 0, 0, 0, 0, dateValue.Location())
+					endOfDay := startOfDay.AddDate(0, 0, 1).Add(-time.Nanosecond)
+					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: bson.D{
+						{Key: "$gte", Value: startOfDay},
+						{Key: "$lte", Value: endOfDay},
+					}})
 				case ">=":
 					mongoFilter = append(mongoFilter, bson.E{Key: "date", Value: bson.D{{Key: "$gte", Value: dateValue}}})
 				case "<=":
@@ -121,6 +136,7 @@ func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter
 		}
 	}
 
+	fmt.Println("Mongodb filter", mongoFilter)
 	// Build sort options
 	findOptions := options.Find()
 

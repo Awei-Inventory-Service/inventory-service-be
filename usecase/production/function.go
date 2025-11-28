@@ -46,12 +46,24 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 	referenceType := constant.Production
 
 	for _, productionItem := range payload.SourceItems {
-		inventory, errW := p.inventoryDomain.FindByBranchAndItem(payload.BranchID, productionItem.SourceItemID)
-
+		item, errW := p.itemDomain.FindByID(ctx, productionItem.SourceItemID)
 		if errW != nil {
-			return nil, errW
+			fmt.Println("Error finding item by id", errW)
+			continue
 		}
-		cost := inventory.Value * productionItem.InitialQuantity
+
+		inventory, errW := p.inventoryDomain.GetInventoryByDate(ctx, dto.CustomDate{
+			Day:   productionParsedDate.Day(),
+			Month: int(productionParsedDate.Month()),
+			Year:  productionParsedDate.Year(),
+		}, productionItem.SourceItemID, payload.BranchID)
+		if errW != nil {
+			fmt.Println("Error getting inventory by date", errW)
+			continue
+		}
+
+		standarizedQuantity := utils.StandarizeMeasurement(productionItem.InitialQuantity, productionItem.InitialUnit, item.Unit)
+		cost := inventory.Price * standarizedQuantity
 
 		errW = p.stockTransactionDomain.Create(model.StockTransaction{
 			BranchOriginID:      payload.BranchID,
@@ -292,7 +304,7 @@ func (p *productionUsecase) Update(ctx context.Context, payload dto.UpdateProduc
 		fmt.Println("Error creating stock transaction for in type", errW)
 		return model.Production{}, errW
 	}
-
+	affectedItems = append(affectedItems, payload.FinalItemID)
 	// Sync inventory for all affected items
 	for _, item := range affectedItems {
 		errW = p.inventoryDomain.RecalculateInventory(ctx, dto.RecalculateInventoryRequest{
@@ -305,7 +317,13 @@ func (p *productionUsecase) Update(ctx context.Context, payload dto.UpdateProduc
 			continue
 		}
 	}
-	return model.Production{}, errW
+	errW = p.inventoryDomain.BulkSyncBranchItems(ctx, payload.BranchID, affectedItems)
+	if errW != nil {
+		fmt.Println("Error doing bulk sync branch item", errW)
+		return model.Production{}, errW
+	}
+
+	return model.Production{}, nil
 }
 
 func (p *productionUsecase) ValidateSourceItemsQuantity(ctx context.Context, sourceItems []dto.SourceItemCreateProductionRequest, productionDate time.Time, branchID string) (valid bool, errW *error_wrapper.ErrorWrapper) {

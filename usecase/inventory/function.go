@@ -3,10 +3,12 @@ package inventory
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
+	"github.com/inventory-service/utils"
 )
 
 func (i *inventoryUsecase) Create(ctx context.Context, payload dto.CreateInventoryRequest) *error_wrapper.ErrorWrapper {
@@ -89,8 +91,136 @@ func (i *inventoryUsecase) SyncBranchItem(ctx context.Context, payload dto.SyncB
 	return i.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, payload.ItemID)
 }
 
-func (i *inventoryUsecase) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper) {
-	return i.inventoryDomain.Get(ctx, filter, order, limit, offset)
+func (i *inventoryUsecase) Get(ctx context.Context, payload dto.GetListRequest, branchID string) ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper) {
+	inventorySnapshots, errW := i.inventorySnapshotDomain.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
+	fmt.Println("Ini len inventory snapshots", len(inventorySnapshots))
+
+	if dateExist, date := utils.CheckKeyExist("date", payload.Filter); dateExist {
+		parsedDate, err := time.Parse("2006-01-02", date[0])
+		if err != nil {
+			return nil, error_wrapper.New(model.ErrInvalidTimestamp, "invalid start time format: "+err.Error())
+		}
+
+		today := time.Now().Truncate(24 * time.Hour)
+		parsedDateTruncated := parsedDate.Truncate(24 * time.Hour)
+		if parsedDateTruncated.Equal(today) {
+			return i.inventoryDomain.Get(ctx, payload)
+		}
+	}
+
+	if itemFilterExist, itemID := utils.CheckKeyExist("item_id", payload.Filter); itemFilterExist {
+		// 1. Check if the inventory snapshots length equal to the filter
+		if len(inventorySnapshots) == len(itemID) {
+			fmt.Println("All items requested exist in the database")
+			return i.mapInventorySnapshotToResponse(ctx, inventorySnapshots), nil
+		}
+		// 2. If not equal, then there are missing data that need to be patched
+		missingItems := i.mapExistInventoryToRequest(itemID, inventorySnapshots)
+		if len(missingItems) > 0 {
+			dateExist, date := utils.CheckKeyExist("date", payload.Filter)
+			if dateExist {
+				parsedTime, err := time.Parse("2006-01-02", date[0])
+				if err != nil {
+					return nil, error_wrapper.New(model.ErrInvalidTimestamp, "invalid start time format: "+err.Error())
+				}
+				// Patching data for data that not exist
+				errW = i.BulkCreate(ctx, missingItems, branchID, parsedTime)
+				if errW != nil {
+					fmt.Println("Error bulk create missing items", errW)
+					return nil, errW
+				}
+			}
+		}
+
+		inventorySnapshots, errW = i.inventorySnapshotDomain.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
+		if errW != nil {
+			fmt.Println("Error getting inventry snapshots after patching", errW)
+			return nil, errW
+		}
+
+		return i.mapInventorySnapshotToResponse(ctx, inventorySnapshots), nil
+	}
+	return i.mapInventorySnapshotToResponse(ctx, inventorySnapshots), errW
+}
+
+func (i *inventoryUsecase) mapInventorySnapshotToResponse(
+	ctx context.Context,
+	inventorySnapshots []model.InventorySnapshot,
+) (
+	response []dto.GetInventoryResponse,
+) {
+
+	if len(inventorySnapshots) <= 0 {
+		return
+	}
+
+	branch, errW := i.branchDomain.FindByID(inventorySnapshots[0].BranchID)
+	if errW != nil {
+		fmt.Println("Error finding branch by id", errW)
+		return
+	}
+
+	for _, inventorySnapshot := range inventorySnapshots {
+		item, errW := i.itemDomain.FindByID(ctx, inventorySnapshot.ItemID)
+		if errW != nil {
+			fmt.Println("Error finding item by id", errW)
+			continue
+		}
+		response = append(response, dto.GetInventoryResponse{
+			UUID:         inventorySnapshot.ID.Hex(),
+			BranchID:     inventorySnapshot.BranchID,
+			ItemID:       inventorySnapshot.ItemID,
+			ItemName:     item.Name,
+			ItemCategory: item.Category,
+			ItemUnit:     item.Unit,
+			CurrentStock: inventorySnapshot.Balance,
+			Price:        inventorySnapshot.Latest,
+			BranchName:   branch.Name,
+		})
+	}
+	fmt.Println("Ini len gresponse", len(response))
+	return
+}
+
+func (i *inventoryUsecase) mapExistInventoryToRequest(
+	requestInventorySnaphots []string,
+	inventorySnapshots []model.InventorySnapshot,
+) (missingItems []string) {
+	mappedItemIdToInventory := make(map[string]model.InventorySnapshot)
+
+	for _, inventorySnapshot := range inventorySnapshots {
+		mappedItemIdToInventory[inventorySnapshot.ItemID] = inventorySnapshot
+	}
+
+	for _, itemID := range requestInventorySnaphots {
+		if _, exist := mappedItemIdToInventory[itemID]; !exist {
+			missingItems = append(missingItems, itemID)
+		}
+	}
+	return
+}
+
+func (i *inventoryUsecase) BulkCreate(ctx context.Context, items []string, branchID string, endTime time.Time) (errW *error_wrapper.ErrorWrapper) {
+	for _, item := range items {
+		balance, price, errW := i.inventoryDomain.CalculatePriceAndBalance(ctx, endTime, item, branchID, nil)
+		if errW != nil {
+			fmt.Println("Error calculating price and balance in bulk create", errW)
+			continue
+		}
+
+		errW = i.inventorySnapshotDomain.Upsert(ctx, dto.CreateInventorySnapshotRequest{
+			ItemID:   item,
+			BranchID: branchID,
+			Value:    price,
+			Balance:  balance,
+			Date:     endTime,
+		})
+		if errW != nil {
+			fmt.Println("Error upserting inventory snapshot", errW)
+			continue
+		}
+	}
+	return
 }
 
 func (i *inventoryUsecase) RecalculateInventory(ctx context.Context, payload dto.RecalculateInventoryRequest) (errW *error_wrapper.ErrorWrapper) {
