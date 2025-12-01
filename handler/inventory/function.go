@@ -79,7 +79,33 @@ func (s *inventoryHandler) FindAll(c *gin.Context) {
 		fmt.Println("Errw", errW.ActualError())
 		return
 	}
+}
 
+func (i *inventoryHandler) GetListCurrent(c *gin.Context) {
+	var (
+		errW        *error_wrapper.ErrorWrapper
+		payload     dto.GetListRequest
+		inventories []dto.GetInventoryResponse
+	)
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, inventories, errW)
+	}()
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+		return
+	}
+
+	branchID := c.GetHeader("branch_id")
+	if branchID == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "Branch id is required in header")
+		return
+	}
+	inventories, errW = i.inventoryUsecase.GetListCurrent(c, payload, branchID)
+	if errW != nil {
+		return
+	}
 }
 
 func (b *inventoryHandler) SyncBalance(c *gin.Context) {
@@ -115,7 +141,6 @@ func (i *inventoryHandler) GetList(c *gin.Context) {
 	}
 
 	defer func() {
-		fmt.Println("Ini inventories di response wrapper", inventories)
 		response_wrapper.New(&c.Writer, c, errW == nil, inventories, errW)
 	}()
 	branchID := c.GetHeader("branch_id")
@@ -126,7 +151,6 @@ func (i *inventoryHandler) GetList(c *gin.Context) {
 		return
 	}
 	inventories, errW = i.inventoryUsecase.Get(c, payload, branchID)
-	fmt.Println("Ini len inventories", len(inventories), inventories)
 
 	if errW != nil {
 		fmt.Println("Error getting inventory", errW)

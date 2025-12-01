@@ -21,6 +21,7 @@ type InventoryUsecase interface {
 	SyncBranchItem(ctx context.Context, payload dto.SyncBalanceRequest) (currentStock, currentPrice float64, errW *error_wrapper.ErrorWrapper)
 	Get(ctx context.Context, payload dto.GetListRequest, branchID string) ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper)
 	RecalculateInventory(ctx context.Context, payload dto.RecalculateInventoryRequest) (errW *error_wrapper.ErrorWrapper)
+	GetListCurrent(ctx context.Context, payload dto.GetListRequest, branchID string) (inventories []dto.GetInventoryResponse, errW *error_wrapper.ErrorWrapper)
 }
 
 type inventoryUsecase struct {

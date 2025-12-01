@@ -12,6 +12,7 @@ type InventoryHandler interface {
 	Create(c *gin.Context)
 	GetList(c *gin.Context)
 	Recalculate(c *gin.Context)
+	GetListCurrent(c *gin.Context)
 }
 
 type inventoryHandler struct {

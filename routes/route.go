@@ -289,6 +289,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		inventory := apiV1.Group("/inventory")
 		{
 			inventory.GET("/", inventoryController.FindAll)
+			inventory.POST("/current", inventoryController.GetListCurrent)
 			inventory.POST("/get-list", inventoryController.GetList)
 			inventory.POST("/sync", inventoryController.SyncBalance)
 			inventory.POST("/", inventoryController.Create)

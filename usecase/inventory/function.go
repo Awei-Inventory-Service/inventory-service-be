@@ -83,6 +83,46 @@ func (i *inventoryUsecase) FindByBranchId(branchId string) ([]model.Inventory, *
 	return i.inventoryDomain.FindByBranch(branchId)
 }
 
+func (i *inventoryUsecase) GetListCurrent(ctx context.Context, payload dto.GetListRequest, branchID string) (inventories []dto.GetInventoryResponse, errW *error_wrapper.ErrorWrapper) {
+	inventories, errW = i.inventoryDomain.Get(ctx, payload)
+	if errW != nil {
+		fmt.Println("Error getting inventories in get list current usecase", errW)
+		return
+	}
+	fmt.Println("Ini len inventories", len(inventories))
+	for _, inventory := range inventories {
+		filters := []dto.Filter{
+			{
+				Key:      "branch_id",
+				Values:   []string{branchID},
+				Wildcard: "==",
+			},
+			{
+				Key:      "item_id",
+				Values:   []string{inventory.ItemID},
+				Wildcard: "==",
+			},
+		}
+		_, errW := i.inventorySnapshotDomain.Get(ctx, filters, nil, 0, 0)
+		if errW != nil && errW.Is(model.RErrDataNotFound) {
+			errW = nil
+			// IF data not found, then create inventory snapshot
+			errW = i.inventorySnapshotDomain.Upsert(ctx, dto.CreateInventorySnapshotRequest{
+				ItemID:   inventory.ItemID,
+				BranchID: inventory.BranchID,
+				Balance:  inventory.CurrentStock,
+				Value:    inventory.Price,
+				Date:     time.Now(),
+			})
+			if errW != nil {
+				fmt.Println("Error upserting new inventory snapshot", errW)
+				continue
+			}
+		}
+	}
+	return
+}
+
 func (i *inventoryUsecase) FindAll() ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper) {
 	return i.inventoryDomain.FindAll()
 }
@@ -104,7 +144,18 @@ func (i *inventoryUsecase) Get(ctx context.Context, payload dto.GetListRequest, 
 		today := time.Now().Truncate(24 * time.Hour)
 		parsedDateTruncated := parsedDate.Truncate(24 * time.Hour)
 		if parsedDateTruncated.Equal(today) {
-			return i.inventoryDomain.Get(ctx, payload)
+			// Remove date filter since inventory table doesn't have date column
+			var filteredPayload dto.GetListRequest
+			filteredPayload = payload
+			filteredPayload.Filter = make([]dto.Filter, 0)
+			
+			for _, filter := range payload.Filter {
+				if filter.Key != "date" {
+					filteredPayload.Filter = append(filteredPayload.Filter, filter)
+				}
+			}
+			
+			return i.inventoryDomain.Get(ctx, filteredPayload)
 		}
 	}
 
@@ -178,7 +229,7 @@ func (i *inventoryUsecase) mapInventorySnapshotToResponse(
 			BranchName:   branch.Name,
 		})
 	}
-	fmt.Println("Ini len gresponse", len(response))
+
 	return
 }
 

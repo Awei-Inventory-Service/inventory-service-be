@@ -36,7 +36,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 			return errW
 		}
 
-		productRecipes, totalPrice, errW := s.productDomain.CalculateProductCost(ctx, *product, payload.BranchID, time.Now())
+		productRecipes, totalPrice, errW := s.productDomain.CalculateProductCost(ctx, *product, payload.BranchID, transactionDate)
 		if errW != nil {
 			return errW
 		}
