@@ -58,12 +58,12 @@ func (p *productionDomain) Create(ctx context.Context, payload dto.CreateProduct
 	return production, nil
 }
 
-func (p *productionDomain) Get(ctx context.Context, filter dto.GetProductionFilter) ([]dto.GetProductionList, *error_wrapper.ErrorWrapper) {
+func (p *productionDomain) Get(ctx context.Context, payload dto.GetListRequest) ([]dto.GetProduction, *error_wrapper.ErrorWrapper) {
 	var (
-		productionResults []dto.GetProductionList
+		productionResults []dto.GetProduction
 		errW              *error_wrapper.ErrorWrapper
 	)
-	productions, errW := p.productionResource.Get(ctx, filter)
+	productions, errW := p.productionResource.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 
 	if errW != nil {
 		return nil, errW
@@ -77,9 +77,9 @@ func (p *productionDomain) Get(ctx context.Context, filter dto.GetProductionFilt
 	return productionResults, nil
 }
 
-func (p *productionDomain) mapToGetProduction(production model.Production) dto.GetProductionList {
+func (p *productionDomain) mapToGetProduction(production model.Production) dto.GetProduction {
 	var (
-		result dto.GetProductionList
+		result dto.GetProduction
 	)
 
 	result.BranchID = production.BranchID
@@ -93,7 +93,7 @@ func (p *productionDomain) mapToGetProduction(production model.Production) dto.G
 
 	for _, productionItem := range production.SourceItems {
 		result.SourceItems = append(result.SourceItems, dto.GetProductionItem{
-			SourceItemID:    productionItem.UUID,
+			SourceItemID:    productionItem.SourceItemID,
 			SourceItemName:  productionItem.SourceItem.Name,
 			InitialQuantity: productionItem.Quantity,
 			Waste:           productionItem.WasteQuantity,

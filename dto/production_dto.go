@@ -24,7 +24,7 @@ type GetProductionItem struct {
 	WastePercentage float64 `json:"waste_percentage"`
 }
 
-type GetProductionList struct {
+type GetProduction struct {
 	ProductionID   string              `json:"production_id"`
 	FinalItemID    string              `json:"final_item_id"`
 	FinalItemName  string              `json:"final_item_name"`
@@ -34,19 +34,6 @@ type GetProductionList struct {
 	BranchID       string              `json:"branch_id"`
 	BranchName     string              `json:"branch_name"`
 	SourceItems    []GetProductionItem `json:"source_items"`
-}
-
-type GetProduction struct {
-	UUID            string  `json:"uuid"`
-	SourceItemID    string  `json:"source_item_id"`
-	SourceItemName  string  `json:"source_item_name"`
-	FinalItemID     string  `json:"final_item_id"`
-	FinalItemName   string  `json:"final_item_name"`
-	Waste           float64 `json:"waste"`
-	WastePercentage float64 `json:"waste_percentage"`
-	BranchID        string  `json:"branch_id"`
-	BranchName      string  `json:"branch_name"`
-	ProductionDate  string  `json:"production_date"`
 }
 
 type GetProductionFilter struct {

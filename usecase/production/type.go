@@ -15,8 +15,10 @@ import (
 
 type ProductionUsecase interface {
 	Create(ctx context.Context, payload dto.CreateProductionRequest) (*model.Production, *error_wrapper.ErrorWrapper)
-	Get(ctx context.Context, filter dto.GetProductionFilter) ([]dto.GetProductionList, *error_wrapper.ErrorWrapper)
+	Get(ctx context.Context, payload dto.GetListRequest) ([]dto.GetProduction, *error_wrapper.ErrorWrapper)
 	Delete(ctx context.Context, payload dto.DeleteProductionRequest) *error_wrapper.ErrorWrapper
+	Update(ctx context.Context, payload dto.UpdateProductionRequest) (model.Production, *error_wrapper.ErrorWrapper)
+	GetByID(ctx context.Context, id string) (production dto.GetProduction, errW *error_wrapper.ErrorWrapper)
 }
 
 type productionUsecase struct {

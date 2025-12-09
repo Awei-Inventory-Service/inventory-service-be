@@ -7,8 +7,9 @@ import (
 
 type ProductionHandler interface {
 	Create(c *gin.Context)
+	Update(c *gin.Context)
 	GetProductionList(c *gin.Context)
-	GetProductCOGS(c *gin.Context)
+	GetByID(c *gin.Context)
 }
 
 type productionHandler struct {

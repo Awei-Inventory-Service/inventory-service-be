@@ -1,6 +1,8 @@
 package production
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -25,7 +27,6 @@ func (p *productionHandler) Create(ctx *gin.Context) {
 	}
 
 	userId := ctx.GetHeader("user_id")
-
 	if userId == "" {
 		errW = error_wrapper.New(model.CErrHeaderIncomplete, "User id is missing on the header")
 		return
@@ -38,8 +39,8 @@ func (p *productionHandler) Create(ctx *gin.Context) {
 func (p *productionHandler) GetProductionList(ctx *gin.Context) {
 	var (
 		errW                *error_wrapper.ErrorWrapper
-		productionsResponse []dto.GetProductionList
-		filter              dto.GetProductionFilter
+		productionsResponse []dto.GetProduction
+		filter              dto.GetListRequest
 	)
 
 	defer func() {
@@ -80,6 +81,51 @@ func (p *productionHandler) Delete(ctx *gin.Context) {
 	})
 }
 
-func (p *productionHandler) GetProductCOGS(ctx *gin.Context) {
+func (p *productionHandler) Update(ctx *gin.Context) {
+	var (
+		updateProductionRequest dto.UpdateProductionRequest
+		errW                    *error_wrapper.ErrorWrapper
+	)
+	id := ctx.Param("id")
 
+	userId := ctx.GetHeader("user_id")
+	if userId == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "User id is missing on the header")
+		return
+	}
+
+	defer func() {
+		response_wrapper.New(&ctx.Writer, ctx, errW == nil, nil, errW)
+	}()
+
+	if err := ctx.ShouldBindJSON(&updateProductionRequest); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+		return
+	}
+
+	updateProductionRequest.ProductionID = id
+	updateProductionRequest.UserID = userId
+	_, errW = p.productionUsecase.Update(ctx, updateProductionRequest)
+	if errW != nil {
+		fmt.Println("Error updating production", errW)
+		return
+	}
+}
+
+func (p *productionHandler) GetByID(ctx *gin.Context) {
+	var (
+		productionResponse dto.GetProduction
+		errW               *error_wrapper.ErrorWrapper
+	)
+	id := ctx.Param("id")
+
+	defer func() {
+		response_wrapper.New(&ctx.Writer, ctx, errW == nil, productionResponse, errW)
+	}()
+
+	productionResponse, errW = p.productionUsecase.GetByID(ctx, id)
+	if errW != nil {
+		fmt.Println("Error getting production by id", errW)
+		return
+	}
 }

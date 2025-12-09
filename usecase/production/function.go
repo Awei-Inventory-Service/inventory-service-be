@@ -123,8 +123,8 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 	return production, nil
 }
 
-func (p *productionUsecase) Get(ctx context.Context, filter dto.GetProductionFilter) ([]dto.GetProductionList, *error_wrapper.ErrorWrapper) {
-	return p.productionDomain.Get(ctx, filter)
+func (p *productionUsecase) Get(ctx context.Context, payload dto.GetListRequest) ([]dto.GetProduction, *error_wrapper.ErrorWrapper) {
+	return p.productionDomain.Get(ctx, payload)
 }
 
 func (p *productionUsecase) Delete(ctx context.Context, payload dto.DeleteProductionRequest) *error_wrapper.ErrorWrapper {
@@ -132,9 +132,11 @@ func (p *productionUsecase) Delete(ctx context.Context, payload dto.DeleteProduc
 		errW *error_wrapper.ErrorWrapper
 	)
 
-	production, errW := p.productionDomain.Get(ctx, dto.GetProductionFilter{
-		ProductionID: payload.ProductionID,
-		BranchID:     payload.BranchID,
+	filter := []dto.Filter{{Key: "uuid", Values: []string{payload.ProductionID}}}
+	production, errW := p.productionDomain.Get(ctx, dto.GetListRequest{
+		Filter: filter,
+		Limit:  0,
+		Offset: 0,
 	})
 	if errW != nil {
 		fmt.Println("Error getting production ", errW)
@@ -190,6 +192,7 @@ func (p *productionUsecase) Update(ctx context.Context, payload dto.UpdateProduc
 	var (
 		affectedItems []string
 	)
+
 	// 1. Validate payload
 	productionDate, err := time.Parse("2006-01-02", payload.ProductionDate)
 	if err != nil {
@@ -198,6 +201,21 @@ func (p *productionUsecase) Update(ctx context.Context, payload dto.UpdateProduc
 	valid, errW := p.ValidateSourceItemsQuantity(ctx, payload.SourceItems, productionDate, payload.BranchID)
 	if errW != nil || !valid {
 		return model.Production{}, errW
+	}
+
+	oldProduction, errW := p.productionDomain.Get(ctx, dto.GetListRequest{
+		Filter: []dto.Filter{{Key: "uuid", Values: []string{payload.ProductionID}}},
+		Limit:  1,
+	})
+	if errW != nil {
+		fmt.Println("Error getting old production ", errW)
+		return model.Production{}, errW
+	}
+
+	oldProductionDate, err := time.Parse("2006-01-02 15:04:05 -0700 MST", oldProduction[0].ProductionDate)
+	if err != nil {
+		fmt.Println("Invalid time stamp for old production date", oldProduction[0].ProductionDate)
+		return model.Production{}, error_wrapper.New(model.ErrInvalidTimestamp, "invalid start time format: "+err.Error())
 	}
 
 	// Update the production data
@@ -231,6 +249,7 @@ func (p *productionUsecase) Update(ctx context.Context, payload dto.UpdateProduc
 
 	// 3. Create new stock_transaction
 	totalCost := 0.0
+	productionType := constant.Production
 	for _, productionItem := range payload.SourceItems {
 		item, errW := p.itemDomain.FindByID(ctx, productionItem.SourceItemID)
 		if errW != nil {
@@ -262,6 +281,7 @@ func (p *productionUsecase) Update(ctx context.Context, payload dto.UpdateProduc
 			Reference:           payload.ProductionID,
 			Cost:                cost,
 			TransactionDate:     productionDate,
+			ReferenceType:       &productionType,
 		})
 		if errW != nil {
 			fmt.Println("Error creating new stock transaction", errW)
@@ -299,6 +319,7 @@ func (p *productionUsecase) Update(ctx context.Context, payload dto.UpdateProduc
 		Reference:           payload.ProductionID,
 		Cost:                totalCost,
 		TransactionDate:     productionDate,
+		ReferenceType:       &productionType,
 	})
 	if errW != nil {
 		fmt.Println("Error creating stock transaction for in type", errW)
@@ -308,9 +329,10 @@ func (p *productionUsecase) Update(ctx context.Context, payload dto.UpdateProduc
 	// Sync inventory for all affected items
 	for _, item := range affectedItems {
 		errW = p.inventoryDomain.RecalculateInventory(ctx, dto.RecalculateInventoryRequest{
-			BranchID: payload.BranchID,
-			ItemID:   item,
-			NewTime:  payload.ProductionDate,
+			BranchID:     payload.BranchID,
+			ItemID:       item,
+			NewTime:      payload.ProductionDate,
+			PreviousTime: &oldProductionDate,
 		})
 		if errW != nil {
 			fmt.Println("Error recalculating inventory", errW)
@@ -357,4 +379,22 @@ func (p *productionUsecase) ValidateSourceItemsQuantity(ctx context.Context, sou
 	}
 
 	return true, nil
+}
+
+func (p *productionUsecase) GetByID(ctx context.Context, id string) (production dto.GetProduction, errW *error_wrapper.ErrorWrapper) {
+	filter := []dto.Filter{
+		{
+			Key:    "uuid",
+			Values: []string{id},
+		},
+	}
+
+	productionRaw, errW := p.productionDomain.Get(ctx, dto.GetListRequest{
+		Filter: filter,
+		Limit:  0,
+		Offset: 0,
+	})
+
+	production = productionRaw[0]
+	return
 }

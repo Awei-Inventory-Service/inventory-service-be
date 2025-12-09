@@ -243,7 +243,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 			productRoutes.GET("/:id", productController.FindByID)
 			productRoutes.PUT("/:id", productController.Update)
 			productRoutes.DELETE("/:id", productController.Delete)
-			productRoutes.POST("/cogs", productionController.Create)
+			// productRoutes.POST("/cogs", productionController.Create)
 			// productRoutes.GET("/:id/cost", productController.GetCost)
 		}
 
@@ -301,7 +301,8 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		{
 			productionRoutes.POST("/create", productionController.Create)
 			productionRoutes.POST("/", productionController.GetProductionList)
-
+			productionRoutes.PUT("/:id", productionController.Update)
+			productionRoutes.GET("/:id", productionController.GetByID)
 		}
 
 		branchProductRoutes := apiV1.Group("/branch-product")

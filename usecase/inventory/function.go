@@ -148,13 +148,13 @@ func (i *inventoryUsecase) Get(ctx context.Context, payload dto.GetListRequest, 
 			var filteredPayload dto.GetListRequest
 			filteredPayload = payload
 			filteredPayload.Filter = make([]dto.Filter, 0)
-			
+
 			for _, filter := range payload.Filter {
 				if filter.Key != "date" {
 					filteredPayload.Filter = append(filteredPayload.Filter, filter)
 				}
 			}
-			
+
 			return i.inventoryDomain.Get(ctx, filteredPayload)
 		}
 	}
@@ -175,18 +175,14 @@ func (i *inventoryUsecase) Get(ctx context.Context, payload dto.GetListRequest, 
 					return nil, error_wrapper.New(model.ErrInvalidTimestamp, "invalid start time format: "+err.Error())
 				}
 				// Patching data for data that not exist
-				errW = i.BulkCreate(ctx, missingItems, branchID, parsedTime)
-				if errW != nil {
-					fmt.Println("Error bulk create missing items", errW)
-					return nil, errW
-				}
+				// errW = i.BulkCreate(ctx, missingItems, branchID, parsedTime)
+				// if errW != nil {
+				// 	fmt.Println("Error bulk create missing items", errW)
+				// 	return nil, errW
+				// }
+				defaultSnapshots := i.GenerateDefaultInventorySnapshots(ctx, missingItems, branchID, parsedTime)
+				inventorySnapshots = append(inventorySnapshots, defaultSnapshots...)
 			}
-		}
-
-		inventorySnapshots, errW = i.inventorySnapshotDomain.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
-		if errW != nil {
-			fmt.Println("Error getting inventry snapshots after patching", errW)
-			return nil, errW
 		}
 
 		return i.mapInventorySnapshotToResponse(ctx, inventorySnapshots), nil
@@ -276,4 +272,45 @@ func (i *inventoryUsecase) BulkCreate(ctx context.Context, items []string, branc
 
 func (i *inventoryUsecase) RecalculateInventory(ctx context.Context, payload dto.RecalculateInventoryRequest) (errW *error_wrapper.ErrorWrapper) {
 	return i.inventoryDomain.RecalculateInventory(ctx, payload)
+}
+
+func (i *inventoryUsecase) GenerateDefaultInventorySnapshots(
+	ctx context.Context,
+	items []string,
+	branchID string,
+	parsedTime time.Time,
+) (inventorySnapshots []model.InventorySnapshot) {
+
+	for _, itemID := range items {
+		balance, price, errW := i.inventoryDomain.CalculatePriceAndBalance(ctx, parsedTime, itemID, branchID, nil)
+		if errW != nil {
+			fmt.Println("Error calculating price and balance for item id ", itemID)
+			inventorySnapshots = append(inventorySnapshots, model.InventorySnapshot{
+				Balance:  0,
+				Latest:   0,
+				Average:  0,
+				Date:     parsedTime,
+				Day:      parsedTime.Day(),
+				Month:    int(parsedTime.Month()),
+				Year:     parsedTime.Year(),
+				BranchID: branchID,
+				ItemID:   itemID,
+			})
+			continue
+		}
+
+		inventorySnapshots = append(inventorySnapshots, model.InventorySnapshot{
+			Balance:  balance,
+			Latest:   price,
+			Date:     parsedTime,
+			Day:      parsedTime.Day(),
+			Month:    int(parsedTime.Month()),
+			Year:     parsedTime.Year(),
+			BranchID: branchID,
+			ItemID:   itemID,
+		})
+
+	}
+
+	return
 }
