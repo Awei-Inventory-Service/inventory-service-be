@@ -119,6 +119,8 @@ func (i *inventoryResource) Get(ctx context.Context, filter []dto.Filter, order 
 				db = db.Where(fil.Key+" = ?", value)
 			case "<":
 				db = db.Where(fil.Key+" < ?", value)
+			default:
+				db = db.Where(fil.Key+ " = ?", value)
 			}
 		} else {
 			db = db.Where(fil.Key+" IN ?", fil.Values)

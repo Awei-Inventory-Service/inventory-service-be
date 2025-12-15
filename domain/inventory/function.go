@@ -546,10 +546,10 @@ func (i *inventoryDomain) CalculatePriceAndBalance(ctx context.Context, endTime 
 			continue
 		}
 		fmt.Println("Ini stock transaction", stockTransaction)
-		if stockTransaction.Type == "IN" {
+		if stockTransaction.Type == "IN" && stockTransaction.BranchDestinationID == branchID {
 			totalBalance += balance
 			totalPrice += stockTransaction.Cost
-		} else if stockTransaction.Type == "OUT" {
+		} else if stockTransaction.Type == "OUT" && stockTransaction.BranchOriginID == branchID {
 			totalBalance -= balance
 		}
 	}

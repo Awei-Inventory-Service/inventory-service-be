@@ -132,6 +132,9 @@ func (i *inventoryUsecase) SyncBranchItem(ctx context.Context, payload dto.SyncB
 }
 
 func (i *inventoryUsecase) Get(ctx context.Context, payload dto.GetListRequest, branchID string) ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper) {
+	var (
+		parsedDate = time.Now()
+	)
 	inventorySnapshots, errW := i.inventorySnapshotDomain.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 	fmt.Println("Ini len inventory snapshots", len(inventorySnapshots))
 
@@ -186,6 +189,18 @@ func (i *inventoryUsecase) Get(ctx context.Context, payload dto.GetListRequest, 
 		}
 
 		return i.mapInventorySnapshotToResponse(ctx, inventorySnapshots), nil
+	}
+
+	if branchIDFilterExist, branchID := utils.CheckKeyExist("branch_id", payload.Filter); branchIDFilterExist {
+		var (
+			inventorySnapshotsBranch []model.InventorySnapshot
+		)
+
+		for _, branch := range branchID {
+			inventorySnapshots := i.GenerateDefaultInventorySnapshotsForBranch(ctx, branch, parsedDate)
+			inventorySnapshotsBranch = append(inventorySnapshotsBranch, inventorySnapshots...)
+		}
+		return i.mapInventorySnapshotToResponse(ctx, inventorySnapshotsBranch), nil
 	}
 	return i.mapInventorySnapshotToResponse(ctx, inventorySnapshots), errW
 }
@@ -274,6 +289,48 @@ func (i *inventoryUsecase) RecalculateInventory(ctx context.Context, payload dto
 	return i.inventoryDomain.RecalculateInventory(ctx, payload)
 }
 
+func (i *inventoryUsecase) GenerateDefaultInventorySnapshotsForBranch(
+	ctx context.Context,
+	branchID string,
+	parsedTime time.Time,
+) (inventorySnaphots []model.InventorySnapshot) {
+	// 1. Get all items that exist on this branch
+	inventories, errW := i.inventoryDomain.Get(ctx, dto.GetListRequest{
+		Filter: []dto.Filter{
+			{
+				Key:    "branch_id",
+				Values: []string{branchID},
+			},
+		},
+	})
+	if errW != nil {
+		fmt.Println("Error getting inventories with branch id", branchID)
+		return
+	}
+
+	// 2. Calculate price and balance for each item with specific branchID and parsedtime
+	for _, inventory := range inventories {
+		balance, price, errW := i.inventoryDomain.CalculatePriceAndBalance(ctx, parsedTime, inventory.ItemID, inventory.BranchID, nil)
+		if errW != nil {
+			fmt.Println("Error calculating price and balance ", errW)
+			continue
+		}
+
+		inventorySnaphots = append(inventorySnaphots, model.InventorySnapshot{
+			Latest:   price,
+			Balance:  balance,
+			Date:     parsedTime,
+			Day:      parsedTime.Day(),
+			Month:    int(parsedTime.Month()),
+			Year:     parsedTime.Year(),
+			BranchID: branchID,
+			ItemID:   inventory.ItemID,
+		})
+	}
+	// 3.Return the balance and price
+	return
+}
+
 func (i *inventoryUsecase) GenerateDefaultInventorySnapshots(
 	ctx context.Context,
 	items []string,
@@ -283,6 +340,7 @@ func (i *inventoryUsecase) GenerateDefaultInventorySnapshots(
 
 	for _, itemID := range items {
 		balance, price, errW := i.inventoryDomain.CalculatePriceAndBalance(ctx, parsedTime, itemID, branchID, nil)
+		fmt.Println("iNI BALANCE AND PRICE DI GENERATE DEFAULT", balance, price, parsedTime)
 		if errW != nil {
 			fmt.Println("Error calculating price and balance for item id ", itemID)
 			inventorySnapshots = append(inventorySnapshots, model.InventorySnapshot{

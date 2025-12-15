@@ -20,6 +20,7 @@ func (i *inventoryTransferUsecase) Create(ctx context.Context, payload dto.Creat
 	}
 
 	now := time.Now()
+	referenceTypeInventoryTransfer := constant.InventoryTransfer
 	for _, transferItem := range payload.Items {
 		// Sync brnach item in destination id, so that it get the correct price
 		_, _, _ = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchOriginID, transferItem.ItemID)
@@ -35,7 +36,6 @@ func (i *inventoryTransferUsecase) Create(ctx context.Context, payload dto.Creat
 		}
 
 		item, errW := i.itemDomain.FindByID(ctx, transferItem.ItemID)
-
 		if errW != nil {
 			fmt.Println("Error getting item by id in create inventory transfer")
 			return newData, errW
@@ -50,9 +50,37 @@ func (i *inventoryTransferUsecase) Create(ctx context.Context, payload dto.Creat
 			Unit:                transferItem.Unit,
 			ItemCost:            inventory.Price * standarizeUnit,
 		})
-
 		if errW != nil {
 			fmt.Println("Error creating inventory transfer", errW)
+			continue
+		}
+
+		parsedTime, err := time.Parse("2006-01-02", payload.TransferDate)
+		if err != nil {
+			return model.InventoryTransfer{}, error_wrapper.New(model.ErrInvalidTimestamp, "invalid start time format: "+err.Error())
+		}
+
+		errW = i.stockTransactionDomain.Create(model.StockTransaction{
+			BranchOriginID:      payload.BranchOriginID,
+			BranchDestinationID: payload.BranchDestinationID,
+			ItemID:              item.UUID,
+			Type:                "OUT",
+			Quantity:            transferItem.Quantity,
+			IssuerID:            payload.IssuerID,
+			Unit:                transferItem.Unit,
+			Reference:           newData.UUID,
+			Cost:                inventory.Price * standarizeUnit,
+			ReferenceType:       &referenceTypeInventoryTransfer,
+			TransactionDate:     parsedTime,
+		})
+		if errW != nil {
+			fmt.Println("Error creating new stock transaction", errW)
+			return model.InventoryTransfer{}, errW
+		}
+
+		_, _, errW = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchOriginID, transferItem.ItemID)
+		if errW != nil {
+			fmt.Println("Error sync branch item", errW, transferItem.ItemID)
 			continue
 		}
 
@@ -113,18 +141,6 @@ func (i *inventoryTransferUsecase) UpdateStatus(ctx context.Context, payload dto
 				fmt.Println("Error creating stock transaction for IN process in UpdateStatus", errW)
 				return
 			}
-
-			stockTransactionOut := stockTransaction
-			stockTransactionOut.Type = "OUT"
-			stockTransactionOut.TransactionDate = inventoryTransfer.TransferDate
-
-			errW = i.stockTransactionDomain.Create(stockTransactionOut)
-
-			if errW != nil {
-				fmt.Println("Error creating stock transaction for OUT process in UpdateStatus", errW)
-				return
-			}
-
 			_, _, errW = i.inventoryDomain.SyncBranchItem(ctx, inventoryTransfer.BranchDestinationID, inventoryTransferItem.ItemID)
 			if errW != nil {
 				fmt.Println("Error sync branch item", errW, inventoryTransferItem.ItemID)
