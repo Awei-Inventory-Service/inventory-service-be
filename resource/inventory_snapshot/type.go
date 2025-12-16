@@ -17,7 +17,7 @@ type InventorySnapshotResource interface {
 	Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]model.InventorySnapshot, *error_wrapper.ErrorWrapper)
 	Upsert(ctx context.Context, payload dto.CreateInventorySnapshotRequest) (errW *error_wrapper.ErrorWrapper)
 	GetPreviousDaySnapshot(ctx context.Context, targetTime time.Time, branchID, itemID string) (*model.InventorySnapshot, *error_wrapper.ErrorWrapper)
-	GetSnapshotBasedOndDate(ctx context.Context, date time.Time) (model.InventorySnapshot, *error_wrapper.ErrorWrapper)
+	GetSnapshotBasedOndDate(ctx context.Context, payload dto.GetSnapshotBasedOnDateRequest) (model.InventorySnapshot, *error_wrapper.ErrorWrapper)
 }
 
 type inventorySnapshotResource struct {

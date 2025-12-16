@@ -314,21 +314,29 @@ func (i *inventorySnapshotResource) GetPreviousDaySnapshot(ctx context.Context, 
 	return &snapshots[0], nil
 }
 
-func (i *inventorySnapshotResource) GetSnapshotBasedOndDate(ctx context.Context, date time.Time) (model.InventorySnapshot, *error_wrapper.ErrorWrapper) {
+func (i *inventorySnapshotResource) GetSnapshotBasedOndDate(ctx context.Context, payload dto.GetSnapshotBasedOnDateRequest) (model.InventorySnapshot, *error_wrapper.ErrorWrapper) {
 	filter := []dto.Filter{
 		{
 			Key:      "day",
-			Values:   []string{fmt.Sprintf("%d", date.Day())},
+			Values:   []string{fmt.Sprintf("%d", payload.Date.Day())},
 			Wildcard: "==",
 		},
 		{
 			Key:      "month",
-			Values:   []string{fmt.Sprintf("%d", int(date.Month()))},
+			Values:   []string{fmt.Sprintf("%d", int(payload.Date.Month()))},
 			Wildcard: "==",
 		},
 		{
 			Key:    "year",
-			Values: []string{fmt.Sprintf("%d", date.Year())},
+			Values: []string{fmt.Sprintf("%d", payload.Date.Year())},
+		},
+		{
+			Key:    "item_id",
+			Values: []string{payload.ItemID},
+		},
+		{
+			Key:    "branch_id",
+			Values: []string{payload.BranchID},
 		},
 	}
 

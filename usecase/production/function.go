@@ -37,7 +37,6 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 	}
 
 	production, errW := p.productionDomain.Create(ctx, payload)
-
 	if errW != nil {
 		return nil, errW
 	}
@@ -113,10 +112,20 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 	if errW != nil {
 		return nil, errW
 	}
+
 	updatedBranchItems = append(updatedBranchItems, payload.FinalItemID)
 	errW = p.inventoryDomain.BulkSyncBranchItems(ctx, payload.BranchID, updatedBranchItems)
-
 	if errW != nil {
+		return nil, errW
+	}
+
+	errW = p.inventoryDomain.RecalculateInventory(ctx, dto.RecalculateInventoryRequest{
+		ItemID:   payload.FinalItemID,
+		BranchID: payload.BranchID,
+		NewTime:  payload.ProductionDate,
+	})
+	if errW != nil {
+		fmt.Println("Error recalculating inventory", err)
 		return nil, errW
 	}
 

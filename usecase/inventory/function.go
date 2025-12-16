@@ -264,7 +264,7 @@ func (i *inventoryUsecase) mapExistInventoryToRequest(
 
 func (i *inventoryUsecase) BulkCreate(ctx context.Context, items []string, branchID string, endTime time.Time) (errW *error_wrapper.ErrorWrapper) {
 	for _, item := range items {
-		balance, price, errW := i.inventoryDomain.CalculatePriceAndBalance(ctx, endTime, item, branchID, nil)
+		_, balance, price, errW := i.inventoryDomain.CalculatePriceAndBalance(ctx, endTime, item, branchID, nil)
 		if errW != nil {
 			fmt.Println("Error calculating price and balance in bulk create", errW)
 			continue
@@ -310,7 +310,7 @@ func (i *inventoryUsecase) GenerateDefaultInventorySnapshotsForBranch(
 
 	// 2. Calculate price and balance for each item with specific branchID and parsedtime
 	for _, inventory := range inventories {
-		balance, price, errW := i.inventoryDomain.CalculatePriceAndBalance(ctx, parsedTime, inventory.ItemID, inventory.BranchID, nil)
+		_, balance, price, errW := i.inventoryDomain.CalculatePriceAndBalance(ctx, parsedTime, inventory.ItemID, inventory.BranchID, nil)
 		if errW != nil {
 			fmt.Println("Error calculating price and balance ", errW)
 			continue
@@ -339,7 +339,7 @@ func (i *inventoryUsecase) GenerateDefaultInventorySnapshots(
 ) (inventorySnapshots []model.InventorySnapshot) {
 
 	for _, itemID := range items {
-		balance, price, errW := i.inventoryDomain.CalculatePriceAndBalance(ctx, parsedTime, itemID, branchID, nil)
+		_, balance, price, errW := i.inventoryDomain.CalculatePriceAndBalance(ctx, parsedTime, itemID, branchID, nil)
 		fmt.Println("iNI BALANCE AND PRICE DI GENERATE DEFAULT", balance, price, parsedTime)
 		if errW != nil {
 			fmt.Println("Error calculating price and balance for item id ", itemID)

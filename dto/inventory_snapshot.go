@@ -9,3 +9,9 @@ type CreateInventorySnapshotRequest struct {
 	Balance  float64   `json:"balance"`
 	Date     time.Time `json:"date"`
 }
+
+type GetSnapshotBasedOnDateRequest struct {
+	Date     time.Time
+	ItemID   string
+	BranchID string
+}

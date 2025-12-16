@@ -434,7 +434,11 @@ func (i *inventoryDomain) RecalculateInventory(ctx context.Context, payload dto.
 	}
 
 	// Check if inventory snapshot exist for current date
-	_, errW = i.inventorySnapshotResource.GetSnapshotBasedOndDate(ctx, parsedTime)
+	_, errW = i.inventorySnapshotResource.GetSnapshotBasedOndDate(ctx, dto.GetSnapshotBasedOnDateRequest{
+		Date:     parsedTime,
+		BranchID: payload.BranchID,
+		ItemID:   payload.ItemID,
+	})
 	if errW != nil && errW.Is(model.RErrDataNotFound) {
 		// Create new empty one
 		errW = i.inventorySnapshotResource.Upsert(ctx, dto.CreateInventorySnapshotRequest{
@@ -465,7 +469,7 @@ func (i *inventoryDomain) RecalculateInventory(ctx context.Context, payload dto.
 		startDate := utils.StartOfDay(inventorySnapshot.Date)
 		endDate := utils.EndOfDay(inventorySnapshot.Date)
 		// Update balance nya
-		balance, price, errW := i.CalculatePriceAndBalance(ctx, startDate, payload.ItemID, payload.BranchID, &endDate)
+		inBalance, balance, price, errW := i.CalculatePriceAndBalance(ctx, startDate, payload.ItemID, payload.BranchID, &endDate)
 		if errW != nil {
 			fmt.Println("Error calculating price and balance", errW)
 			return errW
@@ -476,7 +480,7 @@ func (i *inventoryDomain) RecalculateInventory(ctx context.Context, payload dto.
 		newPrice := 0.0
 
 		if totalBalance > 0 {
-			newPrice = (price*balance + previousSnapshot.Balance*previousSnapshot.Latest) / totalBalance
+			newPrice = (price*inBalance + previousSnapshot.Balance*previousSnapshot.Latest) / (previousSnapshot.Balance + inBalance)
 		}
 
 		inventorySnapshot.Balance = totalBalance
@@ -499,8 +503,11 @@ func (i *inventoryDomain) RecalculateInventory(ctx context.Context, payload dto.
 	return
 }
 
-func (i *inventoryDomain) CalculatePriceAndBalance(ctx context.Context, endTime time.Time, itemID, branchID string, startTime *time.Time) (balance, price float64, errW *error_wrapper.ErrorWrapper) {
+func (i *inventoryDomain) CalculatePriceAndBalance(ctx context.Context, endTime time.Time, itemID, branchID string, startTime *time.Time) (inBalance, balance, price float64, errW *error_wrapper.ErrorWrapper) {
 	// 1. Get stock transactions until the end time
+	var (
+		totalBalance, totalPrice, avg float64
+	)
 	endOfDay := utils.EndOfDay(endTime)
 
 	filter := []dto.Filter{
@@ -529,36 +536,92 @@ func (i *inventoryDomain) CalculatePriceAndBalance(ctx context.Context, endTime 
 	}
 
 	fmt.Println("Ini filter", filter)
-	stockTransactions, errW := i.stockTransactionResource.Get(ctx, filter, []dto.Order{}, 0, 0)
+
+	// Create independent copies of the base filter to avoid shared slice references
+	inFilter := make([]dto.Filter, len(filter))
+	copy(inFilter, filter)
+	inFilter = append(inFilter, dto.Filter{
+		Key:      "branch_destination_id",
+		Values:   []string{branchID},
+		Wildcard: "==",
+	}, dto.Filter{
+		Key:      "type",
+		Values:   []string{"IN"},
+		Wildcard: "==",
+	})
+
+	outFilter := make([]dto.Filter, len(filter))
+	copy(outFilter, filter)
+	outFilter = append(outFilter, dto.Filter{
+		Key:      "branch_origin_id",
+		Values:   []string{branchID},
+		Wildcard: "==",
+	}, dto.Filter{
+		Key:      "type",
+		Values:   []string{"OUT"},
+		Wildcard: "==",
+	})
+
+	inStockTransactions, errW := i.stockTransactionResource.Get(ctx, inFilter, []dto.Order{}, 0, 0)
 	if errW != nil {
-		fmt.Println("Error finding stock transaction with filter", errW)
+		fmt.Println("Error finding input stock transactions", errW)
+		return
+	}
+	for _, inStockTransaction := range inStockTransactions {
+		balance := utils.StandarizeMeasurement(inStockTransaction.Quantity, inStockTransaction.Unit, inStockTransaction.Item.Unit)
+		totalBalance += balance
+		inBalance += balance
+		totalPrice += inStockTransaction.Cost
+	}
+
+	fmt.Println("Stock balance from in stock transactions", totalBalance)
+	fmt.Println("total price from in stock transactions", totalPrice)
+
+	outStockTransactions, errW := i.stockTransactionResource.Get(ctx, outFilter, []dto.Order{}, 0, 0)
+	if errW != nil {
+		fmt.Println("Error getting out stock transactions ", errW)
 		return
 	}
 
-	var (
-		totalBalance, totalPrice, avg float64
-	)
-
-	for _, stockTransaction := range stockTransactions {
-		balance := utils.StandarizeMeasurement(stockTransaction.Quantity, stockTransaction.Unit, stockTransaction.Item.Unit)
-
-		if stockTransaction.BranchDestinationID != branchID && stockTransaction.BranchOriginID != branchID {
-			continue
-		}
-		fmt.Println("Ini stock transaction", stockTransaction)
-		if stockTransaction.Type == "IN" && stockTransaction.BranchDestinationID == branchID {
-			totalBalance += balance
-			totalPrice += stockTransaction.Cost
-		} else if stockTransaction.Type == "OUT" && stockTransaction.BranchOriginID == branchID {
-			totalBalance -= balance
-		}
-	}
-
-	if len(stockTransactions) > 0 {
+	if len(inStockTransactions) > 0 {
 		avg = totalPrice / totalBalance
 	}
 
-	return totalBalance, avg, nil
+	for _, outStockTransaction := range outStockTransactions {
+		balance := utils.StandarizeMeasurement(outStockTransaction.Quantity, outStockTransaction.Unit, outStockTransaction.Item.Unit)
+		totalBalance -= balance
+	}
+
+	// stockTransactions, errW := i.stockTransactionResource.Get(ctx, filter, []dto.Order{}, 0, 0)
+	// if errW != nil {
+	// 	fmt.Println("Error finding stock transaction with filter", errW)
+	// 	return
+	// }
+
+	// var (
+	// 	totalBalance, totalPrice, avg float64
+	// )
+
+	// for _, stockTransaction := range stockTransactions {
+	// balance := utils.StandarizeMeasurement(stockTransaction.Quantity, stockTransaction.Unit, stockTransaction.Item.Unit)
+
+	// 	if stockTransaction.BranchDestinationID != branchID && stockTransaction.BranchOriginID != branchID {
+	// 		continue
+	// 	}
+	// 	fmt.Println("Ini stock transaction", stockTransaction)
+	// 	if stockTransaction.Type == "IN" && stockTransaction.BranchDestinationID == branchID {
+	// 		totalBalance += balance
+	// 		totalPrice += stockTransaction.Cost
+	// 	} else if stockTransaction.Type == "OUT" && stockTransaction.BranchOriginID == branchID {
+	// 		totalBalance -= balance
+	// 	}
+	// }
+
+	// if len(stockTransactions) > 0 {
+	// 	avg = totalPrice / totalBalance
+	// }
+
+	return inBalance, totalBalance, avg, nil
 }
 
 func (i *inventoryDomain) BackFillInventorySnapshot(ctx context.Context, startTime time.Time, branchID, itemID string) (inventorySnapshot model.InventorySnapshot, errW *error_wrapper.ErrorWrapper) {
@@ -569,7 +632,7 @@ func (i *inventoryDomain) BackFillInventorySnapshot(ctx context.Context, startTi
 		if errW.Is(model.RErrDataNotFound) {
 			previousDay := startTime.AddDate(0, 0, -1)
 
-			balance, price, errW := i.CalculatePriceAndBalance(ctx, previousDay, itemID, branchID, nil)
+			_, balance, price, errW := i.CalculatePriceAndBalance(ctx, previousDay, itemID, branchID, nil)
 			if errW != nil {
 				fmt.Println("Error calculating price and balance for previous day", errW)
 				return inventorySnapshot, errW

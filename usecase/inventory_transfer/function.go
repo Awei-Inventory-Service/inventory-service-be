@@ -147,19 +147,19 @@ func (i *inventoryTransferUsecase) UpdateStatus(ctx context.Context, payload dto
 				continue
 			}
 			errW := i.inventoryDomain.RecalculateInventory(ctx, dto.RecalculateInventoryRequest{
-				BranchID: inventoryTransfer.BranchOriginID,
+				BranchID: inventoryTransfer.BranchDestinationID,
 				ItemID:   inventoryTransferItem.ItemID,
-				NewTime:  inventoryTransfer.TransferDate.String(),
+				NewTime:  time.Now().Format("2006-01-02"),
 			})
 			if errW != nil {
 				fmt.Println("Error recalculating inventory", errW)
 			}
 
-			_, _, errW = i.inventoryDomain.SyncBranchItem(ctx, inventoryTransfer.BranchOriginID, inventoryTransferItem.ItemID)
-			if errW != nil {
-				fmt.Println("Error sync branch item", errW, inventoryTransferItem.ItemID)
-				continue
-			}
+			// _, _, errW = i.inventoryDomain.SyncBranchItem(ctx, inventoryTransfer.BranchOriginID, inventoryTransferItem.ItemID)
+			// if errW != nil {
+			// 	fmt.Println("Error sync branch item", errW, inventoryTransferItem.ItemID)
+			// 	continue
+			// }
 
 		}
 	}
