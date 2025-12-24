@@ -34,7 +34,7 @@ func (i *inventoryDomain) FindAll() (results []dto.GetInventoryResponse, errW *e
 			ItemID:       branchItem.ItemID,
 			ItemName:     branchItem.Item.Name,
 			ItemCategory: branchItem.Item.Category,
-			CurrentStock: branchItem.Stock,
+			Stock:        branchItem.Stock,
 			Price:        branchItem.Value,
 			ItemUnit:     branchItem.Item.Unit,
 		})
@@ -336,7 +336,7 @@ func (i *inventoryDomain) Get(ctx context.Context, payload dto.GetListRequest) (
 			ItemName:     inventory.Item.Name,
 			ItemCategory: inventory.Item.Category,
 			ItemUnit:     inventory.Item.Unit,
-			CurrentStock: inventory.Stock,
+			Stock:        inventory.Stock,
 			Price:        inventory.Value,
 		})
 	}

@@ -4,6 +4,23 @@ type CreateSalesData struct {
 	ProductID string  `json:"product_id" binding:"required"`
 	Quantity  float64 `json:"quantity" binding:"required"`
 	Type      string  `json:"type" binding:"required"`
+	Cost      float64
+	Price     float64
+}
+
+type UpdateSalesRequest struct {
+	BranchID        string            `json:"branch_id"`
+	TransactionDate string            `json:"transaction_date"`
+	SalesID         string            `json:"sales_id"`
+	SalesData       []UpdateSalesData `json:"sales_data"`
+	Cost            float64
+	Price           float64
+}
+
+type UpdateSalesData struct {
+	ProductID string  `json:"product_id"`
+	Quantity  float64 `json:"quantity"`
+	Type      string  `json:"type"`
 }
 
 type CreateSalesRequest struct {
@@ -12,37 +29,19 @@ type CreateSalesRequest struct {
 	TransactionDate string            `json:"transaction_date"`
 }
 
-type GetSalesResponse struct {
-	BranchID    string  `json:"branch_id"`
-	BranchName  string  `json:"branch_name"`
+type GetSalesListResponse struct {
+	SalesID         string                    `json:"sales_id"`
+	TransactionDate string                    `json:"transaction_date"`
+	BranchID        string                    `json:"branch_id"`
+	BranchName      string                    `json:"branch_name"`
+	SalesProducts   []GetSalesProductResponse `json:"sales_products"`
+}
+
+type GetSalesProductResponse struct {
 	ProductID   string  `json:"product_id"`
 	ProductName string  `json:"product_name"`
 	Quantity    float64 `json:"quantity"`
-}
-
-type SalesGroupedByDateResponse struct {
-	TransactionDate string             `json:"transaction_date"`
-	TotalSales      int                `json:"total_sales"`
-	TotalRevenue    float64            `json:"total_revenue"`
-	TotalProfit     float64            `json:"total_profit"`
-	Sales           []GetSalesResponse `json:"sales"`
-}
-
-type BranchSalesData struct {
-	BranchID     string             `json:"branch_id"`
-	BranchName   string             `json:"branch_name"`
-	TotalSales   int                `json:"total_sales"`
-	TotalRevenue float64            `json:"total_revenue"`
-	TotalProfit  float64            `json:"total_profit"`
-	Sales        []GetSalesResponse `json:"sales"`
-}
-
-type SalesGroupedByDateAndBranchResponse struct {
-	TransactionDate string             `json:"transaction_date"`
-	TotalSales      int                `json:"total_sales"`
-	TotalRevenue    float64            `json:"total_revenue"`
-	TotalProfit     float64            `json:"total_profit"`
-	BranchID        string             `json:"branch_id"`
-	BranchName      string             `json:"branch_name"`
-	Sales           []GetSalesResponse `json:"sales"`
+	Type        string  `json:"type"`
+	Price       float64 `json:"price"`
+	Cost        float64 `json:"cost"`
 }

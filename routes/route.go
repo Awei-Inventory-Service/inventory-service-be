@@ -28,6 +28,7 @@ import (
 	branch_product_reosurce "github.com/inventory-service/resource/branch_product"
 	inventory_snapshot_resource "github.com/inventory-service/resource/inventory_snapshot"
 	product_snapshot_resource "github.com/inventory-service/resource/product_snapshot"
+	sales_product_resource "github.com/inventory-service/resource/sales_product"
 
 	inventory_stock_count_resource "github.com/inventory-service/resource/inventory_stock_count"
 	inventory_transfer_resource "github.com/inventory-service/resource/inventory_transfer"
@@ -58,6 +59,7 @@ import (
 	product_domain "github.com/inventory-service/domain/product"
 	product_recipe_domain "github.com/inventory-service/domain/product_recipe"
 	production_item_domain "github.com/inventory-service/domain/production_item"
+	sales_product_domain "github.com/inventory-service/domain/sales_product"
 
 	branch_product_domain "github.com/inventory-service/domain/branch_product"
 	inventory_domain "github.com/inventory-service/domain/inventory"
@@ -124,6 +126,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	inventoryTransferResource := inventory_transfer_resource.NewInventoryTransferResource(pgDB)
 	inventoryTransferItemResource := inventory_transfer_item_resource.NewInventoryTransferItemResource(pgDB)
 	productSnapshotResource := product_snapshot_resource.NewProductSnapshotResource(mongodbResource)
+	salesProductResource := sales_product_resource.NewSalesProductResource(pgDB)
 
 	// Initialize usecase
 	userDomain := user_domain.NewUserDomain(userResource)
@@ -134,7 +137,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	inventoryStockCountDomain := inventory_stock_count_domain.NewInventoryStockCountDomain(inventoryStockCountResource)
 	invoiceDomain := invoice_domain.NewInvoiceDomain(invoiceResource)
 	stockTransactionDomain := stock_transaction_domain.NewStockTransactionDomain(stockTransactionResource)
-	salesDomain := sales_domain.NewSalesDomain(salesResource, productResource, branchProductResource)
+	salesDomain := sales_domain.NewSalesDomain(salesResource, productResource, branchProductResource, salesProductResource)
 	inventoryDomain := inventory_domain.NewBranchItemDomain(inventoryResource, stockTransactionResource, itemResource, purchaseResource, inventorySnapshotResource)
 	// Tech debt : domain manggil domain, gaboleh
 	productDomain := product_domain.NewProductDomain(productResource, itemResource, productCompositionResource, inventoryResource, inventoryDomain, inventorySnapshotResource, productSnapshotResource)
@@ -146,6 +149,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	inventoryTransferDomain := inventory_transfer_domain.NewInventoryTransferDomain(inventoryTransferResource, inventoryTransferItemResource)
 	inventoryTransferItemDomain := inventory_transfer_item_domain.NewInventoryTransferItemDomain(inventoryTransferItemResource)
 	productionItemDomain := production_item_domain.NewProductionItemDomain(productionItemResource)
+	salesProductDomain := sales_product_domain.NewSalesProductDomain(salesProductResource)
 
 	// initialize service
 	userService := auth_service.NewUserService(userDomain)
@@ -157,7 +161,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 	productService := product_service.NewProductservice(productDomain, itemDomain, productCompositionDomain, branchProductDomain)
 	invoiceService := invoice_service.NewInvoiceService(invoiceDomain)
 	stockService := stock_service.NewStockService(stockTransactionDomain)
-	salesUsecase := sales_service.NewSalesUsecase(salesDomain, productDomain, branchProductDomain, stockTransactionDomain, inventoryDomain)
+	salesUsecase := sales_service.NewSalesUsecase(salesDomain, productDomain, branchProductDomain, stockTransactionDomain, inventoryDomain, salesProductDomain)
 	inventoryUsecase := inventory_usecase.NewInventoryUsecase(inventoryDomain, itemDomain, stockTransactionDomain, inventorySnapshotDomain, branchDomain)
 	productionUsecase := production_usecase.NewProductionUsecase(productionDomain, stockTransactionDomain, inventoryDomain, itemDomain, productionItemDomain)
 	branchProductUsecase := branch_product.NewBranchProductUsecase(branchProductDomain, inventoryDomain, productDomain)

@@ -15,6 +15,7 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 	var (
 		branchProduct   *model.BranchProduct
 		transactionDate time.Time
+		sales           model.Sales
 	)
 	if payload.TransactionDate != "" {
 		parsedDate, err := time.Parse("2006-01-02", payload.TransactionDate)
@@ -26,9 +27,17 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 		transactionDate = time.Now()
 	}
 
+	sales.BranchID = payload.BranchID
+	sales.TransactionDate = transactionDate
+	newSales, errW := s.salesDomain.Create(ctx, sales)
+	if errW != nil {
+		fmt.Println("Error creating new sales ", errW)
+		return errW
+	}
+
 	for _, sales := range payload.SalesData {
 		var (
-			salesData model.Sales
+			salesProduct model.SalesProduct
 		)
 
 		product, errW := s.productDomain.FindByID(ctx, sales.ProductID)
@@ -40,71 +49,72 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 		if errW != nil {
 			return errW
 		}
-		fmt.Printf("Product cost : %f, sales data quantity: %f", totalPrice, sales.Quantity)
-		salesData.Cost = totalPrice * sales.Quantity
 		branchProduct, errW = s.branchProductDomain.GetByBranchIdAndProductId(ctx, payload.BranchID, sales.ProductID)
-
 		if errW != nil {
-			if errW.Is(model.RErrDataNotFound) {
-				// If not found, create 1
-				errW = nil
-
-				branchProduct, errW = s.branchProductDomain.Create(ctx, dto.CreateBranchProductRequest{
-					BranchID:     payload.BranchID,
-					ProductID:    sales.ProductID,
-					SellingPrice: product.SellingPrice,
-				})
-
-				if errW != nil {
-					return errW
-				}
-			} else {
-				return errW
-			}
-
-		}
-		salesData.BranchProductID = branchProduct.UUID
-		salesData.Quantity = sales.Quantity
-		salesData.Type = sales.Type
-		salesData.TransactionDate = transactionDate
-		if branchProduct.SellingPrice != nil {
-			salesData.Price = *branchProduct.SellingPrice
-		} else {
-			salesData.Price = 0.0
-		}
-
-		newSales, errW := s.salesDomain.Create(ctx, salesData)
-
-		if errW != nil {
+			fmt.Println("Error getting branch product", errW)
 			return errW
 		}
 
-		for _, productRecipe := range productRecipes {
-			total := productRecipe.Amount * sales.Quantity
-			referenceType := constant.Sales
+		fmt.Printf("Product cost : %f, sales data quantity: %f", totalPrice, sales.Quantity)
+		salesProduct.BranchID = payload.BranchID
+		salesProduct.Cost = totalPrice * sales.Quantity
+		salesProduct.ProductID = product.UUID
+		salesProduct.Quantity = sales.Quantity
+		salesProduct.Type = sales.Type
+		salesProduct.SalesID = newSales.UUID
+		if branchProduct.SellingPrice != nil {
+			salesProduct.Price = *branchProduct.SellingPrice
+		} else {
+			salesProduct.Price = 0.0
+		}
+
+		_, errW = s.salesProductDomain.Create(ctx, salesProduct)
+		if errW != nil {
+			fmt.Println("Error creating sales product ", errW)
+			continue
+		}
+
+		referenceType := constant.Sales
+		for _, recipe := range productRecipes {
 			errW = s.stockTransactionDomain.Create(model.StockTransaction{
 				BranchOriginID:      payload.BranchID,
 				BranchDestinationID: payload.BranchID,
-				ItemID:              productRecipe.ItemID,
+				ItemID:              recipe.ItemID,
 				Type:                "OUT",
 				IssuerID:            userID,
-				Quantity:            total,
-				Cost:                productRecipe.Cost * sales.Quantity,
-				Unit:                productRecipe.Unit,
-				Reference:           newSales.UUID,
+				Quantity:            recipe.Amount * sales.Quantity,
+				Cost:                salesProduct.Cost,
+				Unit:                recipe.Unit,
+				Reference:           salesProduct.UUID,
 				ReferenceType:       &referenceType,
-				TransactionDate:     transactionDate,
 			})
 
 			if errW != nil {
-				fmt.Println("Error", errW)
+				fmt.Println("Error creating stock transction", errW)
+				continue
+			}
+
+			errW = s.inventoryDomain.RecalculateInventory(ctx, dto.RecalculateInventoryRequest{
+				ItemID:   recipe.ItemID,
+				BranchID: payload.BranchID,
+				NewTime:  payload.TransactionDate,
+			})
+			if errW != nil {
+				fmt.Println("Error recalcualting inventory ", errW)
 				continue
 			}
 		}
+
 	}
 
 	return nil
 
+}
+
+func (s *salesService) Update(ctx context.Context, payload dto.UpdateSalesRequest) (errW *error_wrapper.ErrorWrapper) {
+	// 1. Get old sales data
+	// 2.
+	return
 }
 
 func (s *salesService) Delete(ctx context.Context, salesID string, userID string) *error_wrapper.ErrorWrapper {
@@ -134,104 +144,6 @@ func (s *salesService) Delete(ctx context.Context, salesID string, userID string
 	return nil
 }
 
-func (s *salesService) FindGroupedByDate(ctx context.Context) ([]dto.SalesGroupedByDateResponse, *error_wrapper.ErrorWrapper) {
-	sales, errW := s.salesDomain.FindGroupedByDate(ctx)
-	if errW != nil {
-		return nil, errW
-	}
-
-	groupedSales := make(map[string][]model.Sales)
-	for _, sale := range sales {
-		dateKey := sale.TransactionDate.Format("2006-01-02")
-		groupedSales[dateKey] = append(groupedSales[dateKey], sale)
-	}
-
-	var response []dto.SalesGroupedByDateResponse
-	for date, salesList := range groupedSales {
-		var totalRevenue, totalProfit float64
-		var salesResponses []dto.GetSalesResponse
-
-		for _, sale := range salesList {
-			totalRevenue += sale.Price * sale.Quantity
-			totalProfit += (sale.Price - sale.Cost) * sale.Quantity
-
-			salesResponses = append(salesResponses, dto.GetSalesResponse{
-				BranchID:    sale.BranchProduct.BranchID,
-				BranchName:  sale.BranchProduct.Branch.Name,
-				ProductID:   sale.BranchProduct.ProductID,
-				ProductName: sale.BranchProduct.Product.Name,
-				Quantity:    sale.Quantity,
-			})
-		}
-
-		response = append(response, dto.SalesGroupedByDateResponse{
-			TransactionDate: date,
-			TotalSales:      len(salesList),
-			TotalRevenue:    totalRevenue,
-			TotalProfit:     totalProfit,
-			Sales:           salesResponses,
-		})
-	}
-
-	return response, nil
-}
-
-func (s *salesService) FindGroupedByDateAndBranch(ctx context.Context) ([]dto.SalesGroupedByDateAndBranchResponse, *error_wrapper.ErrorWrapper) {
-	sales, errW := s.salesDomain.FindGroupedByDateAndBranch(ctx)
-	if errW != nil {
-		return nil, errW
-	}
-
-	// Group sales by date+branch combination (each group becomes one response object)
-	dateBranchGroups := make(map[string][]model.Sales)
-	for _, sale := range sales {
-		dateKey := sale.TransactionDate.Format("2006-01-02")
-		branchKey := sale.BranchProduct.BranchID
-		// Create composite key: date + branch
-		compositeKey := dateKey + "_" + branchKey
-		dateBranchGroups[compositeKey] = append(dateBranchGroups[compositeKey], sale)
-	}
-
-	// Convert to response format - one object per date+branch combination
-	var response []dto.SalesGroupedByDateAndBranchResponse
-	for _, salesList := range dateBranchGroups {
-		if len(salesList) == 0 {
-			continue
-		}
-
-		var totalRevenue, totalProfit float64
-		var salesResponses []dto.GetSalesResponse
-
-		// Get date and branch info from first sale (all sales in group have same date/branch)
-		firstSale := salesList[0]
-		dateKey := firstSale.TransactionDate.Format("2006-01-02")
-		branchID := firstSale.BranchProduct.BranchID
-		branchName := firstSale.BranchProduct.Branch.Name
-
-		// Process all sales in this date+branch group
-		for _, sale := range salesList {
-			totalRevenue += sale.Price * sale.Quantity
-			totalProfit += (sale.Price - sale.Cost) * sale.Quantity
-
-			salesResponses = append(salesResponses, dto.GetSalesResponse{
-				BranchID:    sale.BranchProduct.BranchID,
-				BranchName:  sale.BranchProduct.Branch.Name,
-				ProductID:   sale.BranchProduct.ProductID,
-				ProductName: sale.BranchProduct.Product.Name,
-				Quantity:    sale.Quantity,
-			})
-		}
-
-		response = append(response, dto.SalesGroupedByDateAndBranchResponse{
-			TransactionDate: dateKey,
-			TotalSales:      len(salesList),
-			TotalRevenue:    totalRevenue,
-			TotalProfit:     totalProfit,
-			BranchID:        branchID,
-			BranchName:      branchName,
-			Sales:           salesResponses,
-		})
-	}
-
-	return response, nil
+func (s *salesService) Get(ctx context.Context, payload dto.GetListRequest) (sales []dto.GetSalesListResponse, errW *error_wrapper.ErrorWrapper) {
+	return s.salesDomain.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 }

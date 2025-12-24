@@ -7,6 +7,7 @@ import (
 	"github.com/inventory-service/domain/inventory"
 	"github.com/inventory-service/domain/product"
 	"github.com/inventory-service/domain/sales"
+	sales_product_domain "github.com/inventory-service/domain/sales_product"
 	stocktransaction "github.com/inventory-service/domain/stock_transaction"
 	"github.com/inventory-service/dto"
 
@@ -15,8 +16,7 @@ import (
 
 type SalesService interface {
 	Create(ctx context.Context, payload dto.CreateSalesRequest, userID string) *error_wrapper.ErrorWrapper
-	FindGroupedByDate(ctx context.Context) ([]dto.SalesGroupedByDateResponse, *error_wrapper.ErrorWrapper)
-	FindGroupedByDateAndBranch(ctx context.Context) ([]dto.SalesGroupedByDateAndBranchResponse, *error_wrapper.ErrorWrapper)
+	Get(ctx context.Context, payload dto.GetListRequest) ([]dto.GetSalesListResponse, *error_wrapper.ErrorWrapper)
 }
 
 type salesService struct {
@@ -24,5 +24,6 @@ type salesService struct {
 	productDomain          product.ProductDomain
 	branchProductDomain    branch_product.BranchProductDomain
 	stockTransactionDomain stocktransaction.StockTransactionDomain
-	branchItemDomain       inventory.InventoryDomain
+	inventoryDomain        inventory.InventoryDomain
+	salesProductDomain     sales_product_domain.SalesProductDomain
 }

@@ -110,7 +110,7 @@ func (i *inventoryUsecase) GetListCurrent(ctx context.Context, payload dto.GetLi
 			errW = i.inventorySnapshotDomain.Upsert(ctx, dto.CreateInventorySnapshotRequest{
 				ItemID:   inventory.ItemID,
 				BranchID: inventory.BranchID,
-				Balance:  inventory.CurrentStock,
+				Balance:  inventory.Stock,
 				Value:    inventory.Price,
 				Date:     time.Now(),
 			})
@@ -235,7 +235,7 @@ func (i *inventoryUsecase) mapInventorySnapshotToResponse(
 			ItemName:     item.Name,
 			ItemCategory: item.Category,
 			ItemUnit:     item.Unit,
-			CurrentStock: inventorySnapshot.Balance,
+			Stock:        inventorySnapshot.Balance,
 			Price:        inventorySnapshot.Latest,
 			BranchName:   branch.Name,
 		})

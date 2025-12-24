@@ -14,7 +14,7 @@ type GetInventoryResponse struct {
 	ItemName     string             `json:"item_name"`
 	ItemCategory model.ItemCategory `json:"item_category"`
 	ItemUnit     string             `json:"item_unit"`
-	CurrentStock float64            `json:"current_stock"`
+	Stock        float64            `json:"stock"`
 	Price        float64            `json:"price"`
 }
 

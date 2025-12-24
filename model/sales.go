@@ -3,18 +3,34 @@ package model
 import "time"
 
 type Sales struct {
-	UUID            string  `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
-	BranchProductID string  `gorm:"type:varchar(255);not null"`
-	Type            string  `gorm:"type:varchar(255);not null"`
-	Quantity        float64 `gorm:"type:decimal;not null"`
-	Cost            float64 `gorm:"type:decimal;not null"`
-	Price           float64   `gorm:"type:decimal;not null"`
-	TransactionDate time.Time `gorm:"type:timestamp;not null;default:CURRENT_TIMESTAMP"`
+	UUID            string         `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	BranchID        string         `gorm:"type:uuid;not null" json:"branch_id"`
+	Branch          Branch         `gorm:"foreignKey:BranchID;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL" json:"branch"`
+	TransactionDate time.Time      `gorm:"type:timestamp;not null;default:CURRENT_TIMESTAMP"`
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
-	BranchProduct   BranchProduct `gorm:"foreignKey:BranchProductID"`
+	SalesProducts   []SalesProduct `gorm:"foreignKey:SalesID;references:UUID" json:"sales_products"`
+}
+
+type SalesProduct struct {
+	UUID      string    `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	SalesID   string    `gorm:"type:uuid;not null"`
+	BranchID  string    `gorm:"type:uuid"`
+	ProductID string    `gorm:"type:uuid;not null"`
+	Quantity  float64   `gorm:"type:decimal;not null"`
+	Type      string    `gorm:"type:varchar(255);not null"`
+	Cost      float64   `gorm:"type:decimal;not null"`
+	Price     float64   `gorm:"type:decimal;not null"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Product   Product `gorm:"foreignKey:ProductID"`
+	Branch    Branch  `gorm:"foreignKey:BranchID"`
 }
 
 func (Sales) TableName() string {
 	return "sales"
+}
+
+func (SalesProduct) TableName() string {
+	return "sales_products"
 }

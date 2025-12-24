@@ -41,13 +41,14 @@ func (s *salesController) Create(c *gin.Context) {
 }
 
 func (s *salesController) FindAll(c *gin.Context) {
-	
+
 }
 
-func (s *salesController) FindGroupedByDate(c *gin.Context) {
+func (s *salesController) Get(c *gin.Context) {
 	var (
 		errW     *error_wrapper.ErrorWrapper
-		response []dto.SalesGroupedByDateResponse
+		response []dto.GetSalesListResponse
+		payload  dto.GetListRequest
 	)
 
 	defer func() {
@@ -57,26 +58,12 @@ func (s *salesController) FindGroupedByDate(c *gin.Context) {
 		response_wrapper.New(&c.Writer, c, errW == nil, response, errW)
 	}()
 
-	response, errW = s.salesService.FindGroupedByDate(c)
-	if errW != nil {
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}
-}
 
-func (s *salesController) FindGroupedByDateAndBranch(c *gin.Context) {
-	var (
-		errW     *error_wrapper.ErrorWrapper
-		response []dto.SalesGroupedByDateAndBranchResponse
-	)
-
-	defer func() {
-		if r := recover(); r != nil {
-			errW = error_wrapper.New(model.CErrInternalServer, "Internal server error")
-		}
-		response_wrapper.New(&c.Writer, c, errW == nil, response, errW)
-	}()
-
-	response, errW = s.salesService.FindGroupedByDateAndBranch(c)
+	response, errW = s.salesService.Get(c, payload)
 	if errW != nil {
 		return
 	}

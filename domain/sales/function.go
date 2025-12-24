@@ -2,7 +2,9 @@ package sales
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 )
@@ -24,13 +26,44 @@ func (s *salesDomain) Update(id string, sale model.Sales) *error_wrapper.ErrorWr
 }
 
 func (s *salesDomain) Delete(ctx context.Context, id string) (*model.Sales, *error_wrapper.ErrorWrapper) {
+	errW := s.salesProductResource.Delete(ctx, model.SalesProduct{SalesID: id})
+	if errW != nil {
+		return nil, errW
+	}
 	return s.salesResource.Delete(ctx, id)
 }
 
-func (s *salesDomain) FindGroupedByDate(ctx context.Context) ([]model.Sales, *error_wrapper.ErrorWrapper) {
-	return s.salesResource.FindGroupedByDate(ctx)
-}
+func (s *salesDomain) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]dto.GetSalesListResponse, *error_wrapper.ErrorWrapper) {
+	var (
+		salesResponse []dto.GetSalesListResponse
+	)
+	sales, errW := s.salesResource.Get(ctx, filter, order, limit, offset)
+	if errW != nil {
+		fmt.Println("Error getting sales ", errW)
+	}
 
-func (s *salesDomain) FindGroupedByDateAndBranch(ctx context.Context) ([]model.Sales, *error_wrapper.ErrorWrapper) {
-	return s.salesResource.FindGroupedByDateAndBranch(ctx)
+	for _, rawSales := range sales {
+		var (
+			salesProduct []dto.GetSalesProductResponse
+		)
+
+		for _, rawSalesProduct := range rawSales.SalesProducts {
+			salesProduct = append(salesProduct, dto.GetSalesProductResponse{
+				ProductID:   rawSalesProduct.ProductID,
+				ProductName: rawSalesProduct.Product.Name,
+				Quantity:    rawSalesProduct.Quantity,
+				Cost:        rawSalesProduct.Cost,
+				Price:       rawSalesProduct.Price,
+			})
+		}
+
+		salesResponse = append(salesResponse, dto.GetSalesListResponse{
+			SalesID:         rawSales.UUID,
+			BranchID:        rawSales.BranchID,
+			BranchName:      rawSales.Branch.Name,
+			TransactionDate: rawSales.TransactionDate.Format("2006-01-02"),
+			SalesProducts:   salesProduct,
+		})
+	}
+	return salesResponse, nil
 }

@@ -135,6 +135,7 @@ func (p *productDomain) CalculateProductCost(
 		if errW != nil {
 			return results, totalCost, errW
 		}
+		productCompositionAmount := utils.StandarizeMeasurement(productComposition.Amount, productComposition.Unit, item.Unit)
 
 		inventorySnapshot, errW := p.inventorySnapshotResource.Get(ctx, []dto.Filter{
 			{
@@ -157,12 +158,38 @@ func (p *productDomain) CalculateProductCost(
 			[]dto.Order{}, 1, 0)
 
 		if errW != nil {
+			if errW.Is(model.RErrDataNotFound) {
+				_, balance, price, errW := p.inventoryDomain.CalculatePriceAndBalance(ctx, timestamp, productComposition.ItemID, branchID, nil)
+				if errW != nil {
+					fmt.Println("Error calculating price and balance in CalculateProductCost", errW)
+					continue
+				}
+
+				errW = p.inventorySnapshotResource.Upsert(ctx, dto.CreateInventorySnapshotRequest{
+					Balance:  balance,
+					Value:    price,
+					BranchID: branchID,
+					ItemID:   productComposition.ItemID,
+					Date:     timestamp,
+				})
+				if errW != nil {
+					fmt.Println("Error upserting inventory snapshot resource ", errW)
+					continue
+				}
+				results = append(results, dto.ProductRecipeWithPrice{
+					UUID:   productComposition.UUID,
+					ItemID: productComposition.ItemID,
+					Cost:   price * productCompositionAmount,
+					Unit:   productComposition.Unit,
+					Amount: productComposition.Amount,
+				})
+				continue
+			}
 			fmt.Println("Error getting inventory snapshot")
 			return results, totalCost, errW
 		}
 
 		itemValue := inventorySnapshot[0].Latest
-		productCompositionAmount := utils.StandarizeMeasurement(productComposition.Amount, productComposition.Unit, item.Unit)
 		fmt.Println("Product composition amount", productCompositionAmount, itemValue)
 
 		results = append(results, dto.ProductRecipeWithPrice{

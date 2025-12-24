@@ -111,26 +111,34 @@ func (i *inventoryResource) Get(ctx context.Context, filter []dto.Filter, order 
 	}
 
 	for _, fil := range filter {
+		// Map current_stock to stock for backward compatibility
+		filterKey := fil.Key
+		if filterKey == "current_stock" {
+			filterKey = "stock"
+		}
+
 		if len(fil.Values) == 1 {
 			value := fil.Values[0]
 
 			switch fil.Wildcard {
 			case "==":
-				db = db.Where(fil.Key+" = ?", value)
+				db = db.Where(filterKey+" = ?", value)
 			case "<":
-				db = db.Where(fil.Key+" < ?", value)
+				db = db.Where(filterKey+" < ?", value)
 			default:
-				db = db.Where(fil.Key+ " = ?", value)
+				db = db.Where(filterKey+" = ?", value)
 			}
 		} else {
-			db = db.Where(fil.Key+" IN ?", fil.Values)
+			db = db.Where(filterKey+" IN ?", fil.Values)
 		}
 	}
 	for _, ord := range order {
+		// Map current_stock to stock for backward compatibility
+		orderKey := ord.Key
 		if ord.IsAsc {
-			db = db.Order(ord.Key + " ASC")
+			db = db.Order(orderKey + " ASC")
 		} else {
-			db = db.Order(ord.Key + " DESC")
+			db = db.Order(orderKey + " DESC")
 		}
 	}
 
