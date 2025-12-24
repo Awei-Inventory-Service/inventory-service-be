@@ -10,3 +10,7 @@ import (
 func (s *salesProductDomain) Create(ctx context.Context, payload model.SalesProduct) (model.SalesProduct, *error_wrapper.ErrorWrapper) {
 	return s.salesProductResource.Create(ctx, payload)
 }
+
+func (s *salesProductDomain) Delete(ctx context.Context, payload model.SalesProduct) (errW *error_wrapper.ErrorWrapper) {
+	return s.salesProductResource.Delete(ctx, payload)
+}

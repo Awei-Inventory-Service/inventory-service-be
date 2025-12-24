@@ -26,10 +26,6 @@ func (s *salesDomain) Update(id string, sale model.Sales) *error_wrapper.ErrorWr
 }
 
 func (s *salesDomain) Delete(ctx context.Context, id string) (*model.Sales, *error_wrapper.ErrorWrapper) {
-	errW := s.salesProductResource.Delete(ctx, model.SalesProduct{SalesID: id})
-	if errW != nil {
-		return nil, errW
-	}
 	return s.salesResource.Delete(ctx, id)
 }
 

@@ -10,6 +10,7 @@ import (
 
 type SalesProductDomain interface {
 	Create(ctx context.Context, payload model.SalesProduct) (salesProduct model.SalesProduct, errW *error_wrapper.ErrorWrapper)
+	Delete(ctx context.Context, payload model.SalesProduct) (errW *error_wrapper.ErrorWrapper)
 }
 
 type salesProductDomain struct {

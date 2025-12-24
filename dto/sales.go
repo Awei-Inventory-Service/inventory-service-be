@@ -15,6 +15,7 @@ type UpdateSalesRequest struct {
 	SalesData       []UpdateSalesData `json:"sales_data"`
 	Cost            float64
 	Price           float64
+	UserID          string
 }
 
 type UpdateSalesData struct {
