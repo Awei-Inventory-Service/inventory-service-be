@@ -275,20 +275,20 @@ func (i *inventoryDomain) BulkSyncBranchItems(ctx context.Context, branchID stri
 	return nil
 }
 
-func (i *inventoryDomain) GetInventoryByDate(ctx context.Context, date dto.CustomDate, itemID, branchID string) (response dto.GetInventoryPriceAndValueByDate, errW *error_wrapper.ErrorWrapper) {
+func (i *inventoryDomain) GetInventoryByDate(ctx context.Context, date time.Time, itemID, branchID string) (response dto.GetInventoryPriceAndValueByDate, errW *error_wrapper.ErrorWrapper) {
 
 	inventorySnapshot, errW := i.inventorySnapshotResource.Get(ctx, []dto.Filter{
 		{
 			Key:    "day",
-			Values: []string{fmt.Sprintf("%d", date.Day)},
+			Values: []string{fmt.Sprintf("%d", date.Day())},
 		},
 		{
 			Key:    "month",
-			Values: []string{fmt.Sprintf("%d", date.Month)},
+			Values: []string{fmt.Sprintf("%d", int(date.Month()))},
 		},
 		{
 			Key:    "year",
-			Values: []string{fmt.Sprintf("%d", date.Year)},
+			Values: []string{fmt.Sprintf("%d", date.Year())},
 		},
 		{
 			Key:    "item_id",
@@ -305,11 +305,16 @@ func (i *inventoryDomain) GetInventoryByDate(ctx context.Context, date dto.Custo
 	}
 
 	if len(inventorySnapshot) == 0 {
-		_, _, errW = i.SyncBranchItem(ctx, branchID, itemID)
+		_, balance, price, errW := i.CalculatePriceAndBalance(ctx, date, itemID, branchID, nil)
 		if errW != nil {
-			return
+			fmt.Println("Error calculating price and balance ", errW)
+			return response, errW
 		}
-		return
+
+		response.Balance = balance
+		response.Price = price
+		response.ItemID = itemID
+		return response, nil
 	}
 
 	snapshot := inventorySnapshot[0]

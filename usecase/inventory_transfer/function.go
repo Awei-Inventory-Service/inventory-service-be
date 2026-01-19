@@ -19,16 +19,16 @@ func (i *inventoryTransferUsecase) Create(ctx context.Context, payload dto.Creat
 		return
 	}
 
-	now := time.Now()
+	parsedTime, err := time.Parse("2006-01-02", payload.TransferDate)
+	if err != nil {
+		return newData, error_wrapper.New(model.ErrInvalidTimestamp, "invalid start time format: "+err.Error())
+	}
+
 	referenceTypeInventoryTransfer := constant.InventoryTransfer
 	for _, transferItem := range payload.Items {
 		// Sync brnach item in destination id, so that it get the correct price
 		_, _, _ = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchOriginID, transferItem.ItemID)
-		inventory, errW := i.inventoryDomain.GetInventoryByDate(ctx, dto.CustomDate{
-			Day:   now.Day(),
-			Month: int(now.Month()),
-			Year:  now.Year(),
-		}, transferItem.ItemID, payload.BranchOriginID)
+		inventory, errW := i.inventoryDomain.GetInventoryByDate(ctx, parsedTime, transferItem.ItemID, payload.BranchOriginID)
 
 		if errW != nil {
 			fmt.Println("Error getting inventory price", errW)
@@ -42,7 +42,7 @@ func (i *inventoryTransferUsecase) Create(ctx context.Context, payload dto.Creat
 		}
 
 		standarizeUnit := utils.StandarizeMeasurement(transferItem.Quantity, transferItem.Unit, item.Unit)
-
+		fmt.Printf("Inventory price: %f and standarize unit: %f", inventory.Price, standarizeUnit)
 		_, errW = i.inventoryTransferItemDomain.Create(ctx, model.InventoryTransferItem{
 			InventoryTransferID: newData.UUID,
 			ItemID:              transferItem.ItemID,
@@ -181,9 +181,10 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 		return
 	}
 
+	fmt.Println("ini inventory transfer", inventoryTransfer.UUID)
 	// 2. Delete the old inventory transfer item and the stock transaction
 	errW = i.inventoryTransferItemDomain.Delete(ctx, model.InventoryTransferItem{
-		InventoryTransferID: inventoryTransfer.UUID,
+		InventoryTransferID: id,
 	})
 
 	if errW != nil {
@@ -208,11 +209,7 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 	// 3. Create new inventory transfer item and stock transaction
 	for _, transferItem := range payload.Items {
 		_, _, _ = i.inventoryDomain.SyncBranchItem(ctx, payload.BranchOriginID, transferItem.ItemID)
-		inventory, errW := i.inventoryDomain.GetInventoryByDate(ctx, dto.CustomDate{
-			Day:   now.Day(),
-			Month: int(now.Month()),
-			Year:  now.Year(),
-		}, transferItem.ItemID, payload.BranchOriginID)
+		inventory, errW := i.inventoryDomain.GetInventoryByDate(ctx, now, transferItem.ItemID, payload.BranchOriginID)
 
 		if errW != nil {
 			fmt.Println("Error getting inventory price", errW)
@@ -229,7 +226,7 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 		standarizeUnit := utils.StandarizeMeasurement(transferItem.Quantity, transferItem.Unit, item.Unit)
 
 		_, errW = i.inventoryTransferItemDomain.Create(ctx, model.InventoryTransferItem{
-			InventoryTransferID: inventoryTransfer.UUID,
+			InventoryTransferID: id,
 			ItemID:              transferItem.ItemID,
 			ItemQuantity:        transferItem.Quantity,
 			Unit:                transferItem.Unit,
@@ -252,7 +249,7 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 				Quantity:            transferItem.Quantity,
 				IssuerID:            inventoryTransfer.IssuerID,
 				Unit:                transferItem.Unit,
-				Reference:           inventoryTransfer.UUID,
+				Reference:           id,
 				Cost:                inventory.Price * standarizeUnit,
 				ReferenceType:       &referenceType,
 				TransactionDate:     time.Now(),

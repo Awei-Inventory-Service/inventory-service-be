@@ -91,6 +91,7 @@ func (i *inventoryUsecase) GetListCurrent(ctx context.Context, payload dto.GetLi
 	}
 	fmt.Println("Ini len inventories", len(inventories))
 	for _, inventory := range inventories {
+		fmt.Println("inI INVENTORY", inventory)
 		filters := []dto.Filter{
 			{
 				Key:      "branch_id",
@@ -134,12 +135,13 @@ func (i *inventoryUsecase) SyncBranchItem(ctx context.Context, payload dto.SyncB
 func (i *inventoryUsecase) Get(ctx context.Context, payload dto.GetListRequest, branchID string) ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper) {
 	var (
 		parsedDate = time.Now()
+		err        error
 	)
 	inventorySnapshots, errW := i.inventorySnapshotDomain.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 	fmt.Println("Ini len inventory snapshots", len(inventorySnapshots))
 
 	if dateExist, date := utils.CheckKeyExist("date", payload.Filter); dateExist {
-		parsedDate, err := time.Parse("2006-01-02", date[0])
+		parsedDate, err = time.Parse("2006-01-02", date[0])
 		if err != nil {
 			return nil, error_wrapper.New(model.ErrInvalidTimestamp, "invalid start time format: "+err.Error())
 		}
@@ -197,7 +199,7 @@ func (i *inventoryUsecase) Get(ctx context.Context, payload dto.GetListRequest, 
 		)
 
 		for _, branch := range branchID {
-			inventorySnapshots := i.GenerateDefaultInventorySnapshotsForBranch(ctx, branch, parsedDate)
+			inventorySnapshots := i.GenerateDefaultInventorySnapshotsForBranch(ctx, branch, parsedDate, payload.Filter)
 			inventorySnapshotsBranch = append(inventorySnapshotsBranch, inventorySnapshots...)
 		}
 		return i.mapInventorySnapshotToResponse(ctx, inventorySnapshotsBranch), nil
@@ -293,15 +295,20 @@ func (i *inventoryUsecase) GenerateDefaultInventorySnapshotsForBranch(
 	ctx context.Context,
 	branchID string,
 	parsedTime time.Time,
+	filter []dto.Filter,
 ) (inventorySnaphots []model.InventorySnapshot) {
+
+	var (
+		checkedFilters []dto.Filter
+	)
+	for _, fil := range filter {
+		if fil.Key != "date" {
+			checkedFilters = append(checkedFilters, fil)
+		}
+	}
 	// 1. Get all items that exist on this branch
 	inventories, errW := i.inventoryDomain.Get(ctx, dto.GetListRequest{
-		Filter: []dto.Filter{
-			{
-				Key:    "branch_id",
-				Values: []string{branchID},
-			},
-		},
+		Filter: checkedFilters,
 	})
 	if errW != nil {
 		fmt.Println("Error getting inventories with branch id", branchID)
@@ -313,6 +320,10 @@ func (i *inventoryUsecase) GenerateDefaultInventorySnapshotsForBranch(
 		_, balance, price, errW := i.inventoryDomain.CalculatePriceAndBalance(ctx, parsedTime, inventory.ItemID, inventory.BranchID, nil)
 		if errW != nil {
 			fmt.Println("Error calculating price and balance ", errW)
+			continue
+		}
+
+		if balance == 0 {
 			continue
 		}
 
@@ -340,6 +351,9 @@ func (i *inventoryUsecase) GenerateDefaultInventorySnapshots(
 
 	for _, itemID := range items {
 		_, balance, price, errW := i.inventoryDomain.CalculatePriceAndBalance(ctx, parsedTime, itemID, branchID, nil)
+		if balance == 0 {
+			continue
+		}
 		fmt.Println("iNI BALANCE AND PRICE DI GENERATE DEFAULT", balance, price, parsedTime)
 		if errW != nil {
 			fmt.Println("Error calculating price and balance for item id ", itemID)

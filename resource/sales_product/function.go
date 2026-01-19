@@ -9,7 +9,7 @@ import (
 )
 
 func (s *salesProductResource) Create(ctx context.Context, payload model.SalesProduct) (newSalesProduct model.SalesProduct, errW *error_wrapper.ErrorWrapper) {
-	result := s.db.Create(payload)
+	result := s.db.Create(&payload)
 	if result.Error != nil {
 		errW = error_wrapper.New(model.RErrPostgresCreateDocument, result.Error)
 		return
@@ -79,7 +79,6 @@ func (s *salesProductResource) Get(ctx context.Context, filter []dto.Filter, ord
 	}
 
 	result := db.WithContext(ctx).
-		Preload("Branch").
 		Preload("Product").
 		Find(&salesProducts)
 

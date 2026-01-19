@@ -56,7 +56,6 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 		}
 
 		fmt.Printf("Product cost : %f, sales data quantity: %f", totalPrice, sales.Quantity)
-		salesProduct.BranchID = payload.BranchID
 		salesProduct.Cost = totalPrice * sales.Quantity
 		salesProduct.ProductID = product.UUID
 		salesProduct.Quantity = sales.Quantity
@@ -83,10 +82,11 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 				Type:                "OUT",
 				IssuerID:            userID,
 				Quantity:            recipe.Amount * sales.Quantity,
-				Cost:                salesProduct.Cost,
+				Cost:                recipe.Cost,
 				Unit:                recipe.Unit,
 				Reference:           newSales.UUID,
 				ReferenceType:       &referenceType,
+				TransactionDate:     transactionDate,
 			})
 
 			if errW != nil {
@@ -102,6 +102,12 @@ func (s *salesService) Create(ctx context.Context, payload dto.CreateSalesReques
 			if errW != nil {
 				fmt.Println("Error recalcualting inventory ", errW)
 				continue
+			}
+
+			_, _, errW = s.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, recipe.ItemID)
+			if errW != nil {
+				fmt.Println("Error syncing branch item")
+				return errW
 			}
 		}
 
@@ -194,7 +200,6 @@ func (s *salesService) Update(ctx context.Context, payload dto.UpdateSalesReques
 			return errW
 		}
 
-		salesProduct.BranchID = payload.BranchID
 		salesProduct.Cost = totalPrice * salesData.Quantity
 		salesProduct.ProductID = product.UUID
 		salesProduct.Quantity = salesData.Quantity
@@ -241,6 +246,12 @@ func (s *salesService) Update(ctx context.Context, payload dto.UpdateSalesReques
 				fmt.Println("Error recalcualting inventory ", errW)
 				continue
 			}
+
+			_, _, errW = s.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, recipe.ItemID)
+			if errW != nil {
+				fmt.Println("Error syncing branch item")
+				return errW
+			}
 		}
 	}
 
@@ -259,12 +270,18 @@ func (s *salesService) Update(ctx context.Context, payload dto.UpdateSalesReques
 			fmt.Println("Error recalcualting inventory ", errW)
 			continue
 		}
+
+		_, _, errW = s.inventoryDomain.SyncBranchItem(ctx, payload.BranchID, deletedItem)
+		if errW != nil {
+			fmt.Println("Error syncing branch item")
+			return errW
+		}
 	}
 
 	return
 }
 
-func (s *salesService) Delete(ctx context.Context, salesID string, userID string) *error_wrapper.ErrorWrapper {
+func (s *salesService) Delete(ctx context.Context, salesID, userID string) *error_wrapper.ErrorWrapper {
 	// First, get the sales data before deleting to create reversing transactions
 	sales, errW := s.salesDomain.FindByID(salesID)
 	if errW != nil {

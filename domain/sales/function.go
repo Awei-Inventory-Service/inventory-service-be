@@ -36,6 +36,7 @@ func (s *salesDomain) Get(ctx context.Context, filter []dto.Filter, order []dto.
 	sales, errW := s.salesResource.Get(ctx, filter, order, limit, offset)
 	if errW != nil {
 		fmt.Println("Error getting sales ", errW)
+		return nil, errW
 	}
 
 	for _, rawSales := range sales {
@@ -50,6 +51,7 @@ func (s *salesDomain) Get(ctx context.Context, filter []dto.Filter, order []dto.
 				Quantity:    rawSalesProduct.Quantity,
 				Cost:        rawSalesProduct.Cost,
 				Price:       rawSalesProduct.Price,
+				Type:        rawSalesProduct.Type,
 			})
 		}
 

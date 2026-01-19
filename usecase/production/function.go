@@ -51,19 +51,15 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 			continue
 		}
 
-		inventory, errW := p.inventoryDomain.GetInventoryByDate(ctx, dto.CustomDate{
-			Day:   productionParsedDate.Day(),
-			Month: int(productionParsedDate.Month()),
-			Year:  productionParsedDate.Year(),
-		}, productionItem.SourceItemID, payload.BranchID)
+		inventory, errW := p.inventoryDomain.GetInventoryByDate(ctx, productionParsedDate, productionItem.SourceItemID, payload.BranchID)
 		if errW != nil {
 			fmt.Println("Error getting inventory by date", errW)
 			continue
 		}
-
+		fmt.Println("Ini inventory", inventory)
 		standarizedQuantity := utils.StandarizeMeasurement(productionItem.InitialQuantity, productionItem.InitialUnit, item.Unit)
 		cost := inventory.Price * standarizedQuantity
-
+		fmt.Printf("inventory price: %f, standarized quantity: %f cost: %f\n", inventory.Price, standarizedQuantity, cost)
 		errW = p.stockTransactionDomain.Create(model.StockTransaction{
 			BranchOriginID:      payload.BranchID,
 			BranchDestinationID: payload.BranchID,
@@ -266,11 +262,7 @@ func (p *productionUsecase) Update(ctx context.Context, payload dto.UpdateProduc
 			continue
 		}
 
-		inventory, errW := p.inventoryDomain.GetInventoryByDate(ctx, dto.CustomDate{
-			Day:   productionDate.Day(),
-			Month: int(productionDate.Month()),
-			Year:  productionDate.Year(),
-		}, productionItem.SourceItemID, payload.BranchID)
+		inventory, errW := p.inventoryDomain.GetInventoryByDate(ctx, productionDate, productionItem.SourceItemID, payload.BranchID)
 		if errW != nil {
 			fmt.Println("Error getting inventory by date", errW)
 			return model.Production{}, errW
@@ -368,11 +360,7 @@ func (p *productionUsecase) ValidateSourceItemsQuantity(ctx context.Context, sou
 		}
 
 		//A. Get item price at the production date
-		inventory, errW := p.inventoryDomain.GetInventoryByDate(ctx, dto.CustomDate{
-			Day:   productionDate.Day(),
-			Month: int(productionDate.Month()),
-			Year:  productionDate.Year(),
-		}, newItem.SourceItemID, branchID)
+		inventory, errW := p.inventoryDomain.GetInventoryByDate(ctx, productionDate, newItem.SourceItemID, branchID)
 
 		if errW != nil {
 			fmt.Println("Error getting item price", errW)

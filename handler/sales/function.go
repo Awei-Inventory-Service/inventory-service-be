@@ -68,3 +68,54 @@ func (s *salesController) Get(c *gin.Context) {
 		return
 	}
 }
+
+func (s *salesController) Update(c *gin.Context) {
+	var (
+		errW    *error_wrapper.ErrorWrapper
+		payload dto.UpdateSalesRequest
+	)
+
+	defer func() {
+		if r := recover(); r != nil {
+			errW = error_wrapper.New(model.CErrInternalServer, "Internal server error")
+		}
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+		return
+	}
+
+	userID := c.GetHeader("user_ids")
+	if userID == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "User id is required in header")
+		return
+	}
+
+	errW = s.salesService.Update(c, payload)
+	return
+}
+
+func (s *salesController) Delete(c *gin.Context) {
+	var (
+		errW *error_wrapper.ErrorWrapper
+	)
+	defer func() {
+		if r := recover(); r != nil {
+			errW = error_wrapper.New(model.CErrInternalServer, "Internal server error")
+		}
+		response_wrapper.New(&c.Writer, c, errW == nil, nil, errW)
+	}()
+
+	id := c.Param("id")
+	userID := c.GetHeader("user_id")
+
+	if userID == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "User id is missing on the header")
+		return
+	}
+
+	errW = s.salesService.Delete(c, id, userID)
+	return
+}

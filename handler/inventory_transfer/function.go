@@ -53,6 +53,13 @@ func (h *inventoryTransferHandler) Update(ctx *gin.Context) {
 	}
 
 	id := ctx.Param("id")
+
+	userId := ctx.GetHeader("user_id")
+	if userId == "" {
+		errW = error_wrapper.New(model.CErrHeaderIncomplete, "User id is missing on the header")
+		return
+	}
+	payload.IssuerID = userId
 	resp, errW = h.inventoryTransferUsecase.Update(ctx, id, payload)
 }
 

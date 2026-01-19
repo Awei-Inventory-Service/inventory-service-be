@@ -62,6 +62,12 @@ func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter
 			} else {
 				mongoFilter = append(mongoFilter, bson.E{Key: "item_id", Value: bson.D{{Key: "$in", Value: f.Values}}})
 			}
+		case "branch_id":
+			if len(f.Values) == 1 {
+				mongoFilter = append(mongoFilter, bson.E{Key: "branch_id", Value: f.Values[0]})
+			} else {
+				mongoFilter = append(mongoFilter, bson.E{Key: "branch_id", Value: bson.D{{Key: "$in", Value: f.Values}}})
+			}
 		case "day":
 			if len(f.Values) == 1 {
 				dayInt := 0

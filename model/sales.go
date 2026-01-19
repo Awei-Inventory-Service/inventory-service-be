@@ -15,7 +15,6 @@ type Sales struct {
 type SalesProduct struct {
 	UUID      string    `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
 	SalesID   string    `gorm:"type:uuid;not null"`
-	BranchID  string    `gorm:"type:uuid"`
 	ProductID string    `gorm:"type:uuid;not null"`
 	Quantity  float64   `gorm:"type:decimal;not null"`
 	Type      string    `gorm:"type:varchar(255);not null"`
@@ -24,7 +23,6 @@ type SalesProduct struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Product   Product `gorm:"foreignKey:ProductID"`
-	Branch    Branch  `gorm:"foreignKey:BranchID"`
 }
 
 func (Sales) TableName() string {

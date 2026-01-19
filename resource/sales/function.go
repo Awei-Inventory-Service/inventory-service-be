@@ -142,7 +142,7 @@ func (s *salesResource) Get(ctx context.Context, filters []dto.Filter, orders []
 
 	result := db.WithContext(ctx).
 		Preload("Branch").
-		Preload("SalesProduct").Find(&sales)
+		Preload("SalesProducts.Product").Find(&sales)
 
 	if result.Error != nil {
 		errW = error_wrapper.New(model.RErrPostgresReadDocument, result.Error)

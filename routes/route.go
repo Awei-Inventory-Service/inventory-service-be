@@ -285,9 +285,9 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		salesRoutes := apiV1.Group("/sales")
 		{
 			salesRoutes.POST("/", salesController.Create)
+			salesRoutes.POST("/get-list", salesController.Get)
 			salesRoutes.GET("/", salesController.FindAll)
-			salesRoutes.GET("/grouped-by-date", salesController.FindGroupedByDate)
-			salesRoutes.GET("/grouped-by-date-and-branch", salesController.FindGroupedByDateAndBranch)
+			salesRoutes.PUT("/:id", salesController.Update)
 		}
 
 		inventory := apiV1.Group("/inventory")
@@ -318,7 +318,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 		{
 			inventoryTransferRoutes.POST("/create", inventoryTransferController.Create)
 			inventoryTransferRoutes.POST("/update-status", inventoryTransferController.UpdateStatus)
-			inventoryTransferRoutes.PUT("/update", inventoryTransferController.Update)
+			inventoryTransferRoutes.PUT("/update/:id", inventoryTransferController.Update)
 			inventoryTransferRoutes.POST("/get-list", inventoryTransferController.GetList)
 			inventoryTransferRoutes.DELETE("/:id", inventoryTransferController.Delete)
 		}
