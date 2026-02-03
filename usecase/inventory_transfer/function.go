@@ -174,14 +174,26 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 	var (
 		updatedItems []string
 	)
+
+	oldInventoryTransfer, errW := i.inventoryTransferDomain.FindByID(ctx, id)
+	if errW != nil {
+		fmt.Println("Error finding old inventory transfer by id ", id)
+		return
+	}
+
+	parsedTransferDate, err := time.Parse("2006-01-02", payload.TransferDate)
+	if err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, "Invalid date format")
+		fmt.Println("ERROR", errW)
+		return
+	}
 	// 1. Update the old inventory transfer
-	inventoryTransfer, errW := i.inventoryTransferDomain.Update(ctx, id, payload)
+	updatedInventoryTransfer, errW := i.inventoryTransferDomain.Update(ctx, id, payload)
 	if errW != nil {
 		fmt.Println("Error updating inventory transfer", errW)
 		return
 	}
 
-	fmt.Println("ini inventory transfer", inventoryTransfer.UUID)
 	// 2. Delete the old inventory transfer item and the stock transaction
 	errW = i.inventoryTransferItemDomain.Delete(ctx, model.InventoryTransferItem{
 		InventoryTransferID: id,
@@ -195,13 +207,13 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 	items, errW := i.stockTransactionDomain.InvalidateStockTransaction(ctx, []map[string]interface{}{
 		{
 			"field": "reference",
-			"value": inventoryTransfer.UUID,
+			"value": id,
 		},
 	}, payload.IssuerID)
 
 	if errW != nil {
 		fmt.Println("Fail invalidating stock transaction")
-		return inventoryTransfer, errW
+		return updatedInventoryTransfer, errW
 	}
 	updatedItems = append(updatedItems, items...)
 
@@ -220,7 +232,7 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 
 		if errW != nil {
 			fmt.Println("Error getting item by id in create inventory transfer")
-			return inventoryTransfer, errW
+			return updatedInventoryTransfer, errW
 		}
 
 		standarizeUnit := utils.StandarizeMeasurement(transferItem.Quantity, transferItem.Unit, item.Unit)
@@ -238,55 +250,76 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 			continue
 		}
 
+		referenceType := constant.InventoryTransfer
+		stockTransactionOut := model.StockTransaction{
+			BranchOriginID:      updatedInventoryTransfer.BranchOriginID,
+			BranchDestinationID: updatedInventoryTransfer.BranchDestinationID,
+			ItemID:              transferItem.ItemID,
+			Type:                "OUT",
+			Quantity:            transferItem.Quantity,
+			IssuerID:            updatedInventoryTransfer.IssuerID,
+			Unit:                transferItem.Unit,
+			Reference:           id,
+			Cost:                inventory.Price * standarizeUnit,
+			ReferenceType:       &referenceType,
+			TransactionDate:     parsedTransferDate,
+		}
+		errW = i.stockTransactionDomain.Create(stockTransactionOut)
+		if errW != nil {
+			fmt.Println("Error creating stock transaction for OUT process in UpdateStatus", errW)
+			return updatedInventoryTransfer, errW
+		}
+
+		updatedItems = append(updatedItems, transferItem.ItemID)
 		if payload.Status == constant.TRANSFER_STATUS_COMPLETED {
 			// IF status is completed, then crate stock transaction
-			referenceType := constant.InventoryTransfer
-			stockTransaction := model.StockTransaction{
-				BranchOriginID:      inventoryTransfer.BranchOriginID,
-				BranchDestinationID: inventoryTransfer.BranchDestinationID,
-				ItemID:              transferItem.ItemID,
-				Type:                "IN",
-				Quantity:            transferItem.Quantity,
-				IssuerID:            inventoryTransfer.IssuerID,
-				Unit:                transferItem.Unit,
-				Reference:           id,
-				Cost:                inventory.Price * standarizeUnit,
-				ReferenceType:       &referenceType,
-				TransactionDate:     time.Now(),
-			}
-			errW = i.stockTransactionDomain.Create(stockTransaction)
 
+			parsedDate, err := time.Parse("2006-01-02", payload.CompletedDate)
+			if err != nil {
+				errW = error_wrapper.New(model.CErrJsonBind, "Invalid date format")
+				continue
+			}
+
+			stockTransactionIn := stockTransactionOut
+			stockTransactionIn.Type = "IN"
+			stockTransactionIn.TransactionDate = parsedDate
+
+			errW = i.stockTransactionDomain.Create(stockTransactionIn)
 			if errW != nil {
 				fmt.Println("Error creating stock transaction for IN process in UpdateStatus", errW)
-				return inventoryTransfer, errW
+				return updatedInventoryTransfer, errW
 			}
-
-			stockTransactionOut := stockTransaction
-			stockTransactionOut.Type = "OUT"
-			stockTransactionOut.TransactionDate = inventoryTransfer.TransferDate
-
-			errW = i.stockTransactionDomain.Create(stockTransactionOut)
-
-			if errW != nil {
-				fmt.Println("Error creating stock transaction for OUT process in UpdateStatus", errW)
-				return inventoryTransfer, errW
-			}
-
 			updatedItems = append(updatedItems, transferItem.ItemID)
 		}
 	}
-	// 4.Sync branch item for all impacted items
-	errW = i.inventoryDomain.BulkSyncBranchItems(ctx, payload.BranchDestinationID, updatedItems)
 
-	if errW != nil {
-		fmt.Println("Error bulk sync branch items for branch destination id", errW)
-		return
+	var (
+		needToBeUpdatedBranch = make(map[string]bool)
+	)
+
+	needToBeUpdatedBranch[payload.BranchDestinationID] = true
+	needToBeUpdatedBranch[payload.BranchOriginID] = true
+
+	if _, exist := needToBeUpdatedBranch[oldInventoryTransfer.BranchDestinationID]; !exist {
+		needToBeUpdatedBranch[oldInventoryTransfer.BranchDestinationID] = true
 	}
 
-	errW = i.inventoryDomain.BulkSyncBranchItems(ctx, payload.BranchOriginID, updatedItems)
+	if _, exist := needToBeUpdatedBranch[oldInventoryTransfer.BranchOriginID]; !exist {
+		needToBeUpdatedBranch[oldInventoryTransfer.BranchOriginID] = true
+	}
 
+	for branchId, _ := range needToBeUpdatedBranch {
+		errW = i.inventoryDomain.BulkSyncBranchItems(ctx, branchId, updatedItems)
+		if errW != nil {
+			fmt.Println("Error bulk sync branch items ", errW)
+			continue
+		}
+	}
+
+	// 4.Sync branch item for all impacted items
+	errW = i.inventoryDomain.BulkSyncBranchItems(ctx, payload.BranchDestinationID, updatedItems)
 	if errW != nil {
-		fmt.Println("Error bulk sync branch items for branch origin id", errW)
+		fmt.Println("Error bulk sync branch items for branch destination id", errW)
 		return
 	}
 
@@ -294,9 +327,16 @@ func (i *inventoryTransferUsecase) Update(ctx context.Context, id string, payloa
 }
 
 func (i *inventoryTransferUsecase) Delete(ctx context.Context, payload dto.DeleteInventoryTransferRequest) (errW *error_wrapper.ErrorWrapper) {
+
+	//  1. Get inventory transfer old data
+	oldInventoryTransfer, errW := i.inventoryTransferDomain.FindByID(ctx, payload.ID)
+	if errW != nil {
+		fmt.Println("Error getting inventory transfer by id ", payload.ID)
+		return
+	}
+
 	// 1. Delete inventory transfer
 	errW = i.inventoryTransferDomain.Delete(ctx, payload.ID)
-
 	if errW != nil {
 		fmt.Println("Error deleting inventory transfer", errW)
 		return
@@ -326,10 +366,15 @@ func (i *inventoryTransferUsecase) Delete(ctx context.Context, payload dto.Delet
 	}
 
 	// 4. Sync branch item
-	errW = i.inventoryDomain.BulkSyncBranchItems(ctx, payload.BranchID, items)
-
+	errW = i.inventoryDomain.BulkSyncBranchItems(ctx, oldInventoryTransfer.BranchOriginID, items)
 	if errW != nil {
 		fmt.Println("Error bulk sync branch item", errW)
+		return
+	}
+
+	errW = i.inventoryDomain.BulkSyncBranchItems(ctx, oldInventoryTransfer.BranchDestinationID, items)
+	if errW != nil {
+		fmt.Println("Error bulk sync branch items for branch destination id ", errW)
 		return
 	}
 

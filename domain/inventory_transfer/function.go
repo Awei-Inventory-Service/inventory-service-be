@@ -33,12 +33,12 @@ func (i *inventoryTransferDomain) Create(ctx context.Context, payload dto.Create
 
 func (i *inventoryTransferDomain) Update(ctx context.Context, id string, payload dto.UpdateInventoryTransferRequest) (result model.InventoryTransfer, errW *error_wrapper.ErrorWrapper) {
 	parsedDate, err := time.Parse("2006-01-02", payload.TransferDate)
-
 	if err != nil {
 		errW = error_wrapper.New(model.CErrJsonBind, "Invalid date format")
 		fmt.Println("ERROR", errW)
 		return
 	}
+
 	inventoryTransfer := model.InventoryTransfer{
 		BranchOriginID:      payload.BranchOriginID,
 		BranchDestinationID: payload.BranchDestinationID,
@@ -60,7 +60,7 @@ func (i *inventoryTransferDomain) UpdateStatus(ctx context.Context, id, status s
 }
 
 func (i *inventoryTransferDomain) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (results dto.GetInventoryTransferListResponse, errW *error_wrapper.ErrorWrapper) {
-	inventoryTransfers, errW := i.inventoryTransferResource.Get(ctx, filter, order, limit, offset)
+	inventoryTransfers, count, errW := i.inventoryTransferResource.Get(ctx, filter, order, limit, offset)
 
 	if errW != nil {
 		return
@@ -88,9 +88,11 @@ func (i *inventoryTransferDomain) Get(ctx context.Context, filter []dto.Filter, 
 			Items:                 items,
 			TransferDate:          inventoryTransfer.TransferDate.String(),
 			Status:                inventoryTransfer.Status,
+			Remarks:               *inventoryTransfer.Remarks,
+			CompletedDate:         inventoryTransfer.CompletedDate.String(),
 		})
 	}
-
+	results.Count = count
 	return
 }
 

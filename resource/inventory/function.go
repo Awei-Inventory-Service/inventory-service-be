@@ -93,7 +93,7 @@ func (i *inventoryResource) Delete(branchID, itemID string) *error_wrapper.Error
 	return nil
 }
 
-func (i *inventoryResource) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (inventories []model.Inventory, errW *error_wrapper.ErrorWrapper) {
+func (i *inventoryResource) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (inventories []model.Inventory, count int64, errW *error_wrapper.ErrorWrapper) {
 	db := i.db.Model(&model.Inventory{})
 
 	// Check if we need to join with items table
@@ -134,6 +134,11 @@ func (i *inventoryResource) Get(ctx context.Context, filter []dto.Filter, order 
 			db = db.Where(filterKey+" IN ?", fil.Values)
 		}
 	}
+
+	if err := db.WithContext(ctx).Count(&count).Error; err != nil {
+		return
+	}
+
 	for _, ord := range order {
 		// Map current_stock to stock for backward compatibility
 		orderKey := ord.Key

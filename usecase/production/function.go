@@ -56,10 +56,8 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 			fmt.Println("Error getting inventory by date", errW)
 			continue
 		}
-		fmt.Println("Ini inventory", inventory)
 		standarizedQuantity := utils.StandarizeMeasurement(productionItem.InitialQuantity, productionItem.InitialUnit, item.Unit)
 		cost := inventory.Price * standarizedQuantity
-		fmt.Printf("inventory price: %f, standarized quantity: %f cost: %f\n", inventory.Price, standarizedQuantity, cost)
 		errW = p.stockTransactionDomain.Create(model.StockTransaction{
 			BranchOriginID:      payload.BranchID,
 			BranchDestinationID: payload.BranchID,
@@ -128,7 +126,7 @@ func (p *productionUsecase) Create(ctx context.Context, payload dto.CreateProduc
 	return production, nil
 }
 
-func (p *productionUsecase) Get(ctx context.Context, payload dto.GetListRequest) ([]dto.GetProduction, *error_wrapper.ErrorWrapper) {
+func (p *productionUsecase) Get(ctx context.Context, payload dto.GetListRequest) (dto.GetProductionResponse, *error_wrapper.ErrorWrapper) {
 	return p.productionDomain.Get(ctx, payload)
 }
 
@@ -148,11 +146,11 @@ func (p *productionUsecase) Delete(ctx context.Context, payload dto.DeleteProduc
 		return errW
 	}
 
-	if len(production) == 0 {
+	if len(production.Productions) == 0 {
 		return error_wrapper.New(model.RErrDataNotFound, "Production not found")
 	}
 
-	deletedProduction := production[0]
+	deletedProduction := production.Productions[0]
 
 	errW = p.productionDomain.Delete(ctx, payload.ProductionID)
 	if errW != nil {
@@ -203,10 +201,7 @@ func (p *productionUsecase) Update(ctx context.Context, payload dto.UpdateProduc
 	if err != nil {
 		return model.Production{}, error_wrapper.New(model.ErrInvalidTimestamp, "invalid start time format: "+err.Error())
 	}
-	valid, errW := p.ValidateSourceItemsQuantity(ctx, payload.SourceItems, productionDate, payload.BranchID)
-	if errW != nil || !valid {
-		return model.Production{}, errW
-	}
+	payload.ParsedProductionDate = productionDate
 
 	oldProduction, errW := p.productionDomain.Get(ctx, dto.GetListRequest{
 		Filter: []dto.Filter{{Key: "uuid", Values: []string{payload.ProductionID}}},
@@ -217,10 +212,21 @@ func (p *productionUsecase) Update(ctx context.Context, payload dto.UpdateProduc
 		return model.Production{}, errW
 	}
 
-	oldProductionDate, err := time.Parse("2006-01-02 15:04:05 -0700 MST", oldProduction[0].ProductionDate)
+	if len(oldProduction.Productions) == 0 {
+		errW = error_wrapper.New(model.RErrDataNotFound, fmt.Sprintf("Production with id %s not found ", payload.ProductionID))
+		return model.Production{}, errW
+	}
+
+	oldProductionData := oldProduction.Productions[0]
+	oldProductionDate, err := time.Parse("2006-01-02 15:04:05 -0700 MST", oldProductionData.ProductionDate)
 	if err != nil {
-		fmt.Println("Invalid time stamp for old production date", oldProduction[0].ProductionDate)
+		fmt.Println("Invalid time stamp for old production date", oldProductionData.ProductionDate)
 		return model.Production{}, error_wrapper.New(model.ErrInvalidTimestamp, "invalid start time format: "+err.Error())
+	}
+
+	valid, errW := p.ValidateSourceItemsQuantity(ctx, payload, oldProductionData)
+	if errW != nil || !valid {
+		return model.Production{}, errW
 	}
 
 	// Update the production data
@@ -349,9 +355,21 @@ func (p *productionUsecase) Update(ctx context.Context, payload dto.UpdateProduc
 	return model.Production{}, nil
 }
 
-func (p *productionUsecase) ValidateSourceItemsQuantity(ctx context.Context, sourceItems []dto.SourceItemCreateProductionRequest, productionDate time.Time, branchID string) (valid bool, errW *error_wrapper.ErrorWrapper) {
+func (p *productionUsecase) ValidateSourceItemsQuantity(ctx context.Context, payload dto.UpdateProductionRequest, oldProduction dto.GetProduction) (valid bool, errW *error_wrapper.ErrorWrapper) {
+	var (
+		mappedProductionSourceItems = make(map[string]dto.GetProductionItem)
+	)
 
-	for _, newItem := range sourceItems {
+	for _, oldItem := range oldProduction.SourceItems {
+		mappedProductionSourceItems[oldItem.SourceItemID] = oldItem
+	}
+
+	for _, newItem := range payload.SourceItems {
+		var (
+			stockInProduction = 0.0
+			unit              = ""
+		)
+
 		item, errW := p.itemDomain.FindByID(ctx, newItem.SourceItemID)
 		if errW != nil {
 			fmt.Println("Error getting item with id", newItem.SourceItemID)
@@ -359,18 +377,22 @@ func (p *productionUsecase) ValidateSourceItemsQuantity(ctx context.Context, sou
 			continue
 		}
 
-		//A. Get item price at the production date
-		inventory, errW := p.inventoryDomain.GetInventoryByDate(ctx, productionDate, newItem.SourceItemID, branchID)
-
+		unit = item.Unit
+		inventory, errW := p.inventoryDomain.GetInventoryByDate(ctx, payload.ParsedProductionDate, newItem.SourceItemID, payload.BranchID)
 		if errW != nil {
 			fmt.Println("Error getting item price", errW)
 			continue
 		}
 
-		// B. Standarize quantity
+		if oldValue, existInOldProduction := mappedProductionSourceItems[newItem.SourceItemID]; existInOldProduction {
+			// maximumStock += oldValue.Quantity
+			stockInProduction += utils.StandarizeMeasurement(oldValue.InitialQuantity, oldValue.SourceItemUnit, unit)
+		}
+		maximumStock := stockInProduction + inventory.Balance
 		payloadQuantity := utils.StandarizeMeasurement(newItem.InitialQuantity, newItem.InitialUnit, item.Unit)
-		if inventory.Balance < payloadQuantity {
-			errW = error_wrapper.New(model.UErrStockIsNotEnough, fmt.Sprintf("Item : %s balance is only %f on %s", item.Name, inventory.Balance, productionDate))
+
+		if maximumStock < payloadQuantity {
+			errW = error_wrapper.New(model.UErrStockIsNotEnough, fmt.Sprintf("Item: %s balance is only %f on %s", item.Name, maximumStock, payload.ProductionDate))
 			return false, errW
 		}
 	}
@@ -392,6 +414,6 @@ func (p *productionUsecase) GetByID(ctx context.Context, id string) (production 
 		Offset: 0,
 	})
 
-	production = productionRaw[0]
+	production = productionRaw.Productions[0]
 	return
 }

@@ -137,7 +137,7 @@ func (p *productDomain) CalculateProductCost(
 		}
 		productCompositionAmount := utils.StandarizeMeasurement(productComposition.Amount, productComposition.Unit, item.Unit)
 
-		inventorySnapshot, errW := p.inventorySnapshotResource.Get(ctx, []dto.Filter{
+		inventorySnapshot, _, errW := p.inventorySnapshotResource.Get(ctx, []dto.Filter{
 			{
 				Key:    "item_id",
 				Values: []string{productComposition.ItemID},

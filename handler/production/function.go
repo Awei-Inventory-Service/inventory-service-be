@@ -39,7 +39,7 @@ func (p *productionHandler) Create(ctx *gin.Context) {
 func (p *productionHandler) GetProductionList(ctx *gin.Context) {
 	var (
 		errW                *error_wrapper.ErrorWrapper
-		productionsResponse []dto.GetProduction
+		productionsResponse dto.GetProductionResponse
 		filter              dto.GetListRequest
 	)
 
@@ -99,6 +99,7 @@ func (p *productionHandler) Update(ctx *gin.Context) {
 	}()
 
 	if err := ctx.ShouldBindJSON(&updateProductionRequest); err != nil {
+		fmt.Println("Error ", err)
 		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
 		return
 	}

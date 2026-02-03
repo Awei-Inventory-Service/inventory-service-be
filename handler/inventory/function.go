@@ -85,7 +85,7 @@ func (i *inventoryHandler) GetListCurrent(c *gin.Context) {
 	var (
 		errW        *error_wrapper.ErrorWrapper
 		payload     dto.GetListRequest
-		inventories []dto.GetInventoryResponse
+		inventories dto.GetInventoryResponseBody
 	)
 
 	defer func() {

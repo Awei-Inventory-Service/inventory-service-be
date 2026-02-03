@@ -83,15 +83,15 @@ func (i *inventoryUsecase) FindByBranchId(branchId string) ([]model.Inventory, *
 	return i.inventoryDomain.FindByBranch(branchId)
 }
 
-func (i *inventoryUsecase) GetListCurrent(ctx context.Context, payload dto.GetListRequest, branchID string) (inventories []dto.GetInventoryResponse, errW *error_wrapper.ErrorWrapper) {
-	inventories, errW = i.inventoryDomain.Get(ctx, payload)
+func (i *inventoryUsecase) GetListCurrent(ctx context.Context, payload dto.GetListRequest, branchID string) (inventoryBody dto.GetInventoryResponseBody, errW *error_wrapper.ErrorWrapper) {
+	inventories, count, errW := i.inventoryDomain.Get(ctx, payload)
 	if errW != nil {
 		fmt.Println("Error getting inventories in get list current usecase", errW)
 		return
 	}
-	fmt.Println("Ini len inventories", len(inventories))
+	inventoryBody.Data = inventories
+	inventoryBody.Count = count
 	for _, inventory := range inventories {
-		fmt.Println("inI INVENTORY", inventory)
 		filters := []dto.Filter{
 			{
 				Key:      "branch_id",
@@ -104,7 +104,7 @@ func (i *inventoryUsecase) GetListCurrent(ctx context.Context, payload dto.GetLi
 				Wildcard: "==",
 			},
 		}
-		_, errW := i.inventorySnapshotDomain.Get(ctx, filters, nil, 0, 0)
+		_, _, errW := i.inventorySnapshotDomain.Get(ctx, filters, nil, 0, 0)
 		if errW != nil && errW.Is(model.RErrDataNotFound) {
 			errW = nil
 			// IF data not found, then create inventory snapshot
@@ -137,7 +137,7 @@ func (i *inventoryUsecase) Get(ctx context.Context, payload dto.GetListRequest, 
 		parsedDate = time.Now()
 		err        error
 	)
-	inventorySnapshots, errW := i.inventorySnapshotDomain.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
+	inventorySnapshots, _, errW := i.inventorySnapshotDomain.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 	fmt.Println("Ini len inventory snapshots", len(inventorySnapshots))
 
 	if dateExist, date := utils.CheckKeyExist("date", payload.Filter); dateExist {
@@ -159,8 +159,9 @@ func (i *inventoryUsecase) Get(ctx context.Context, payload dto.GetListRequest, 
 					filteredPayload.Filter = append(filteredPayload.Filter, filter)
 				}
 			}
-
-			return i.inventoryDomain.Get(ctx, filteredPayload)
+			inventories, _, errW := i.inventoryDomain.Get(ctx, filteredPayload)
+			return inventories, errW
+			// return i.inventoryDomain.Get(ctx, filteredPayload)
 		}
 	}
 
@@ -307,7 +308,7 @@ func (i *inventoryUsecase) GenerateDefaultInventorySnapshotsForBranch(
 		}
 	}
 	// 1. Get all items that exist on this branch
-	inventories, errW := i.inventoryDomain.Get(ctx, dto.GetListRequest{
+	inventories, _, errW := i.inventoryDomain.Get(ctx, dto.GetListRequest{
 		Filter: checkedFilters,
 	})
 	if errW != nil {

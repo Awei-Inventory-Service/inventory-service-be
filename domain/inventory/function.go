@@ -277,7 +277,7 @@ func (i *inventoryDomain) BulkSyncBranchItems(ctx context.Context, branchID stri
 
 func (i *inventoryDomain) GetInventoryByDate(ctx context.Context, date time.Time, itemID, branchID string) (response dto.GetInventoryPriceAndValueByDate, errW *error_wrapper.ErrorWrapper) {
 
-	inventorySnapshot, errW := i.inventorySnapshotResource.Get(ctx, []dto.Filter{
+	inventorySnapshot, _, errW := i.inventorySnapshotResource.Get(ctx, []dto.Filter{
 		{
 			Key:    "day",
 			Values: []string{fmt.Sprintf("%d", date.Day())},
@@ -325,8 +325,8 @@ func (i *inventoryDomain) GetInventoryByDate(ctx context.Context, date time.Time
 	return
 }
 
-func (i *inventoryDomain) Get(ctx context.Context, payload dto.GetListRequest) (inventories []dto.GetInventoryResponse, errW *error_wrapper.ErrorWrapper) {
-	inventoriesRaw, errW := i.inventoryResource.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
+func (i *inventoryDomain) Get(ctx context.Context, payload dto.GetListRequest) (inventories []dto.GetInventoryResponse, count int64, errW *error_wrapper.ErrorWrapper) {
+	inventoriesRaw, count, errW := i.inventoryResource.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 	if errW != nil {
 		fmt.Println("Error getting all inventories resource", errW)
 		return
@@ -460,16 +460,13 @@ func (i *inventoryDomain) RecalculateInventory(ctx context.Context, payload dto.
 
 	fmt.Println("Ini filter di recalculate inventory", filter)
 	// Get all inventory snapshots need to be updated
-	inventorySnasphots, errW := i.inventorySnapshotResource.Get(ctx, filter, order, 0, 0)
+	inventorySnasphots, _, errW := i.inventorySnapshotResource.Get(ctx, filter, order, 0, 0)
 	if errW != nil {
 		fmt.Println("Error getting inventory snapshout", errW)
 		return
 	}
-	fmt.Println("Ini inventory snapshots", len(inventorySnasphots), inventorySnasphots)
 
 	for _, inventorySnapshot := range inventorySnasphots {
-		fmt.Println("Ini inventory snapshot", inventorySnapshot)
-		fmt.Println("Ini previous snapshot", previousSnapshot)
 
 		startDate := utils.StartOfDay(inventorySnapshot.Date)
 		endDate := utils.EndOfDay(inventorySnapshot.Date)

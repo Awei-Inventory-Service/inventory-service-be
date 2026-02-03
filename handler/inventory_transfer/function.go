@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/inventory-service/constant"
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/lib/response_wrapper"
@@ -60,6 +61,12 @@ func (h *inventoryTransferHandler) Update(ctx *gin.Context) {
 		return
 	}
 	payload.IssuerID = userId
+
+	if payload.Status == constant.TRANSFER_STATUS_COMPLETED && payload.CompletedDate == "" {
+		errW = error_wrapper.New(model.CErrPayloadIncomplete, "Inventory Transfer need completed date")
+		return
+	}
+
 	resp, errW = h.inventoryTransferUsecase.Update(ctx, id, payload)
 }
 

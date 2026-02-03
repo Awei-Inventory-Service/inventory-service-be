@@ -70,6 +70,10 @@ func (r *MongoCollection) DeleteOne(ctx context.Context, filter interface{}, opt
 	return r.collection.DeleteOne(ctx, filter, opts...)
 }
 
+func (r *MongoCollection) CountDocuments(ctx context.Context, filter interface{}, opts ...*options.CountOptions) (int64, error) {
+	return r.collection.CountDocuments(ctx, filter, opts...)
+}
+
 func (c *MongoCursor) Next(ctx context.Context) bool {
 	return c.cursor.Next(ctx)
 }

@@ -29,7 +29,7 @@ func (i *inventoryTransferResource) Update(ctx context.Context, id string, paylo
 	return payload, nil
 }
 
-func (i *inventoryTransferResource) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (results []model.InventoryTransfer, errW *error_wrapper.ErrorWrapper) {
+func (i *inventoryTransferResource) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (results []model.InventoryTransfer, count int64, errW *error_wrapper.ErrorWrapper) {
 	db := i.db.Model(&model.InventoryTransfer{})
 
 	for _, fil := range filter {
@@ -45,6 +45,10 @@ func (i *inventoryTransferResource) Get(ctx context.Context, filter []dto.Filter
 		} else {
 			db = db.Where(fil.Key+" IN ?", fil.Values)
 		}
+	}
+
+	if err := db.WithContext(ctx).Count(&count).Error; err != nil {
+		return nil, 0, error_wrapper.New(model.RErrPostgresReadDocument, err)
 	}
 
 	for _, ord := range order {

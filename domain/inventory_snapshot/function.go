@@ -12,6 +12,6 @@ func (i *inventorySnapshotDomain) Upsert(ctx context.Context, payload dto.Create
 	return i.inventorySnapshotResource.Upsert(ctx, payload)
 }
 
-func (i *inventorySnapshotDomain) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]model.InventorySnapshot, *error_wrapper.ErrorWrapper) {
+func (i *inventorySnapshotDomain) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]model.InventorySnapshot, int64, *error_wrapper.ErrorWrapper) {
 	return i.inventorySnapshotResource.Get(ctx, filter, order, limit, offset)
 }

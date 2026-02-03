@@ -1,5 +1,7 @@
 package dto
 
+import "time"
+
 type SourceItemCreateProductionRequest struct {
 	SourceItemID    string  `json:"source_item_id" binding:"required"`
 	InitialQuantity float64 `json:"initial_quantity" binding:"required"`
@@ -19,9 +21,15 @@ type CreateProductionRequest struct {
 type GetProductionItem struct {
 	SourceItemID    string  `json:"source_item_id"`
 	SourceItemName  string  `json:"source_item_name"`
+	SourceItemUnit  string  `json:"source_item_unit"`
 	InitialQuantity float64 `json:"initial_quantity"`
 	Waste           float64 `json:"waste"`
 	WastePercentage float64 `json:"waste_percentage"`
+}
+
+type GetProductionResponse struct {
+	Productions []GetProduction `json:"productions"`
+	Count       int64           `json:"count"`
 }
 
 type GetProduction struct {
@@ -49,12 +57,13 @@ type DeleteProductionRequest struct {
 }
 
 type UpdateProductionRequest struct {
-	SourceItems    []SourceItemCreateProductionRequest `json:"source_items"`
-	ProductionID   string                              `json:"production_id"`
-	FinalItemID    string                              `json:"final_item_id"`
-	FinalQuantity  float64                             `json:"final_quantity"`
-	FinalUnit      string                              `json:"final_unit"`
-	BranchID       string                              `json:"branch_id"`
-	ProductionDate string                              `json:"production_date"`
-	UserID         string                              `json:"user_id"`
+	SourceItems          []SourceItemCreateProductionRequest `json:"source_items"`
+	ProductionID         string                              `json:"production_id"`
+	FinalItemID          string                              `json:"final_item_id"`
+	FinalQuantity        float64                             `json:"final_quantity"`
+	FinalUnit            string                              `json:"final_unit"`
+	BranchID             string                              `json:"branch_id"`
+	ProductionDate       string                              `json:"production_date"`
+	UserID               string                              `json:"user_id"`
+	ParsedProductionDate time.Time                           `json:"parsed_production_date"`
 }

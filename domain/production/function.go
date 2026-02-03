@@ -58,15 +58,16 @@ func (p *productionDomain) Create(ctx context.Context, payload dto.CreateProduct
 	return production, nil
 }
 
-func (p *productionDomain) Get(ctx context.Context, payload dto.GetListRequest) ([]dto.GetProduction, *error_wrapper.ErrorWrapper) {
+func (p *productionDomain) Get(ctx context.Context, payload dto.GetListRequest) (dto.GetProductionResponse, *error_wrapper.ErrorWrapper) {
 	var (
-		productionResults []dto.GetProduction
-		errW              *error_wrapper.ErrorWrapper
+		productionResults  []dto.GetProduction
+		productionResponse dto.GetProductionResponse
+		errW               *error_wrapper.ErrorWrapper
 	)
-	productions, errW := p.productionResource.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
+	productions, totalCount, errW := p.productionResource.Get(ctx, payload.Filter, payload.Order, payload.Limit, payload.Offset)
 
 	if errW != nil {
-		return nil, errW
+		return productionResponse, errW
 	}
 
 	for _, production := range productions {
@@ -74,7 +75,9 @@ func (p *productionDomain) Get(ctx context.Context, payload dto.GetListRequest) 
 		productionResults = append(productionResults, mappedProduction)
 	}
 
-	return productionResults, nil
+	productionResponse.Productions = productionResults
+	productionResponse.Count = totalCount
+	return productionResponse, nil
 }
 
 func (p *productionDomain) mapToGetProduction(production model.Production) dto.GetProduction {
@@ -98,6 +101,7 @@ func (p *productionDomain) mapToGetProduction(production model.Production) dto.G
 			InitialQuantity: productionItem.Quantity,
 			Waste:           productionItem.WasteQuantity,
 			WastePercentage: productionItem.WastePercentage,
+			SourceItemUnit:  productionItem.Unit,
 		})
 	}
 	return result

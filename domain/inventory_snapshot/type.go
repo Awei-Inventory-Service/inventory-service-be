@@ -11,7 +11,7 @@ import (
 
 type InventorySnapshotDomain interface {
 	Upsert(ctx context.Context, payload dto.CreateInventorySnapshotRequest) (errW *error_wrapper.ErrorWrapper)
-	Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (results []model.InventorySnapshot, errW *error_wrapper.ErrorWrapper)
+	Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) (results []model.InventorySnapshot, count int64, errW *error_wrapper.ErrorWrapper)
 }
 
 type inventorySnapshotDomain struct {

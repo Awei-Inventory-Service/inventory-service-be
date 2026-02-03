@@ -44,7 +44,7 @@ func (i *inventorySnapshotResource) Update(ctx context.Context, snapshotID strin
 	return
 }
 
-func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]model.InventorySnapshot, *error_wrapper.ErrorWrapper) {
+func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter, order []dto.Order, limit, offset int) ([]model.InventorySnapshot, int64, *error_wrapper.ErrorWrapper) {
 	var inventorySnapshots []model.InventorySnapshot
 
 	// Build MongoDB filter
@@ -142,7 +142,12 @@ func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter
 		}
 	}
 
-	fmt.Println("Mongodb filter", mongoFilter)
+	// Get total count BEFORE applying limit/offset
+	totalCount, err := i.inventorySnapshotCollection.CountDocuments(ctx, mongoFilter)
+	if err != nil {
+		return nil, 0, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
+	}
+
 	// Build sort options
 	findOptions := options.Find()
 
@@ -165,7 +170,7 @@ func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter
 	// Execute query
 	cursor, err := i.inventorySnapshotCollection.Find(ctx, mongoFilter, findOptions)
 	if err != nil {
-		return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
+		return nil, 0, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 	}
 
 	defer cursor.Close(ctx)
@@ -174,16 +179,16 @@ func (i *inventorySnapshotResource) Get(ctx context.Context, filter []dto.Filter
 	for cursor.Next(ctx) {
 		var inventorySnapshot model.InventorySnapshot
 		if err := cursor.Decode(&inventorySnapshot); err != nil {
-			return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
+			return nil, 0, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 		}
 		inventorySnapshots = append(inventorySnapshots, inventorySnapshot)
 	}
 
 	if err := cursor.Err(); err != nil {
-		return nil, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
+		return nil, 0, error_wrapper.New(model.RErrMongoDBReadDocument, err.Error())
 	}
 
-	return inventorySnapshots, nil
+	return inventorySnapshots, totalCount, nil
 }
 
 func (i *inventorySnapshotResource) FindByID(ctx context.Context, snapshotID string) (inventorySnapshot model.InventorySnapshot, errW *error_wrapper.ErrorWrapper) {
@@ -228,7 +233,7 @@ func (i *inventorySnapshotResource) Upsert(ctx context.Context, payload dto.Crea
 		},
 	}
 
-	existingInventorySnapshots, errW := i.Get(ctx, filter, []dto.Order{}, 1, 0)
+	existingInventorySnapshots, _, errW := i.Get(ctx, filter, []dto.Order{}, 1, 0)
 	if errW != nil {
 		return errW
 	}
@@ -308,7 +313,7 @@ func (i *inventorySnapshotResource) GetPreviousDaySnapshot(ctx context.Context, 
 		},
 	}
 
-	snapshots, errW := i.Get(ctx, filter, []dto.Order{}, 1, 0)
+	snapshots, _, errW := i.Get(ctx, filter, []dto.Order{}, 1, 0)
 	if errW != nil {
 		return nil, errW
 	}
@@ -346,7 +351,7 @@ func (i *inventorySnapshotResource) GetSnapshotBasedOndDate(ctx context.Context,
 		},
 	}
 
-	snapshot, errW := i.Get(ctx, filter, []dto.Order{}, 0, 0)
+	snapshot, _, errW := i.Get(ctx, filter, []dto.Order{}, 0, 0)
 	if errW != nil {
 		fmt.Println("Error getting snapshot based on date", errW)
 		return model.InventorySnapshot{}, errW

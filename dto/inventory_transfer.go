@@ -19,6 +19,7 @@ type UpdateInventoryTransferRequest struct {
 	Status              string                               `json:"status" binding:"required"`
 	Remarks             string                               `json:"remarks"`
 	Items               []UpdateInventoryTransferItemRequest `json:"items" binding:"required"`
+	CompletedDate       string                               `json:"completed_date"`
 }
 
 type UpdateInventoryTransferItemRequest struct {
@@ -40,6 +41,7 @@ type UpdateInventoryTransferStatus struct {
 
 type GetInventoryTransferListResponse struct {
 	InventoryTansfers []InventoryTransferResponse `json:"inventory_transfers"`
+	Count             int64                       `json:"count"`
 }
 type InventoryTransferResponse struct {
 	UUID                  string                             `json:"uuid"`
@@ -50,6 +52,8 @@ type InventoryTransferResponse struct {
 	Items                 []GetInventoryTransferItemResponse `json:"items"`
 	TransferDate          string                             `json:"transfer_date"`
 	Status                string                             `json:"status"`
+	Remarks               string                             `json:"remarks"`
+	CompletedDate         string                             `json:"completed_date"`
 }
 
 type GetInventoryTransferItemResponse struct {

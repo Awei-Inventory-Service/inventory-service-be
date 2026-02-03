@@ -6,6 +6,11 @@ import (
 	"github.com/inventory-service/model"
 )
 
+type GetInventoryResponseBody struct {
+	Data  []GetInventoryResponse `json:"data"`
+	Count int64                  `json:"count"`
+}
+
 type GetInventoryResponse struct {
 	UUID         string             `json:"uuid"`
 	BranchID     string             `json:"branch_id"`

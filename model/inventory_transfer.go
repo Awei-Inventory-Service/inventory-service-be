@@ -5,16 +5,17 @@ import (
 )
 
 type InventoryTransfer struct {
-	UUID                string                   `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
-	BranchOriginID      string                   `gorm:"type:uuid;not null"`
-	BranchOrigin        Branch                   `gorm:"foreignKey:BranchOriginID;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL"`
-	BranchDestinationID string                   `gorm:"type:uuid;not null"`
-	BranchDestination   Branch                   `gorm:"foreignKey:BranchDestinationID;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL"`
-	Status              string                   `gorm:"type:varchar(50);not null"`
-	TransferDate        time.Time                `gorm:"not null"`
-	Remarks             *string                  `gorm:"type:text"`
-	IssuerID            string                   `gorm:"type:uuid;not null"`
-	Items               []InventoryTransferItem  `gorm:"foreignKey:InventoryTransferID;references:UUID"`
+	UUID                string                  `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
+	BranchOriginID      string                  `gorm:"type:uuid;not null"`
+	BranchOrigin        Branch                  `gorm:"foreignKey:BranchOriginID;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL"`
+	BranchDestinationID string                  `gorm:"type:uuid;not null"`
+	BranchDestination   Branch                  `gorm:"foreignKey:BranchDestinationID;references:UUID;constraint:onUpdate:CASCADE,onDelete:SET NULL"`
+	Status              string                  `gorm:"type:varchar(50);not null"`
+	TransferDate        time.Time               `gorm:"not null"`
+	Remarks             *string                 `gorm:"type:text"`
+	IssuerID            string                  `gorm:"type:uuid;not null"`
+	Items               []InventoryTransferItem `gorm:"foreignKey:InventoryTransferID;references:UUID"`
+	CompletedDate       time.Time
 }
 
 type InventoryTransferItem struct {
