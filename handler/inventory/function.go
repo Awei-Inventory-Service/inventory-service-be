@@ -158,6 +158,30 @@ func (i *inventoryHandler) GetList(c *gin.Context) {
 	}
 }
 
+func (i *inventoryHandler) GetStockMovement(c *gin.Context) {
+	var (
+		payload dto.GetListRequest
+		resp    dto.GetStockMovementResponse
+		errW    *error_wrapper.ErrorWrapper
+	)
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		errW = error_wrapper.New(model.CErrJsonBind, err.Error())
+		return
+	}
+
+	defer func() {
+		response_wrapper.New(&c.Writer, c, errW == nil, resp, errW)
+	}()
+
+	resp, errW = i.inventoryUsecase.GetItemMovement(c, payload)
+	if errW != nil {
+		fmt.Println("Error getting inventory", errW)
+		return
+	}
+
+}
+
 func (i *inventoryHandler) Recalculate(c *gin.Context) {
 	var (
 		errW    *error_wrapper.ErrorWrapper

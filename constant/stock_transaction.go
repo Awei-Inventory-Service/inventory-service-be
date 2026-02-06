@@ -13,4 +13,11 @@ var (
 	ReferenceTypeMap = map[string]string{
 		Production: ReversalProduction,
 	}
+
+	StockTransactionReferenceTypeMap = map[string]string{
+		InventoryTransfer: "Inventory Transfer",
+		Purchasing:        "Purchasing",
+		Production:        "Production",
+		Sales:             "Sales",
+	}
 )

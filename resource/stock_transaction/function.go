@@ -2,6 +2,7 @@ package stocktransaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
@@ -55,10 +56,21 @@ func (s *stockTransactionResource) Delete(id string) *error_wrapper.ErrorWrapper
 	return nil
 }
 
-func (s *stockTransactionResource) Get(ctx context.Context, filters []dto.Filter, order []dto.Order, limit, offset int) (stockTransactions []model.StockTransaction, errW *error_wrapper.ErrorWrapper) {
-	db := s.db.Model(&model.StockTransaction{})
+func (s *stockTransactionResource) Get(ctx context.Context, filters []dto.Filter, order []dto.Order, limit, offset int) (stockTransactions []model.StockTransaction, totalCount int64, errW *error_wrapper.ErrorWrapper) {
+	db := s.db.Model(&model.StockTransaction{}).Where("deleted_at IS NULL")
 
 	for _, filter := range filters {
+		// Special handling for branch_id filter - match either origin or destination
+		if filter.Key == "branch_id" {
+			if len(filter.Values) == 1 {
+				value := filter.Values[0]
+				db = db.Where("(branch_origin_id = ? AND type = ?) OR (branch_destination_id = ? AND type = ? )", value, "OUT", value, "IN")
+			} else {
+				db = db.Where("(branch_origin_id IN ? AND type = ?) OR (branch_destination_id IN ? AND type = ?)", filter.Values, "OUT", filter.Values, "IN")
+			}
+			continue
+		}
+
 		if len(filter.Values) == 1 {
 			value := filter.Values[0]
 
@@ -87,6 +99,12 @@ func (s *stockTransactionResource) Get(ctx context.Context, filters []dto.Filter
 		}
 	}
 
+	if err := db.WithContext(ctx).Count(&totalCount).Error; err != nil {
+		fmt.Println("Error getting total count", err)
+		errW = error_wrapper.New(model.RErrPostgresReadDocument, err)
+		return
+	}
+
 	for _, ord := range order {
 		if ord.IsAsc {
 			db = db.Order(ord.Key + " ASC")
@@ -101,7 +119,11 @@ func (s *stockTransactionResource) Get(ctx context.Context, filters []dto.Filter
 		db = db.Offset(offset)
 	}
 
-	result := db.WithContext(ctx).Preload("Item").Offset(offset).Find(&stockTransactions)
+	result := db.WithContext(ctx).
+		Preload("Item").
+		Preload("BranchOrigin").
+		Preload("BranchDestination").
+		Offset(offset).Find(&stockTransactions)
 
 	if result.Error != nil {
 		errW = error_wrapper.New(model.RErrPostgresReadDocument, result.Error.Error())

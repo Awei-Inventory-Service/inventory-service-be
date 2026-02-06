@@ -27,3 +27,7 @@ func IsSameDay(first string, second string) bool {
 		firstDate.Month() == secondDate.Month() &&
 		firstDate.Day() == secondDate.Day()
 }
+
+func parseDateToString(rawTime time.Time) string {
+	return rawTime.Format("2006-01-02")
+}

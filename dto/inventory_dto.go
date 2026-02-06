@@ -23,6 +23,21 @@ type GetInventoryResponse struct {
 	Price        float64            `json:"price"`
 }
 
+type StockMovement struct {
+	Date                  string  `json:"date"`
+	Quantity              float64 `json:"quantity"`
+	Unit                  string  `json:"unit"`
+	Type                  string  `json:"type"`          // Only 2 possible values, IN / OUT
+	MovementType          string  `json:"movement_type"` // It can be purchasing, sales, etc
+	BranchOriginName      string  `json:"branch_origin_name"`
+	BranchDestinationName string  `json:"branch_destination_name"`
+}
+
+type GetStockMovementResponse struct {
+	Data  []StockMovement `json:"data"`
+	Count int64           `json:"count"`
+}
+
 type GetInventoryPriceAndValueByDate struct {
 	Price   float64 `json:"price"`
 	Balance float64 `json:"balance"`

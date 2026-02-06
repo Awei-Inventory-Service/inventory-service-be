@@ -564,7 +564,7 @@ func (i *inventoryDomain) CalculatePriceAndBalance(ctx context.Context, endTime 
 		Wildcard: "==",
 	})
 
-	inStockTransactions, errW := i.stockTransactionResource.Get(ctx, inFilter, []dto.Order{}, 0, 0)
+	inStockTransactions, _, errW := i.stockTransactionResource.Get(ctx, inFilter, []dto.Order{}, 0, 0)
 	if errW != nil {
 		fmt.Println("Error finding input stock transactions", errW)
 		return
@@ -579,7 +579,7 @@ func (i *inventoryDomain) CalculatePriceAndBalance(ctx context.Context, endTime 
 	fmt.Println("Stock balance from in stock transactions", totalBalance)
 	fmt.Println("total price from in stock transactions", totalPrice)
 
-	outStockTransactions, errW := i.stockTransactionResource.Get(ctx, outFilter, []dto.Order{}, 0, 0)
+	outStockTransactions, _, errW := i.stockTransactionResource.Get(ctx, outFilter, []dto.Order{}, 0, 0)
 	if errW != nil {
 		fmt.Println("Error getting out stock transactions ", errW)
 		return

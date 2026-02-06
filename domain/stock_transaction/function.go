@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/inventory-service/dto"
 	"github.com/inventory-service/lib/error_wrapper"
 	"github.com/inventory-service/model"
 )
@@ -15,6 +16,10 @@ func (s *stockTransactionDomain) Create(transaction model.StockTransaction) *err
 
 func (s *stockTransactionDomain) FindAll() ([]model.StockTransaction, *error_wrapper.ErrorWrapper) {
 	return s.stockTransactionResource.FindAll()
+}
+
+func (s *stockTransactionDomain) Get(ctx context.Context, filters []dto.Filter, order []dto.Order, limit, offset int) (stockTransactions []model.StockTransaction, totalCount int64, errW *error_wrapper.ErrorWrapper) {
+	return s.stockTransactionResource.Get(ctx, filters, order, limit, offset)
 }
 
 func (s *stockTransactionDomain) FindByID(id string) (*model.StockTransaction, *error_wrapper.ErrorWrapper) {

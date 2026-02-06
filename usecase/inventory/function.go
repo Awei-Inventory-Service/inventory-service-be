@@ -387,3 +387,33 @@ func (i *inventoryUsecase) GenerateDefaultInventorySnapshots(
 
 	return
 }
+
+func (i *inventoryUsecase) GetItemMovement(
+	ctx context.Context,
+	request dto.GetListRequest,
+) (resp dto.GetStockMovementResponse, errW *error_wrapper.ErrorWrapper) {
+	//	1. Get stock transactions
+	stockTransactions, totalCount, errW := i.stockTransactionDomain.Get(ctx, request.Filter, request.Order, request.Limit, request.Offset)
+	if errW != nil {
+		fmt.Println("Error getting stock transactions", errW)
+		return
+	}
+	resp.Count = totalCount
+	for _, stockTransaction := range stockTransactions {
+		var referenceType string
+		if stockTransaction.ReferenceType != nil {
+			referenceType = *stockTransaction.ReferenceType
+		}
+		resp.Data = append(resp.Data, dto.StockMovement{
+			Date:                  stockTransaction.TransactionDate.Format("2006-01-02"),
+			Quantity:              stockTransaction.Quantity,
+			Unit:                  stockTransaction.Unit,
+			Type:                  stockTransaction.Type,
+			MovementType:          referenceType,
+			BranchOriginName:      stockTransaction.BranchOrigin.Name,
+			BranchDestinationName: stockTransaction.BranchDestination.Name,
+		})
+	}
+
+	return
+}

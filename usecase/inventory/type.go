@@ -22,6 +22,7 @@ type InventoryUsecase interface {
 	Get(ctx context.Context, payload dto.GetListRequest, branchID string) ([]dto.GetInventoryResponse, *error_wrapper.ErrorWrapper)
 	RecalculateInventory(ctx context.Context, payload dto.RecalculateInventoryRequest) (errW *error_wrapper.ErrorWrapper)
 	GetListCurrent(ctx context.Context, payload dto.GetListRequest, branchID string) (inventories dto.GetInventoryResponseBody, errW *error_wrapper.ErrorWrapper)
+	GetItemMovement(ctx context.Context, request dto.GetListRequest) (resp dto.GetStockMovementResponse, errW *error_wrapper.ErrorWrapper)
 }
 
 type inventoryUsecase struct {

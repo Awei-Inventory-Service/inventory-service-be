@@ -299,6 +299,7 @@ func InitRoutes(pgDB *gorm.DB) *gin.Engine {
 			inventory.POST("/", inventoryController.Create)
 			inventory.GET("/:branch_id/:item_id", inventoryController.FindByBranchIdAndItemId)
 			inventory.POST("/recalculate", inventoryController.Recalculate)
+			inventory.POST("/stock-movement", inventoryController.GetStockMovement)
 		}
 
 		productionRoutes := apiV1.Group("/production")
